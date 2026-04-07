@@ -6,13 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "scripts": {
-  "dev": "vite",
-  "build": "tsc -b && vite build",
-  "ci-build": "vite build",
-  "lint": "eslint .",
-  "preview": "vite preview"
-},
+    "ci-build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
