@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Build
-        run: npx vite build --skipLibCheck
+        run: npm run ci-build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
