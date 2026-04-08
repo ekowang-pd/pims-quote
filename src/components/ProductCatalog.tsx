@@ -1,11 +1,27 @@
 import { useState, useMemo } from 'react';
 import type { QuoteItem, StandardProduct, Category, SubCategory } from '../types';
-import { SAMPLE_PRODUCTS, CATEGORIES, SUPPLIERS, COLOR_DOTS, CATEGORY_ICONS } from '../data/categories';
+import { SAMPLE_PRODUCTS, CATEGORIES, SUPPLIERS } from '../data/categories';
 
 type ViewMode = 'grid' | 'excel';
 
 // 模拟当前业务员的部门（后续可对接登录用户信息）
 const CURRENT_USER_DEPT = 'ceramic'; // 默认展示陶瓷部
+
+const CATEGORY_ICONS: Record<string, JSX.Element> = {
+  ceramic: (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+    </svg>
+  ),
+  // 其他类目图标可按需扩展
+};
+
+const COLOR_DOTS: Record<string, string> = {
+  '白色': '#f9fafb', '米色': '#fef3c7', '灰色': '#9ca3af', '深灰': '#4b5563',
+  '黑色': '#111827', '棕色': '#92400e', '木色': '#d97706', '蓝色': '#3b82f6',
+  '绿色': '#22c55e', '红色': '#ef4444', '黄色': '#eab308', '米白': '#fefce8',
+  '灰白': '#f3f4f6', '米黄': '#fef9c3', '浅灰': '#e5e7eb', '深棕': '#78350f',
+};
 
 interface CartItem extends QuoteItem {
   // 额外展示用
