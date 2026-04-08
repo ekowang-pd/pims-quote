@@ -32,6 +32,298 @@ interface Props {
   onClose: () => void;
 }
 
+// ===== 产品详情弹窗（支持多供应商）=====
+function ProductDetailModal({
+  product,
+  selectedItems,
+  onAddToCart,
+  onClose,
+}: {
+  product: StandardProduct;
+  selectedItems: CartItem[];
+  onAddToCart: (item: CartItem) => void;
+  onClose: () => void;
+}) {
+  const [quantity, setQuantity] = useState(1);
+  const [margin, setMargin] = useState(30); // 利润率 %，默认30%
+  const [remark, setRemark] = useState('');
+  const [imgError, setImgError] = useState(false);
+  // 多供应商支持
+  const supplierPrices = product.supplierPrices || [];
+  const availableSuppliers = supplierPrices.length > 0 
+    ? supplierPrices 
+    : (product.supplierId ? [{ supplierId: product.supplierId, supplierProductId: product.supplierProductId, price: product.basePrice }] : []);
+  
+  const [selectedSupplierIdx, setSelectedSupplierIdx] = useState(0);
+  const currentSupplier = availableSuppliers[selectedSupplierIdx];
+  
+  // 计算单价（基于选中的供应商）
+  const unitPrice = currentSupplier?.price || product.basePrice;
+  const subtotal = quantity * unitPrice;
+  const alreadyAdded = selectedItems.some(i => i.productId === product.id);
+
+  const handleAdd = () => {
+    const cat = CATEGORIES.find(c => c.id === product.categoryId);
+    const sub = cat?.subCategories.find(s => s.id === product.subCategoryId);
+    const supplier = SUPPLIERS.find(s => s.id === currentSupplier?.supplierId);
+
+    const item: CartItem = {
+      id: `cart_${Date.now()}_${Math.random()}`,
+      type: 'standard',
+      productId: product.id,
+      libraryId: product.libraryId,
+      supplierProductId: currentSupplier?.supplierProductId || product.supplierProductId,
+      productName: product.name,
+      categoryName: cat?.name,
+      subCategoryName: sub?.name,
+      spec: product.spec,
+      color: product.color,
+      size: product.size,
+      length: product.length,
+      width: product.width,
+      height: product.height,
+      weight: product.weight,
+      description: product.description,
+      unit: product.unit,
+      quantity,
+      basePrice: currentSupplier?.price || product.basePrice,
+      unitPrice: unitPrice * (1 + margin / 100), // 利润率加成后的售价
+      totalPrice: quantity * unitPrice * (1 + margin / 100),
+      volume: product.length && product.width && product.height
+        ? (product.length * product.width * product.height / 1000000000)
+        : undefined,
+      weight: product.weight,
+      margin: margin / 100,
+      remark,
+      imageUrl: product.imageUrl,
+      // 记录供应商信息
+      regionId: supplier?.id,
+    };
+
+    onAddToCart(item);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        {/* 弹窗头部 */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">{product.name}</h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              {CATEGORIES.find(c => c.id === product.categoryId)?.name} · {CATEGORIES.find(c => c.id === product.categoryId)?.subCategories.find(s => s.id === product.subCategoryId)?.name}
+            </p>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer text-gray-500">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="p-6 space-y-5">
+          {/* 产品图片 */}
+          <div className="w-full h-48 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center">
+            {product.imageUrl && !imgError ? (
+              <img
+                src={product.imageUrl}
+                alt={product.name}
+                className="w-full h-full object-cover"
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <div className="flex flex-col items-center gap-3"
+                style={{ backgroundColor: COLOR_DOTS[product.color] || '#f3f4f6', width: '100%', height: '100%', justifyContent: 'center', display: 'flex', flexDirection: 'column' }}>
+                <div className="text-gray-400 opacity-50">
+                  {CATEGORY_ICONS[product.categoryId]}
+                </div>
+                <span className="text-xs text-gray-400">暂无图片</span>
+              </div>
+            )}
+          </div>
+
+          {/* 产品属性标签 */}
+          <div className="flex flex-wrap gap-2">
+            {product.libraryId && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full font-mono">
+                {product.libraryId}
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">
+              规格：{product.spec}
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">
+              <span
+                className="w-3 h-3 rounded-full border border-gray-200"
+                style={{ backgroundColor: COLOR_DOTS[product.color] || '#e5e7eb' }}
+              />
+              <span>{product.color}</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">
+              尺寸：{product.size}
+            </span>
+            {product.length && product.width && product.height && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">
+                {product.length}×{product.width}×{product.height}mm
+              </span>
+            )}
+          </div>
+
+          {/* 多供应商选择 */}
+          {availableSuppliers.length > 1 && (
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">选择供应商</h3>
+              <div className="space-y-2">
+                {availableSuppliers.map((sp, idx) => {
+                  const supplier = SUPPLIERS.find(s => s.id === sp.supplierId);
+                  return (
+                    <button
+                      key={sp.supplierId}
+                      onClick={() => setSelectedSupplierIdx(idx)}
+                      className={`w-full p-3 rounded-xl border-2 transition-all cursor-pointer text-left ${
+                        selectedSupplierIdx === idx 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : 'border-gray-200 hover:border-gray-300 bg-white'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium text-gray-900">{supplier?.name || '未知供应商'}</div>
+                          {sp.supplierProductId && (
+                            <div className="text-xs text-gray-500 mt-0.5">货号: {sp.supplierProductId}</div>
+                          )}
+                          {sp.leadTime && (
+                            <div className="text-xs text-gray-400 mt-0.5">交期: {sp.leadTime}</div>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-blue-700">${sp.price.toFixed(2)}</div>
+                          <div className="text-xs text-gray-400">/ {product.unit}</div>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* 只有一个供应商时的简化展示 */}
+          {availableSuppliers.length === 1 && currentSupplier && (
+            <div className="p-3 bg-gray-50 rounded-xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-sm text-gray-600">供应商：</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {SUPPLIERS.find(s => s.id === currentSupplier.supplierId)?.name || '默认'}
+                  </span>
+                </div>
+                {currentSupplier.supplierProductId && (
+                  <div className="text-xs text-gray-500">货号: {currentSupplier.supplierProductId}</div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 分割线 */}
+          <div className="border-t border-gray-100" />
+
+          {/* 报价配置 */}
+          <div>
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">配置报价参数</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">数量（{product.unit}）</label>
+                <input
+                  type="number" min="1" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  value={quantity} onChange={e => setQuantity(Number(e.target.value))}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">利润率（%）</label>
+                <input
+                  type="number" min="0" max="200" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  value={margin} onChange={e => setMargin(Number(e.target.value))}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">供货单价（USD）</label>
+                <div className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 text-gray-700">
+                  ${unitPrice.toFixed(2)} / {product.unit}
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">售价（USD）</label>
+                <div className="w-full px-3 py-2 text-sm border border-blue-200 rounded-lg bg-blue-50 text-blue-700 font-bold text-base">
+                  ${(unitPrice * (1 + margin / 100)).toFixed(2)} / {product.unit}
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">小计（USD）</label>
+                <div className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 text-blue-700 font-bold text-base">
+                  ${subtotal.toFixed(2)}
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">MOQ</label>
+                <div className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 text-gray-700">
+                  {currentSupplier?.moq || product.moq} {product.unit}
+                </div>
+              </div>
+              <div className="col-span-2">
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">备注（可选）</label>
+                <input
+                  type="text" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100" placeholder="特殊要求、包装、认证等"
+                  value={remark} onChange={e => setRemark(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 底部操作 */}
+        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/60 flex items-center justify-between rounded-b-2xl">
+          <div className="text-sm text-gray-500">
+            参考价：<span className="font-semibold text-gray-800">${product.basePrice}</span>
+            <span className="text-gray-400 ml-1">/ {product.unit}</span>
+          </div>
+          <div className="flex gap-3">
+            <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+              取消
+            </button>
+            <button
+              onClick={handleAdd}
+              disabled={alreadyAdded}
+              className={`px-5 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer flex items-center gap-2 ${
+                alreadyAdded 
+                  ? 'bg-green-100 text-green-700 cursor-not-allowed' 
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              {alreadyAdded ? (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  已添加
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  加入报价车
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ===== 产品库视图（左侧分类 + 右侧产品列表 + 底部报价车）=====
 export function ProductCatalog({ onAddToCart, onClose }: Props) {
   const [activeCategoryId, setActiveCategoryId] = useState<string>(CURRENT_USER_DEPT);
@@ -41,6 +333,8 @@ export function ProductCatalog({ onAddToCart, onClose }: Props) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
+  // 产品详情弹窗
+  const [selectedProduct, setSelectedProduct] = useState<StandardProduct | null>(null);
 
   // 过滤产品
   const filteredProducts = useMemo(() => {
@@ -71,12 +365,23 @@ export function ProductCatalog({ onAddToCart, onClose }: Props) {
 
   const activeCategory = CATEGORIES.find(c => c.id === activeCategoryId);
 
-  // 添加到购物车
-  const handleAddToCart = (product: StandardProduct) => {
-    if (cartItems.some(i => i.productId === product.id)) return;
+  // 添加单个产品到购物车（从详情弹窗）
+  const handleAddSingleToCart = (item: CartItem) => {
+    if (cartItems.some(i => i.productId === item.productId)) return;
+    setCartItems(prev => [...prev, item]);
+  };
+
+  // 快速添加产品到购物车（跳过详情页，直接用默认配置）
+  const handleQuickAddToCart = (product: StandardProduct) => {
+    if (cartItems.some(i => i.productId === product.id)) {
+      // 已存在，改为打开详情页让用户编辑
+      setSelectedProduct(product);
+      return;
+    }
 
     const cat = CATEGORIES.find(c => c.id === product.categoryId);
     const sub = cat?.subCategories.find(s => s.id === product.subCategoryId);
+    const supplier = SUPPLIERS.find(s => s.id === product.supplierId);
 
     const item: CartItem = {
       id: `cart_${Date.now()}_${Math.random()}`,
@@ -106,6 +411,7 @@ export function ProductCatalog({ onAddToCart, onClose }: Props) {
       weight: product.weight,
       margin: 0,
       imageUrl: product.imageUrl,
+      regionId: supplier?.id,
     };
 
     setCartItems(prev => [...prev, item]);
@@ -368,13 +674,12 @@ export function ProductCatalog({ onAddToCart, onClose }: Props) {
                           <td className="px-3 py-2.5 text-right font-semibold text-blue-700">${product.basePrice.toFixed(2)}</td>
                           <td className="px-3 py-2.5 text-center">
                             <button
-                              onClick={() => { if (!inCart) handleAddToCart(product); }}
-                              disabled={inCart}
+                              onClick={() => setSelectedProduct(product)}
                               className={`px-3 py-1 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
                                 inCart ? 'bg-green-100 text-green-600' : 'bg-blue-600 text-white hover:bg-blue-700'
                               }`}
                             >
-                              {inCart ? '已添加' : '+ 加入'}
+                              {inCart ? '查看详情' : '查看详情'}
                             </button>
                           </td>
                         </tr>
@@ -449,12 +754,12 @@ export function ProductCatalog({ onAddToCart, onClose }: Props) {
                           <span className="text-xs text-gray-400 ml-1">/ {product.unit}</span>
                         </div>
                         <button
-                          onClick={() => { if (!inCart) handleAddToCart(product); }}
+                          onClick={() => setSelectedProduct(product)}
                           className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
                             inCart ? 'bg-green-100 text-green-700' : 'bg-blue-700 text-white hover:bg-blue-800'
                           }`}
                         >
-                          {inCart ? '已添加' : '加入'}
+                          {inCart ? '查看详情' : '查看详情'}
                         </button>
                       </div>
                     </div>
@@ -508,6 +813,16 @@ export function ProductCatalog({ onAddToCart, onClose }: Props) {
           onRemove={handleRemoveFromCart}
           onClose={() => setShowCart(false)}
           onGenerateQuote={handleGenerateQuote}
+        />
+      )}
+
+      {/* 产品详情弹窗 */}
+      {selectedProduct && (
+        <ProductDetailModal
+          product={selectedProduct}
+          selectedItems={cartItems}
+          onAddToCart={handleAddSingleToCart}
+          onClose={() => setSelectedProduct(null)}
         />
       )}
     </div>

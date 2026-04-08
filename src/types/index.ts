@@ -43,6 +43,16 @@ export interface Supplier {
   tags?: string[];  // 如 ['OEM', '认证', '工厂直营']
 }
 
+// 供应商价格（支持多供应商）
+export interface SupplierPrice {
+  supplierId: string;
+  supplierProductId?: string; // 供应商产品编号/货号
+  price: number;               // 供货价格
+  moq?: number;                // 最小起订量
+  leadTime?: string;           // 交期
+  remark?: string;             // 备注
+}
+
 // 标品产品项
 export interface StandardProduct {
   id: string;
@@ -50,7 +60,6 @@ export interface StandardProduct {
   supplierProductId?: string; // 供应商产品ID（供应商提供的型号/货号）
   categoryId: string;
   subCategoryId: string;
-  supplierId?: string;
   name: string;
   spec: string;
   color: string;
@@ -67,6 +76,9 @@ export interface StandardProduct {
   description?: string; // 产品描述
   // 扩展属性（供 filterGroups 使用）
   attrs?: Record<string, string>;
+  // 多供应商支持
+  supplierId?: string;        // 默认供应商ID（兼容旧数据）
+  supplierPrices?: SupplierPrice[]; // 多供应商价格列表
 }
 
 // 报价行
