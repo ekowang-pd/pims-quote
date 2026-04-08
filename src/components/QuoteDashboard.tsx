@@ -10,9 +10,10 @@ interface Props {
   onEditQuote: (quote: Quote) => void;
   onViewQuote: (quote: Quote) => void;
   onDeleteQuote: (quoteId: string) => void;
+  onOpenCatalog: () => void;
 }
 
-export function QuoteDashboard({ quotes, onNewQuote, onEditQuote, onViewQuote, onDeleteQuote }: Props) {
+export function QuoteDashboard({ quotes, onNewQuote, onEditQuote, onViewQuote, onDeleteQuote, onOpenCatalog }: Props) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
   const filteredQuotes = statusFilter === 'all' 
@@ -43,12 +44,20 @@ export function QuoteDashboard({ quotes, onNewQuote, onEditQuote, onViewQuote, o
               <p className="text-xs text-gray-500">My Quotes</p>
             </div>
           </div>
-          <button onClick={onNewQuote} className="btn-primary">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            新建报价单
-          </button>
+          <div className="flex items-center gap-3">
+            <button onClick={onOpenCatalog} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 border border-blue-300 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+              产品库
+            </button>
+            <button onClick={onNewQuote} className="btn-primary">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              新建报价单
+            </button>
+          </div>
         </div>
         {/* 状态筛选标签 */}
         <div className="max-w-7xl mx-auto px-6 pb-3 flex items-center gap-1">

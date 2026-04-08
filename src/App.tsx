@@ -4,9 +4,10 @@ import { QuoteDashboard } from './components/QuoteDashboard';
 import { QuoteEditor } from './components/QuoteEditor';
 import { QuoteDetail } from './components/QuoteDetail';
 import { ProductSelector } from './components/ProductSelector';
+import { ProductCatalog } from './components/ProductCatalog';
 import { SAMPLE_PRODUCTS, CATEGORIES } from './data/categories';
 
-export type AppView = 'dashboard' | 'editor' | 'detail' | 'product-select';
+export type AppView = 'dashboard' | 'editor' | 'detail' | 'product-select' | 'catalog';
 
 // ===== 批量添加弹窗组件 =====
 function BatchAddModal({
@@ -229,6 +230,25 @@ function App() {
     setView('editor');
   };
 
+  // 从产品库报价车生成报价单
+  const handleCartGenerateQuote = (items: QuoteItem[]) => {
+    const newQuote: Quote = {
+      id: `q_${Date.now()}`,
+      quoteNo: `QT-${new Date().getFullYear()}-${String(quotes.length + 1).padStart(4, '0')}`,
+      customerName: '',
+      customerCountry: '',
+      createdAt: new Date().toISOString().split('T')[0],
+      validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      status: 'draft',
+      items,
+      currency: 'USD',
+      paymentTerms: 'T/T 30% deposit, 70% before shipment',
+      deliveryTerms: 'FOB',
+    };
+    setCurrentQuote(newQuote);
+    setView('editor');
+  };
+
   const handleEditQuote = (quote: Quote) => {
     setCurrentQuote({ ...quote });
     setView('editor');
@@ -299,6 +319,7 @@ function App() {
           onEditQuote={handleEditQuote}
           onViewQuote={handleViewQuote}
           onDeleteQuote={handleDeleteQuote}
+          onOpenCatalog={() => setView('catalog')}
         />
       )}
       {view === 'editor' && currentQuote && (
@@ -322,6 +343,12 @@ function App() {
         <ProductSelector
           onSelect={handleProductSelected}
           onCancel={() => { setSelectingForQuote(null); setView('editor'); }}
+        />
+      )}
+      {view === 'catalog' && (
+        <ProductCatalog
+          onAddToCart={handleCartGenerateQuote}
+          onClose={() => setView('dashboard')}
         />
       )}
 

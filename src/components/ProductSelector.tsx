@@ -15,7 +15,8 @@ interface Props {
 
 // 交互步骤：选大类 → 选子类 → 产品列表+筛选 → 产品详情
 // 新增：combo-type（选组合品类型）→ combo-config（配置组合品组件）
-type Step = 'category' | 'subcategory' | 'combo-type' | 'combo-config' | 'list' | 'detail';
+// 新增：search（全局搜索结果）
+type Step = 'category' | 'subcategory' | 'combo-type' | 'combo-config' | 'list' | 'detail' | 'search';
 
 const CATEGORY_ICONS: Record<string, JSX.Element> = {
   ceramic: (
@@ -1264,6 +1265,288 @@ function ComboConfigView({
   );
 }
 
+// ===== 全局搜索结果视图 =====
+function SearchResultView({
+  keyword,
+  selectedItems,
+  onViewDetail,
+  onQuickAdd,
+  viewMode,
+  onViewModeChange,
+}: {
+  keyword: string;
+  selectedItems: QuoteItem[];
+  onViewDetail: (p: StandardProduct, cat: Category, sub: SubCategory) => void;
+  onQuickAdd: (p: StandardProduct, cat: Category, sub: SubCategory) => void;
+  viewMode: ViewMode;
+  onViewModeChange: (m: ViewMode) => void;
+}) {
+  const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
+
+  // 跨所有类别搜索
+  const results = useMemo(() => {
+    const q = keyword.trim().toLowerCase();
+    if (!q) return [];
+    return SAMPLE_PRODUCTS.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      (p.spec || '').toLowerCase().includes(q) ||
+      (p.color || '').toLowerCase().includes(q) ||
+      (p.libraryId || '').toLowerCase().includes(q) ||
+      (p.supplierProductId || '').toLowerCase().includes(q) ||
+      (p.description || '').toLowerCase().includes(q)
+    ).map(p => {
+      const cat = CATEGORIES.find(c => c.id === p.categoryId);
+      const sub = cat?.subCategories.find(s => s.id === p.subCategoryId);
+      return { product: p, cat, sub };
+    }).filter(r => r.cat && r.sub) as { product: StandardProduct; cat: Category; sub: SubCategory }[];
+  }, [keyword]);
+
+  if (!keyword.trim()) {
+    return (
+      <div className="flex flex-col items-center gap-3 py-20 text-gray-400">
+        <svg className="w-12 h-12 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <p className="text-sm">输入关键词搜索产品</p>
+      </div>
+    );
+  }
+
+  if (results.length === 0) {
+    return (
+      <div className="flex flex-col items-center gap-3 py-20 text-gray-400">
+        <svg className="w-12 h-12 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p className="text-sm">未找到与 <span className="text-gray-700 font-medium">"{keyword}"</span> 相关的产品</p>
+        <p className="text-xs text-gray-400">试试产品名称、规格、颜色或产品编号</p>
+      </div>
+    );
+  }
+
+  // 按大类分组
+  const grouped = results.reduce<Record<string, { cat: Category; items: typeof results }>>((acc, r) => {
+    if (!acc[r.cat.id]) acc[r.cat.id] = { cat: r.cat, items: [] };
+    acc[r.cat.id].items.push(r);
+    return acc;
+  }, {});
+
+  return (
+    <div className="space-y-6">
+      {/* 结果统计 + 视图切换 */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-700">
+            找到 <span className="font-bold text-blue-600">{results.length}</span> 款产品
+            <span className="text-gray-400 ml-1">匹配 "{keyword}"</span>
+          </p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            涉及 {Object.keys(grouped).length} 个品类
+          </p>
+        </div>
+        <div className="flex items-center bg-gray-100 rounded-lg p-0.5 gap-0.5">
+          <button
+            onClick={() => onViewModeChange('grid')}
+            title="卡片视图"
+            className={`p-1.5 rounded-md transition-colors cursor-pointer ${viewMode === 'grid' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="7" height="7" rx="1" strokeWidth={2}/>
+              <rect x="14" y="3" width="7" height="7" rx="1" strokeWidth={2}/>
+              <rect x="3" y="14" width="7" height="7" rx="1" strokeWidth={2}/>
+              <rect x="14" y="14" width="7" height="7" rx="1" strokeWidth={2}/>
+            </svg>
+          </button>
+          <button
+            onClick={() => onViewModeChange('excel')}
+            title="表格视图"
+            className={`p-1.5 rounded-md transition-colors cursor-pointer ${viewMode === 'excel' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18M10 4v16M3 4h18a1 1 0 011 1v14a1 1 0 01-1 1H3a1 1 0 01-1-1V5a1 1 0 011-1z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* 按大类分组展示 */}
+      {Object.values(grouped).map(({ cat, items }) => (
+        <div key={cat.id}>
+          {/* 分类分隔线 */}
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-6 h-6 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0">
+              {CATEGORY_ICONS[cat.id]}
+            </div>
+            <span className="text-sm font-semibold text-gray-700">{cat.name}</span>
+            <div className="flex-1 h-px bg-gray-100" />
+            <span className="text-xs text-gray-400">{items.length} 款</span>
+          </div>
+
+          {viewMode === 'excel' ? (
+            /* 表格视图 */
+            <div className="card overflow-hidden mb-2">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      <th className="text-left px-3 py-2.5 font-semibold text-gray-600 whitespace-nowrap">#</th>
+                      <th className="text-left px-3 py-2.5 font-semibold text-gray-600 whitespace-nowrap">产品库ID</th>
+                      <th className="text-left px-3 py-2.5 font-semibold text-gray-600 whitespace-nowrap">产品名称</th>
+                      <th className="text-left px-3 py-2.5 font-semibold text-gray-600 whitespace-nowrap">子类</th>
+                      <th className="text-left px-3 py-2.5 font-semibold text-gray-600 whitespace-nowrap">规格</th>
+                      <th className="text-left px-3 py-2.5 font-semibold text-gray-600 whitespace-nowrap">颜色</th>
+                      <th className="text-left px-3 py-2.5 font-semibold text-gray-600 whitespace-nowrap">尺寸</th>
+                      <th className="text-right px-3 py-2.5 font-semibold text-gray-600 whitespace-nowrap">参考价(USD)</th>
+                      <th className="text-center px-3 py-2.5 font-semibold text-gray-600 whitespace-nowrap">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.map(({ product, cat: c, sub }, idx) => {
+                      const alreadyAdded = selectedItems.some(i => i.productId === product.id);
+                      const supplier = product.supplierId ? SUPPLIERS.find(s => s.id === product.supplierId) : null;
+                      return (
+                        <tr
+                          key={product.id}
+                          className={`border-b border-gray-50 hover:bg-blue-50/40 transition-colors cursor-pointer ${alreadyAdded ? 'bg-green-50/40' : ''}`}
+                          onClick={() => onViewDetail(product, c, sub)}
+                        >
+                          <td className="px-3 py-2.5 text-gray-400">{idx + 1}</td>
+                          <td className="px-3 py-2.5">
+                            <span className="font-mono text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded text-[11px]">
+                              {product.libraryId || '-'}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <div className="flex items-center gap-1.5">
+                              {alreadyAdded && (
+                                <svg className="w-3.5 h-3.5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                              <span className="font-medium text-gray-900">{product.name}</span>
+                            </div>
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <span className="text-xs px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded">{sub.name}</span>
+                          </td>
+                          <td className="px-3 py-2.5 text-gray-600">{product.spec}</td>
+                          <td className="px-3 py-2.5">
+                            <div className="flex items-center gap-1">
+                              <span className="w-3 h-3 rounded-full border border-gray-300 flex-shrink-0" style={{ backgroundColor: COLOR_DOTS[product.color] || '#e5e7eb' }} />
+                              <span className="text-gray-600">{product.color}</span>
+                            </div>
+                          </td>
+                          <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{product.size}</td>
+                          <td className="px-3 py-2.5 text-right font-semibold text-blue-700">${product.basePrice.toFixed(2)}</td>
+                          <td className="px-3 py-2.5" onClick={e => e.stopPropagation()}>
+                            <button
+                              onClick={() => { if (!alreadyAdded) onQuickAdd(product, c, sub); }}
+                              disabled={alreadyAdded}
+                              className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
+                                alreadyAdded ? 'bg-green-100 text-green-600 cursor-default' : 'bg-blue-600 text-white hover:bg-blue-700'
+                              }`}
+                            >
+                              {alreadyAdded ? '已添加' : '+ 添加'}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            /* 卡片视图 */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-2">
+              {items.map(({ product, cat: c, sub }) => {
+                const alreadyAdded = selectedItems.some(i => i.productId === product.id);
+                const hasImgError = imgErrors[product.id];
+                const supplier = product.supplierId ? SUPPLIERS.find(s => s.id === product.supplierId) : null;
+                return (
+                  <div
+                    key={product.id}
+                    className="card overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer group"
+                    onClick={() => onViewDetail(product, c, sub)}
+                  >
+                    {/* 图片区域 */}
+                    <div className="relative h-36 overflow-hidden bg-gray-100">
+                      {product.imageUrl && !hasImgError ? (
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={() => setImgErrors(prev => ({ ...prev, [product.id]: true }))}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center gap-1"
+                          style={{ backgroundColor: COLOR_DOTS[product.color] || '#f3f4f6' }}>
+                          <div className="text-gray-400 opacity-40">{CATEGORY_ICONS[c.id]}</div>
+                          <span className="text-xs text-gray-400">暂无图片</span>
+                        </div>
+                      )}
+                      {alreadyAdded && (
+                        <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                          </svg>
+                          已添加
+                        </div>
+                      )}
+                      {/* 子类标签 */}
+                      <div className="absolute bottom-2 left-2">
+                        <span className="text-[10px] bg-black/50 text-white px-2 py-0.5 rounded-full">
+                          {sub.name}
+                        </span>
+                      </div>
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                        <span className="bg-white text-gray-800 text-xs font-medium px-3 py-1.5 rounded-full shadow-md">查看详情</span>
+                      </div>
+                    </div>
+                    {/* 产品信息 */}
+                    <div className="p-3">
+                      <div className="flex items-center gap-1 mb-1 flex-wrap">
+                        {product.libraryId && (
+                          <span className="font-mono text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">{product.libraryId}</span>
+                        )}
+                      </div>
+                      <h4 className="text-sm font-semibold text-gray-900 mb-1 truncate">{product.name}</h4>
+                      <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-2">
+                        <span className="px-1.5 py-0.5 bg-gray-100 rounded">{product.spec}</span>
+                        <span className="flex items-center gap-1">
+                          <span className="w-2.5 h-2.5 rounded-full border border-gray-300" style={{ backgroundColor: COLOR_DOTS[product.color] || '#e5e7eb' }} />
+                          {product.color}
+                        </span>
+                      </div>
+                      {supplier && (
+                        <p className="text-xs text-gray-400 mb-2 truncate">{supplier.name}</p>
+                      )}
+                      <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                        <div>
+                          <span className="text-sm font-bold text-blue-700">${product.basePrice}</span>
+                          <span className="text-xs text-gray-400 ml-1">/ {product.unit}</span>
+                        </div>
+                        <button
+                          onClick={e => { e.stopPropagation(); if (!alreadyAdded) onQuickAdd(product, c, sub); }}
+                          className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
+                            alreadyAdded ? 'bg-green-100 text-green-700 cursor-default' : 'bg-blue-700 text-white hover:bg-blue-800'
+                          }`}
+                        >
+                          {alreadyAdded ? '已添加' : '快速添加'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ===== 组合品类型选择视图 =====
 function ComboTypeView({
   category,
@@ -1338,6 +1621,9 @@ export function ProductSelector({ onSelect, onCancel }: Props) {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedSubCategory, setSelectedSubCategory] = useState<SubCategory | null>(null);
   const [detailProduct, setDetailProduct] = useState<StandardProduct | null>(null);
+  // 搜索路径：详情来自哪个大类/子类（搜索路径下需要记录）
+  const [detailCat, setDetailCat] = useState<Category | null>(null);
+  const [detailSub, setDetailSub] = useState<SubCategory | null>(null);
   const [selectedItems, setSelectedItems] = useState<QuoteItem[]>([]);
   // 组合品已选项
   const [selectedCombos, setSelectedCombos] = useState<ComboQuoteItem[]>([]);
@@ -1345,6 +1631,20 @@ export function ProductSelector({ onSelect, onCancel }: Props) {
   const [showSelectedPanel, setShowSelectedPanel] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [activeRegionId, setActiveRegionId] = useState<string>('');
+  // 全局搜索
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [searchInputValue, setSearchInputValue] = useState('');
+  // 记录搜索前的来源步骤，供返回使用
+  const [prevStep, setPrevStep] = useState<Step>('category');
+
+  // 执行搜索
+  const handleSearch = (kw: string) => {
+    const trimmed = kw.trim();
+    if (!trimmed) return;
+    setSearchKeyword(trimmed);
+    setPrevStep(step);
+    setStep('search');
+  };
 
   const handleSelectCategory = (cat: Category) => {
     setSelectedCategory(cat);
@@ -1362,13 +1662,34 @@ export function ProductSelector({ onSelect, onCancel }: Props) {
     }
   };
 
-  const handleViewDetail = (product: StandardProduct) => {
+  const handleViewDetail = (product: StandardProduct, cat?: Category, sub?: SubCategory) => {
     setDetailProduct(product);
+    if (cat) setDetailCat(cat);
+    if (sub) setDetailSub(sub);
     setStep('detail');
   };
 
-  const handleQuickAdd = (product: StandardProduct, regionId?: string) => {
-    if (!selectedCategory || !selectedSubCategory) return;
+  const handleQuickAdd = (product: StandardProduct, catOrRegionId?: Category | string, subOrUndefined?: SubCategory) => {
+    // 兼容两种调用：
+    // 分类路径: handleQuickAdd(product, regionId?)
+    // 搜索路径: handleQuickAdd(product, cat, sub)
+    let cat: Category | null;
+    let sub: SubCategory | null;
+    let regionId: string | undefined;
+
+    if (catOrRegionId && typeof catOrRegionId === 'object') {
+      // 搜索路径
+      cat = catOrRegionId;
+      sub = subOrUndefined || null;
+      regionId = undefined;
+    } else {
+      // 分类路径
+      cat = selectedCategory;
+      sub = selectedSubCategory;
+      regionId = catOrRegionId as string | undefined;
+    }
+
+    if (!cat || !sub) return;
     if (selectedItems.some(i => i.productId === product.id)) return;
     const item: QuoteItem = {
       id: `std_${Date.now()}_${Math.random()}`,
@@ -1377,8 +1698,8 @@ export function ProductSelector({ onSelect, onCancel }: Props) {
       libraryId: product.libraryId,
       supplierProductId: product.supplierProductId,
       productName: product.name,
-      categoryName: selectedCategory.name,
-      subCategoryName: selectedSubCategory.name,
+      categoryName: cat.name,
+      subCategoryName: sub.name,
       spec: product.spec,
       color: product.color,
       size: product.size,
@@ -1403,8 +1724,15 @@ export function ProductSelector({ onSelect, onCancel }: Props) {
       if (prev.some(i => i.productId === item.productId)) return prev;
       return [...prev, item];
     });
-    setStep('list');
+    // 返回来源步骤（搜索路径返回搜索，分类路径返回列表）
+    if (prevStep === 'search') {
+      setStep('search');
+    } else {
+      setStep('list');
+    }
     setDetailProduct(null);
+    setDetailCat(null);
+    setDetailSub(null);
   };
 
   const removeItem = (id: string) => {
@@ -1429,7 +1757,14 @@ export function ProductSelector({ onSelect, onCancel }: Props) {
   };
 
   // 面包屑
-  const breadcrumbs = [
+  const breadcrumbs = step === 'search' ? [
+    { label: '产品大类', active: false, onClick: () => { setStep('category'); setSearchKeyword(''); setSearchInputValue(''); } },
+    { label: `搜索: "${searchKeyword}"`, active: true, onClick: () => {} },
+  ] : step === 'detail' && prevStep === 'search' ? [
+    { label: '产品大类', active: false, onClick: () => { setStep('category'); setSearchKeyword(''); setSearchInputValue(''); } },
+    { label: `搜索: "${searchKeyword}"`, active: false, onClick: () => setStep('search') },
+    { label: detailProduct?.name || '产品详情', active: true, onClick: () => {} },
+  ] : [
     { label: '产品大类', active: step === 'category', onClick: () => setStep('category') },
     ...(selectedCategory ? [{
       label: selectedCategory.name,
@@ -1451,12 +1786,17 @@ export function ProductSelector({ onSelect, onCancel }: Props) {
     <div className="min-h-screen bg-gray-50">
       {/* 顶部导航 */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
             {step !== 'category' ? (
               <button
                 onClick={() => {
-                  if (step === 'detail') { setStep('list'); setDetailProduct(null); }
+                  if (step === 'detail') {
+                    if (prevStep === 'search') { setStep('search'); }
+                    else { setStep('list'); }
+                    setDetailProduct(null); setDetailCat(null); setDetailSub(null);
+                  }
+                  else if (step === 'search') { setStep(prevStep === 'search' ? 'category' : prevStep); setSearchKeyword(''); setSearchInputValue(''); }
                   else if (step === 'list') {
                     if (selectedSubCategory?.id === 'custom-combo') { setStep('combo-type'); }
                     else { setStep('subcategory'); setSelectedSubCategory(null); }
@@ -1465,20 +1805,20 @@ export function ProductSelector({ onSelect, onCancel }: Props) {
                   else if (step === 'combo-type') { setStep('subcategory'); setSelectedSubCategory(null); }
                   else if (step === 'subcategory') { setStep('category'); setSelectedCategory(null); }
                 }}
-                className="text-gray-500 hover:text-gray-700 cursor-pointer p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                className="text-gray-500 hover:text-gray-700 cursor-pointer p-1.5 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
             ) : (
-              <button onClick={onCancel} className="text-gray-500 hover:text-gray-700 cursor-pointer p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+              <button onClick={onCancel} className="text-gray-500 hover:text-gray-700 cursor-pointer p-1.5 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
             )}
-            <div>
+            <div className="min-w-0">
               <h1 className="text-lg font-bold text-gray-900">选择产品</h1>
               {/* 面包屑 */}
               <div className="flex items-center gap-1 mt-0.5">
@@ -1497,7 +1837,37 @@ export function ProductSelector({ onSelect, onCancel }: Props) {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          {/* 全局搜索框（始终可见） */}
+          <div className="flex-1 max-w-md">
+            <form
+              onSubmit={e => { e.preventDefault(); handleSearch(searchInputValue); }}
+              className="relative"
+            >
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                value={searchInputValue}
+                onChange={e => setSearchInputValue(e.target.value)}
+                placeholder="搜索产品名称、规格、颜色、产品编号..."
+                className="w-full pl-10 pr-10 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-gray-50 transition-all"
+              />
+              {searchInputValue && (
+                <button
+                  type="button"
+                  onClick={() => { setSearchInputValue(''); if (step === 'search') { setStep(prevStep); setSearchKeyword(''); } }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </form>
+          </div>
+
+          <div className="flex items-center gap-3 flex-shrink-0">
             {/* 已选列表按钮 */}
             {(selectedItems.length > 0 || selectedCombos.length > 0) && (
               <button
@@ -1525,40 +1895,51 @@ export function ProductSelector({ onSelect, onCancel }: Props) {
           </div>
         </div>
 
-        {/* 步骤进度条 */}
+        {/* 步骤进度条（搜索路径 vs 分类路径） */}
         <div className="max-w-7xl mx-auto px-6 pb-3">
-          <div className="flex items-center gap-2">
-            {[
-              { key: 'category', label: '① 选大类' },
-              { key: 'subcategory', label: '② 选子类' },
-              { key: 'combo-type', label: '③ 组合方案' },
-              { key: 'combo-config', label: '④ 配置组件' },
-              { key: 'list', label: '⑤ 产品列表' },
-              { key: 'detail', label: '⑥ 产品详情' },
-            ].map((s, i) => {
-              const stepOrder = ['category', 'subcategory', 'combo-type', 'combo-config', 'list', 'detail'];
-              const currentIdx = stepOrder.indexOf(step);
-              const thisIdx = stepOrder.indexOf(s.key);
-              const isDone = thisIdx < currentIdx;
-              const isActive = s.key === step;
-              return (
-                <div key={s.key} className="flex items-center gap-2">
-                  {i > 0 && (
-                    <div className={`h-px w-8 ${isDone || isActive ? 'bg-blue-400' : 'bg-gray-200'}`} />
-                  )}
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium transition-colors ${
-                    isActive
-                      ? 'bg-blue-600 text-white'
-                      : isDone
-                      ? 'bg-blue-100 text-blue-600'
-                      : 'text-gray-400'
-                  }`}>
-                    {s.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+          {step === 'search' ? (
+            /* 搜索路径进度条 */
+            <div className="flex items-center gap-2">
+              <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-blue-100 text-blue-600">🔍 搜索模式</span>
+              <div className="h-px w-8 bg-blue-400" />
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-blue-600 text-white">
+                找到 {SAMPLE_PRODUCTS.filter(p => {
+                  const q = searchKeyword.toLowerCase();
+                  return p.name.toLowerCase().includes(q) || (p.spec||'').toLowerCase().includes(q) || (p.color||'').toLowerCase().includes(q) || (p.libraryId||'').toLowerCase().includes(q);
+                }).length} 款产品
+              </span>
+            </div>
+          ) : (
+            /* 分类路径进度条 */
+            <div className="flex items-center gap-2">
+              {[
+                { key: 'category', label: '① 选大类' },
+                { key: 'subcategory', label: '② 选子类' },
+                { key: 'combo-type', label: '③ 组合方案' },
+                { key: 'combo-config', label: '④ 配置组件' },
+                { key: 'list', label: '⑤ 产品列表' },
+                { key: 'detail', label: '⑥ 产品详情' },
+              ].map((s, i) => {
+                const stepOrder = ['category', 'subcategory', 'combo-type', 'combo-config', 'list', 'detail'];
+                const currentIdx = stepOrder.indexOf(step);
+                const thisIdx = stepOrder.indexOf(s.key);
+                const isDone = thisIdx < currentIdx;
+                const isActive = s.key === step;
+                return (
+                  <div key={s.key} className="flex items-center gap-2">
+                    {i > 0 && (
+                      <div className={`h-px w-8 ${isDone || isActive ? 'bg-blue-400' : 'bg-gray-200'}`} />
+                    )}
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium transition-colors ${
+                      isActive ? 'bg-blue-600 text-white' : isDone ? 'bg-blue-100 text-blue-600' : 'text-gray-400'
+                    }`}>
+                      {s.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </header>
 
@@ -1636,7 +2017,7 @@ export function ProductSelector({ onSelect, onCancel }: Props) {
         {/* 步骤一：选择大类 */}
         {step === 'category' && (
           <div>
-            <p className="text-sm text-gray-500 mb-5">选择产品大类，然后进入子品类浏览</p>
+            <p className="text-sm text-gray-500 mb-5">选择产品大类，然后进入子品类浏览；或使用上方搜索框直接搜索产品</p>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               {CATEGORIES.map(cat => {
                 const count = SAMPLE_PRODUCTS.filter(p => p.categoryId === cat.id).length;
@@ -1713,6 +2094,21 @@ export function ProductSelector({ onSelect, onCancel }: Props) {
           </div>
         )}
 
+        {/* 搜索结果 */}
+        {step === 'search' && (
+          <SearchResultView
+            keyword={searchKeyword}
+            selectedItems={selectedItems}
+            onViewDetail={(p, cat, sub) => {
+              setPrevStep('search');
+              handleViewDetail(p, cat, sub);
+            }}
+            onQuickAdd={(p, cat, sub) => handleQuickAdd(p, cat, sub)}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+          />
+        )}
+
         {/* 步骤三：产品列表+筛选 */}
         {step === 'list' && selectedCategory && selectedSubCategory && (
           <ProductListView
@@ -1751,14 +2147,18 @@ export function ProductSelector({ onSelect, onCancel }: Props) {
       </main>
 
       {/* 步骤四：产品详情弹窗 */}
-      {step === 'detail' && detailProduct && selectedCategory && selectedSubCategory && (
+      {step === 'detail' && detailProduct && (detailCat || selectedCategory) && (detailSub || selectedSubCategory) && (
         <ProductDetailModal
           product={detailProduct}
-          category={selectedCategory}
-          subCategory={selectedSubCategory}
+          category={(detailCat || selectedCategory)!}
+          subCategory={(detailSub || selectedSubCategory)!}
           selectedItems={selectedItems}
           onAddToList={handleAddFromDetail}
-          onClose={() => { setStep('list'); setDetailProduct(null); }}
+          onClose={() => {
+            if (prevStep === 'search') { setStep('search'); }
+            else { setStep('list'); }
+            setDetailProduct(null); setDetailCat(null); setDetailSub(null);
+          }}
         />
       )}
     </div>
