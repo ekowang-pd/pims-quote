@@ -10,10 +10,9 @@ interface Props {
   onEditQuote: (quote: Quote) => void;
   onViewQuote: (quote: Quote) => void;
   onDeleteQuote: (quoteId: string) => void;
-  onOpenCatalog: () => void;
 }
 
-export function QuoteDashboard({ quotes, onNewQuote, onEditQuote, onViewQuote, onDeleteQuote, onOpenCatalog }: Props) {
+export function QuoteDashboard({ quotes, onNewQuote, onEditQuote, onViewQuote, onDeleteQuote }: Props) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
   const filteredQuotes = statusFilter === 'all' 
@@ -30,37 +29,9 @@ export function QuoteDashboard({ quotes, onNewQuote, onEditQuote, onViewQuote, o
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 顶部导航 */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-blue-700 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-gray-900">我的报价单</h1>
-              <p className="text-xs text-gray-500">My Quotes</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button onClick={onOpenCatalog} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 border border-blue-300 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-              产品库
-            </button>
-            <button onClick={onNewQuote} className="btn-primary">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              新建报价单
-            </button>
-          </div>
-        </div>
-        {/* 状态筛选标签 */}
-        <div className="max-w-7xl mx-auto px-6 pb-3 flex items-center gap-1">
+      {/* 状态筛选标签 */}
+      <div className="bg-white border-b border-gray-100 px-6 py-3">
+        <div className="max-w-7xl mx-auto flex items-center gap-1">
           {[
             { key: 'all' as StatusFilter, label: '全部', count: quotes.length, color: 'bg-gray-100 text-gray-700 hover:bg-gray-200' },
             { key: 'draft' as StatusFilter, label: '草稿', count: draftCount, color: 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100' },
@@ -69,7 +40,7 @@ export function QuoteDashboard({ quotes, onNewQuote, onEditQuote, onViewQuote, o
             <button
               key={tab.key}
               onClick={() => setStatusFilter(tab.key)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer ${
                 statusFilter === tab.key 
                   ? 'bg-blue-700 text-white' 
                   : tab.color
@@ -79,7 +50,7 @@ export function QuoteDashboard({ quotes, onNewQuote, onEditQuote, onViewQuote, o
             </button>
           ))}
         </div>
-      </header>
+      </div>
 
       <main className="max-w-7xl mx-auto px-6 py-8">
         {/* 统计卡片 */}

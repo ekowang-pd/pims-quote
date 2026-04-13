@@ -8,6 +8,7 @@ import { ProductCatalog } from './components/ProductCatalog';
 import { SAMPLE_PRODUCTS, CATEGORIES } from './data/categories';
 
 export type AppView = 'dashboard' | 'editor' | 'detail' | 'product-select' | 'catalog';
+export type MainTab = 'quotes' | 'products';
 
 // ===== 批量添加弹窗组件 =====
 function BatchAddModal({
@@ -205,6 +206,7 @@ p001, p002, p003
 }
 
 function App() {
+  const [mainTab, setMainTab] = useState<MainTab>('quotes');
   const [view, setView] = useState<AppView>('dashboard');
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [currentQuote, setCurrentQuote] = useState<Quote | null>(null);
@@ -311,7 +313,66 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* ===== 全局顶部 Tab 导航（仅在非全屏子页时显示）===== */}
+      {(view === 'dashboard' || view === 'catalog') && (
+        <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
+          <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+            {/* Logo */}
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-700 rounded-lg flex items-center justify-center">
+                <svg className="w-4.5 h-4.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+              <span className="text-base font-bold text-gray-900">PIMS</span>
+            </div>
+
+            {/* 2个 Tab */}
+            <nav className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
+              <button
+                onClick={() => { setMainTab('quotes'); setView('dashboard'); }}
+                className={`flex items-center gap-2 px-5 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer ${
+                  mainTab === 'quotes'
+                    ? 'bg-white text-blue-700 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                我的报价单
+              </button>
+              <button
+                onClick={() => { setMainTab('products'); setView('catalog'); }}
+                className={`flex items-center gap-2 px-5 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer ${
+                  mainTab === 'products'
+                    ? 'bg-white text-blue-700 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+                产品
+              </button>
+            </nav>
+
+            {/* 右侧新建报价单（仅在报价单 Tab 显示） */}
+            {mainTab === 'quotes' && (
+              <button onClick={handleNewQuote} className="btn-primary">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                新建报价单
+              </button>
+            )}
+            {mainTab === 'products' && <div className="w-28" />}
+          </div>
+        </header>
+      )}
+
+      {/* ===== 内容区 ===== */}
       {view === 'dashboard' && (
         <QuoteDashboard
           quotes={quotes}
@@ -319,7 +380,6 @@ function App() {
           onEditQuote={handleEditQuote}
           onViewQuote={handleViewQuote}
           onDeleteQuote={handleDeleteQuote}
-          onOpenCatalog={() => setView('catalog')}
         />
       )}
       {view === 'editor' && currentQuote && (
@@ -348,7 +408,6 @@ function App() {
       {view === 'catalog' && (
         <ProductCatalog
           onAddToCart={handleCartGenerateQuote}
-          onClose={() => setView('dashboard')}
         />
       )}
 

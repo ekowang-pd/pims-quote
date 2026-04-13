@@ -1,22 +1,17 @@
 import { useState, useMemo } from 'react';
 import type {
-  QuoteItem, Category, SubCategory, StandardProduct, Region,
+  QuoteItem, Category, SubCategory, StandardProduct,
   ComboProduct, ComboComponent, ComboSelectedProduct, ComboQuoteItem,
 } from '../types';
 import {
-  CATEGORIES, SAMPLE_PRODUCTS, SUPPLIERS, REGIONS,
-  COMBO_PRODUCTS, COMBO_CATEGORY_LIST, COMBO_PRODUCTS_CATALOG,
+  CATEGORIES, SAMPLE_PRODUCTS, SUPPLIERS,
+  COMBO_PRODUCTS, COMBO_PRODUCTS_CATALOG,
 } from '../data/categories';
 
 interface Props {
   onSelect: (items: QuoteItem[], combos?: ComboQuoteItem[]) => void;
   onCancel: () => void;
 }
-
-// 交互步骤：选大类 → 选子类 → 产品列表+筛选 → 产品详情
-// 新增：combo-type（选组合品类型）→ combo-config（配置组合品组件）
-// 新增：search（全局搜索结果）
-type Step = 'category' | 'subcategory' | 'combo-type' | 'combo-config' | 'list' | 'detail' | 'search';
 
 const CATEGORY_ICONS: Record<string, JSX.Element> = {
   ceramic: (
@@ -270,18 +265,14 @@ function ProductListView({
   onQuickAdd,
   viewMode,
   onViewModeChange,
-  activeRegionId,
-  onRegionChange,
 }: {
   category: Category;
   subCategory: SubCategory;
   selectedItems: QuoteItem[];
   onViewDetail: (p: StandardProduct) => void;
-  onQuickAdd: (p: StandardProduct, regionId?: string) => void;
+  onQuickAdd: (p: StandardProduct) => void;
   viewMode: ViewMode;
   onViewModeChange: (m: ViewMode) => void;
-  activeRegionId: string;
-  onRegionChange: (id: string) => void;
 }) {
   // 动态筛选状态：key → 选中值
   const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
@@ -392,52 +383,6 @@ function ProductListView({
             </button>
           </div>
         </div>
-      </div>
-
-      {/* ===== 区域选择（按区域分隔） ===== */}
-      <div className="card p-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-semibold text-gray-500 flex items-center gap-1.5 mr-1">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            添加到区域：
-          </span>
-          {REGIONS.map(r => (
-            <button
-              key={r.id}
-              onClick={() => onRegionChange(activeRegionId === r.id ? '' : r.id)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md border transition-colors cursor-pointer ${
-                activeRegionId === r.id
-                  ? 'text-white border-transparent'
-                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
-              }`}
-              style={activeRegionId === r.id ? { backgroundColor: r.color, borderColor: r.color } : {}}
-            >
-              <span
-                className="w-2 h-2 rounded-full flex-shrink-0"
-                style={{ backgroundColor: activeRegionId === r.id ? 'rgba(255,255,255,0.7)' : (r.color || '#9ca3af') }}
-              />
-              {r.name}
-            </button>
-          ))}
-          {activeRegionId && (
-            <button onClick={() => onRegionChange('')} className="text-xs text-gray-400 hover:text-gray-600 cursor-pointer">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
-        </div>
-        {activeRegionId && (
-          <p className="text-xs text-gray-400 mt-1.5 ml-1">
-            当前"快速添加"将归入：
-            <span className="font-semibold ml-1" style={{ color: REGIONS.find(r => r.id === activeRegionId)?.color }}>
-              {REGIONS.find(r => r.id === activeRegionId)?.name}
-            </span>
-          </p>
-        )}
       </div>
 
       {/* ===== 供应商搜索选择区 ===== */}
@@ -711,7 +656,7 @@ function ProductListView({
                       </td>
                       <td className="px-3 py-2.5" onClick={e => e.stopPropagation()}>
                         <button
-                          onClick={() => { if (!alreadyAdded) onQuickAdd(product, activeRegionId || undefined); }}
+                          onClick={() => { if (!alreadyAdded) onQuickAdd(product); }}
                           disabled={alreadyAdded}
                           className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
                             alreadyAdded
@@ -730,69 +675,10 @@ function ProductListView({
           </div>
         </div>
       ) : (
-        /* ===== 卡片视图（含区域分隔） ===== */
-        (() => {
-          // 按区域分组
-          const regionGroups = REGIONS.map(r => ({
-            region: r,
-            products: filtered.filter(p => {
-              const item = selectedItems.find(i => i.productId === p.id);
-              return item?.regionId === r.id;
-            }),
-          })).filter(g => g.products.length > 0);
-
-          const unregionedProducts = filtered.filter(p => {
-            const item = selectedItems.find(i => i.productId === p.id);
-            return !item || !item.regionId;
-          });
-
-          // 所有未归区域的产品放在一起，已归区域的按区域分隔展示
-          return (
-            <div className="space-y-6">
-              {/* 未归区域的产品 */}
-              {unregionedProducts.length > 0 && (
-                <div>
-                  {regionGroups.length > 0 && (
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-xs font-semibold text-gray-500 flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-gray-300" />
-                        未分区域
-                      </span>
-                      <div className="flex-1 h-px bg-gray-100" />
-                      <span className="text-xs text-gray-400">{unregionedProducts.length} 款</span>
-                    </div>
-                  )}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {unregionedProducts.map(product => renderProductCard(product))}
-                  </div>
-                </div>
-              )}
-
-              {/* 按区域分组展示 */}
-              {regionGroups.map(({ region, products }) => (
-                <div key={region.id}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <span
-                      className="text-xs font-semibold flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white"
-                      style={{ backgroundColor: region.color || '#9ca3af' }}
-                    >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      {region.name}
-                    </span>
-                    <div className="flex-1 h-px" style={{ backgroundColor: region.color ? region.color + '30' : '#f3f4f6' }} />
-                    <span className="text-xs text-gray-400">{products.length} 款</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {products.map(product => renderProductCard(product))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          );
-        })()
+        /* ===== 卡片视图 ===== */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map(product => renderProductCard(product))}
+        </div>
       )}
     </div>
   );
@@ -802,8 +688,6 @@ function ProductListView({
     const alreadyAdded = selectedItems.some(i => i.productId === product.id);
     const hasImgError = imgErrors[product.id];
     const supplier = product.supplierId ? SUPPLIERS.find(s => s.id === product.supplierId) : null;
-    const addedItem = selectedItems.find(i => i.productId === product.id);
-    const addedRegion = addedItem?.regionId ? REGIONS.find(r => r.id === addedItem.regionId) : null;
 
     return (
       <div
@@ -830,23 +714,15 @@ function ProductListView({
             </div>
           )}
 
-          {/* 已添加标记 + 区域标签 */}
+          {/* 已添加标记 */}
           {alreadyAdded && (
-            <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
+            <div className="absolute top-2 right-2">
               <div className="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                 </svg>
                 已添加
               </div>
-              {addedRegion && (
-                <div
-                  className="text-white text-[10px] px-2 py-0.5 rounded-full"
-                  style={{ backgroundColor: addedRegion.color }}
-                >
-                  {addedRegion.name}
-                </div>
-              )}
             </div>
           )}
 
@@ -911,7 +787,7 @@ function ProductListView({
             <button
               onClick={e => {
                 e.stopPropagation();
-                if (!alreadyAdded) onQuickAdd(product, activeRegionId || undefined);
+                if (!alreadyAdded) onQuickAdd(product);
               }}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
                 alreadyAdded
@@ -1617,79 +1493,82 @@ function ComboTypeView({
 }
 
 export function ProductSelector({ onSelect, onCancel }: Props) {
-  const [step, setStep] = useState<Step>('category');
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [selectedSubCategory, setSelectedSubCategory] = useState<SubCategory | null>(null);
+  // 左侧导航状态
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>(() => {
+    // 默认展开第一个分类
+    return CATEGORIES.length > 0 ? { [CATEGORIES[0].id]: true } : {};
+  });
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
+    CATEGORIES.length > 0 ? CATEGORIES[0] : null
+  );
+  const [selectedSubCategory, setSelectedSubCategory] = useState<SubCategory | null>(
+    CATEGORIES.length > 0 && CATEGORIES[0].subCategories.length > 0
+      ? CATEGORIES[0].subCategories[0]
+      : null
+  );
+
+  // 右侧内容模式
+  type ContentMode = 'list' | 'detail' | 'combo-type' | 'combo-config' | 'search';
+  const [contentMode, setContentMode] = useState<ContentMode>('list');
+
   const [detailProduct, setDetailProduct] = useState<StandardProduct | null>(null);
-  // 搜索路径：详情来自哪个大类/子类（搜索路径下需要记录）
   const [detailCat, setDetailCat] = useState<Category | null>(null);
   const [detailSub, setDetailSub] = useState<SubCategory | null>(null);
   const [selectedItems, setSelectedItems] = useState<QuoteItem[]>([]);
-  // 组合品已选项
   const [selectedCombos, setSelectedCombos] = useState<ComboQuoteItem[]>([]);
   const [activeComboProduct, setActiveComboProduct] = useState<ComboProduct | null>(null);
   const [showSelectedPanel, setShowSelectedPanel] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [activeRegionId, setActiveRegionId] = useState<string>('');
-  // 全局搜索
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchInputValue, setSearchInputValue] = useState('');
-  // 记录搜索前的来源步骤，供返回使用
-  const [prevStep, setPrevStep] = useState<Step>('category');
+
+  // 切换大类展开/折叠
+  const toggleCategory = (catId: string) => {
+    setExpandedCategories(prev => ({ ...prev, [catId]: !prev[catId] }));
+  };
+
+  // 选择大类（展开，不直接切换产品列表）
+  const handleSelectCategory = (cat: Category) => {
+    setExpandedCategories(prev => ({ ...prev, [cat.id]: true }));
+    setSelectedCategory(cat);
+    // 自动选中第一个非 combo 子类
+    const firstSub = cat.subCategories.find(s => s.id !== 'custom-combo');
+    if (firstSub) {
+      setSelectedSubCategory(firstSub);
+      setContentMode('list');
+    }
+  };
+
+  // 选择子类
+  const handleSelectSubCategory = (cat: Category, sub: SubCategory) => {
+    setSelectedCategory(cat);
+    setSelectedSubCategory(sub);
+    if (sub.id === 'custom-combo') {
+      setContentMode('combo-type');
+    } else {
+      setContentMode('list');
+    }
+  };
 
   // 执行搜索
   const handleSearch = (kw: string) => {
     const trimmed = kw.trim();
     if (!trimmed) return;
     setSearchKeyword(trimmed);
-    setPrevStep(step);
-    setStep('search');
-  };
-
-  const handleSelectCategory = (cat: Category) => {
-    setSelectedCategory(cat);
-    setSelectedSubCategory(null);
-    setStep('subcategory');
-  };
-
-  const handleSelectSubCategory = (sub: SubCategory) => {
-    setSelectedSubCategory(sub);
-    // 如果选的是"定制品"，进入组合品类型选择
-    if (sub.id === 'custom-combo') {
-      setStep('combo-type');
-    } else {
-      setStep('list');
-    }
+    setContentMode('search');
   };
 
   const handleViewDetail = (product: StandardProduct, cat?: Category, sub?: SubCategory) => {
     setDetailProduct(product);
-    if (cat) setDetailCat(cat);
-    if (sub) setDetailSub(sub);
-    setStep('detail');
+    setDetailCat(cat || selectedCategory);
+    setDetailSub(sub || selectedSubCategory);
+    setContentMode('detail');
   };
 
-  const handleQuickAdd = (product: StandardProduct, catOrRegionId?: Category | string, subOrUndefined?: SubCategory) => {
-    // 兼容两种调用：
-    // 分类路径: handleQuickAdd(product, regionId?)
-    // 搜索路径: handleQuickAdd(product, cat, sub)
-    let cat: Category | null;
-    let sub: SubCategory | null;
-    let regionId: string | undefined;
-
-    if (catOrRegionId && typeof catOrRegionId === 'object') {
-      // 搜索路径
-      cat = catOrRegionId;
-      sub = subOrUndefined || null;
-      regionId = undefined;
-    } else {
-      // 分类路径
-      cat = selectedCategory;
-      sub = selectedSubCategory;
-      regionId = catOrRegionId as string | undefined;
-    }
-
-    if (!cat || !sub) return;
+  const handleQuickAdd = (product: StandardProduct, cat?: Category, sub?: SubCategory) => {
+    const useCat = cat || selectedCategory;
+    const useSub = sub || selectedSubCategory;
+    if (!useCat || !useSub) return;
     if (selectedItems.some(i => i.productId === product.id)) return;
     const item: QuoteItem = {
       id: `std_${Date.now()}_${Math.random()}`,
@@ -1698,8 +1577,8 @@ export function ProductSelector({ onSelect, onCancel }: Props) {
       libraryId: product.libraryId,
       supplierProductId: product.supplierProductId,
       productName: product.name,
-      categoryName: cat.name,
-      subCategoryName: sub.name,
+      categoryName: useCat.name,
+      subCategoryName: useSub.name,
       spec: product.spec,
       color: product.color,
       size: product.size,
@@ -1713,7 +1592,6 @@ export function ProductSelector({ onSelect, onCancel }: Props) {
       basePrice: product.basePrice,
       unitPrice: product.basePrice,
       margin: 0,
-      regionId,
       imageUrl: product.imageUrl,
     };
     setSelectedItems(prev => [...prev, item]);
@@ -1724,11 +1602,8 @@ export function ProductSelector({ onSelect, onCancel }: Props) {
       if (prev.some(i => i.productId === item.productId)) return prev;
       return [...prev, item];
     });
-    // 返回来源步骤（搜索路径返回搜索，分类路径返回列表）
-    if (prevStep === 'search') {
-      setStep('search');
-    } else {
-      setStep('list');
+    if (contentMode === 'detail') {
+      setContentMode(detailCat ? 'list' : 'list');
     }
     setDetailProduct(null);
     setDetailCat(null);
@@ -1745,7 +1620,7 @@ export function ProductSelector({ onSelect, onCancel }: Props) {
 
   const handleComboConfirm = (item: ComboQuoteItem) => {
     setSelectedCombos(prev => [...prev, item]);
-    setStep('subcategory');
+    setContentMode('list');
   };
 
   const handleConfirm = () => {
@@ -1756,88 +1631,30 @@ export function ProductSelector({ onSelect, onCancel }: Props) {
     }
   };
 
-  // 面包屑
-  const breadcrumbs = step === 'search' ? [
-    { label: '产品大类', active: false, onClick: () => { setStep('category'); setSearchKeyword(''); setSearchInputValue(''); } },
-    { label: `搜索: "${searchKeyword}"`, active: true, onClick: () => {} },
-  ] : step === 'detail' && prevStep === 'search' ? [
-    { label: '产品大类', active: false, onClick: () => { setStep('category'); setSearchKeyword(''); setSearchInputValue(''); } },
-    { label: `搜索: "${searchKeyword}"`, active: false, onClick: () => setStep('search') },
-    { label: detailProduct?.name || '产品详情', active: true, onClick: () => {} },
-  ] : [
-    { label: '产品大类', active: step === 'category', onClick: () => setStep('category') },
-    ...(selectedCategory ? [{
-      label: selectedCategory.name,
-      active: step === 'subcategory' || step === 'combo-type',
-      onClick: () => { setStep('subcategory'); setSelectedSubCategory(null); }
-    }] : []),
-    ...(selectedSubCategory ? [{
-      label: selectedSubCategory.name,
-      active: step === 'list' || step === 'combo-type',
-      onClick: () => {
-        if (selectedSubCategory.id === 'custom-combo') setStep('combo-type');
-        else setStep('list');
-      }
-    }] : []),
-    ...(step === 'detail' && detailProduct ? [{ label: detailProduct.name, active: true, onClick: () => {} }] : []),
-  ];
+  // 产品计数
+  const getSubCount = (subId: string) =>
+    SAMPLE_PRODUCTS.filter(p => p.subCategoryId === subId).length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* 顶部导航 */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            {step !== 'category' ? (
-              <button
-                onClick={() => {
-                  if (step === 'detail') {
-                    if (prevStep === 'search') { setStep('search'); }
-                    else { setStep('list'); }
-                    setDetailProduct(null); setDetailCat(null); setDetailSub(null);
-                  }
-                  else if (step === 'search') { setStep(prevStep === 'search' ? 'category' : prevStep); setSearchKeyword(''); setSearchInputValue(''); }
-                  else if (step === 'list') {
-                    if (selectedSubCategory?.id === 'custom-combo') { setStep('combo-type'); }
-                    else { setStep('subcategory'); setSelectedSubCategory(null); }
-                  }
-                  else if (step === 'combo-config') { setStep('combo-type'); }
-                  else if (step === 'combo-type') { setStep('subcategory'); setSelectedSubCategory(null); }
-                  else if (step === 'subcategory') { setStep('category'); setSelectedCategory(null); }
-                }}
-                className="text-gray-500 hover:text-gray-700 cursor-pointer p-1.5 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-            ) : (
-              <button onClick={onCancel} className="text-gray-500 hover:text-gray-700 cursor-pointer p-1.5 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-            )}
-            <div className="min-w-0">
-              <h1 className="text-lg font-bold text-gray-900">选择产品</h1>
-              {/* 面包屑 */}
-              <div className="flex items-center gap-1 mt-0.5">
-                {breadcrumbs.map((bc, i) => (
-                  <span key={i} className="flex items-center gap-1">
-                    {i > 0 && <svg className="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>}
-                    <button
-                      onClick={bc.onClick}
-                      className={`text-xs transition-colors cursor-pointer ${bc.active ? 'text-blue-600 font-medium' : 'text-gray-400 hover:text-gray-600'}`}
-                    >
-                      {bc.label}
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* ===== 顶部导航 ===== */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-20">
+        <div className="max-w-full px-6 py-3 flex items-center gap-4">
+          {/* 返回按钮 */}
+          <button
+            onClick={onCancel}
+            className="text-gray-500 hover:text-gray-700 cursor-pointer p-1.5 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          <div className="flex-shrink-0">
+            <h1 className="text-base font-bold text-gray-900">选择产品</h1>
           </div>
 
-          {/* 全局搜索框（始终可见） */}
+          {/* 全局搜索框 */}
           <div className="flex-1 max-w-md">
             <form
               onSubmit={e => { e.preventDefault(); handleSearch(searchInputValue); }}
@@ -1856,7 +1673,13 @@ export function ProductSelector({ onSelect, onCancel }: Props) {
               {searchInputValue && (
                 <button
                   type="button"
-                  onClick={() => { setSearchInputValue(''); if (step === 'search') { setStep(prevStep); setSearchKeyword(''); } }}
+                  onClick={() => {
+                    setSearchInputValue('');
+                    if (contentMode === 'search') {
+                      setSearchKeyword('');
+                      setContentMode('list');
+                    }
+                  }}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1867,7 +1690,7 @@ export function ProductSelector({ onSelect, onCancel }: Props) {
             </form>
           </div>
 
-          <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
             {/* 已选列表按钮 */}
             {(selectedItems.length > 0 || selectedCombos.length > 0) && (
               <button
@@ -1894,273 +1717,214 @@ export function ProductSelector({ onSelect, onCancel }: Props) {
             </button>
           </div>
         </div>
-
-        {/* 步骤进度条（搜索路径 vs 分类路径） */}
-        <div className="max-w-7xl mx-auto px-6 pb-3">
-          {step === 'search' ? (
-            /* 搜索路径进度条 */
-            <div className="flex items-center gap-2">
-              <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-blue-100 text-blue-600">🔍 搜索模式</span>
-              <div className="h-px w-8 bg-blue-400" />
-              <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-blue-600 text-white">
-                找到 {SAMPLE_PRODUCTS.filter(p => {
-                  const q = searchKeyword.toLowerCase();
-                  return p.name.toLowerCase().includes(q) || (p.spec||'').toLowerCase().includes(q) || (p.color||'').toLowerCase().includes(q) || (p.libraryId||'').toLowerCase().includes(q);
-                }).length} 款产品
-              </span>
-            </div>
-          ) : (
-            /* 分类路径进度条 */
-            <div className="flex items-center gap-2">
-              {[
-                { key: 'category', label: '① 选大类' },
-                { key: 'subcategory', label: '② 选子类' },
-                { key: 'combo-type', label: '③ 组合方案' },
-                { key: 'combo-config', label: '④ 配置组件' },
-                { key: 'list', label: '⑤ 产品列表' },
-                { key: 'detail', label: '⑥ 产品详情' },
-              ].map((s, i) => {
-                const stepOrder = ['category', 'subcategory', 'combo-type', 'combo-config', 'list', 'detail'];
-                const currentIdx = stepOrder.indexOf(step);
-                const thisIdx = stepOrder.indexOf(s.key);
-                const isDone = thisIdx < currentIdx;
-                const isActive = s.key === step;
-                return (
-                  <div key={s.key} className="flex items-center gap-2">
-                    {i > 0 && (
-                      <div className={`h-px w-8 ${isDone || isActive ? 'bg-blue-400' : 'bg-gray-200'}`} />
-                    )}
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium transition-colors ${
-                      isActive ? 'bg-blue-600 text-white' : isDone ? 'bg-blue-100 text-blue-600' : 'text-gray-400'
-                    }`}>
-                      {s.label}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-6">
-        {/* 已选产品面板（可折叠） */}
-        {(selectedItems.length > 0 || selectedCombos.length > 0) && showSelectedPanel && (
-          <div className="mb-5 card overflow-hidden border-green-200">
-            <div className="px-5 py-3 bg-green-50 border-b border-green-100 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <h3 className="text-sm font-semibold text-green-800">
-                  已选产品 ({selectedItems.length})
-                  {selectedCombos.length > 0 && <span className="text-orange-600"> + 组合品 {selectedCombos.length}</span>}
-                </h3>
-              </div>
-              <button onClick={() => setShowSelectedPanel(false)} className="text-green-600 hover:text-green-800 cursor-pointer">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                </svg>
-              </button>
-            </div>
-            <div className="divide-y divide-gray-50 max-h-60 overflow-y-auto">
-              {/* 组合品 */}
-              {selectedCombos.map(combo => (
-                <div key={combo.id} className="px-5 py-3 flex items-center justify-between bg-orange-50/50">
-                  <div className="flex items-center gap-3">
-                    {combo.imageUrl && (
-                      <img src={combo.imageUrl} alt={combo.comboName} className="w-10 h-10 rounded-lg object-cover bg-gray-100 flex-shrink-0" />
-                    )}
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-semibold text-gray-900">{combo.comboName}</p>
-                        <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-medium">组合</span>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {combo.components.length} 个组件
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm font-bold text-blue-700">${combo.totalPrice.toFixed(2)}</span>
-                    <button onClick={() => removeCombo(combo.id)} className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              ))}
-              {/* 标品 */}
-              {selectedItems.map(item => (
-                <div key={item.id} className="px-5 py-2.5 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{item.productName}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{item.color} · {item.size} · {item.quantity} {item.unit}</p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm font-semibold text-gray-900">
-                      ${(item.quantity * item.unitPrice).toFixed(2)}
-                    </span>
-                    <button onClick={() => removeItem(item.id)} className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 步骤一：选择大类 */}
-        {step === 'category' && (
-          <div>
-            <p className="text-sm text-gray-500 mb-5">选择产品大类，然后进入子品类浏览；或使用上方搜索框直接搜索产品</p>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              {CATEGORIES.map(cat => {
-                const count = SAMPLE_PRODUCTS.filter(p => p.categoryId === cat.id).length;
-                return (
+      {/* ===== 主体：左侧导航 + 右侧内容 ===== */}
+      <div className="flex flex-1 overflow-hidden min-h-0" style={{ height: 'calc(100vh - 57px)' }}>
+        {/* 左侧分类树导航 */}
+        <aside className="w-52 flex-shrink-0 bg-white border-r border-gray-200 overflow-y-auto">
+          <div className="py-2">
+            {CATEGORIES.map(cat => {
+              const isExpanded = expandedCategories[cat.id];
+              const catCount = SAMPLE_PRODUCTS.filter(p => p.categoryId === cat.id).length;
+              return (
+                <div key={cat.id}>
+                  {/* 大类行 */}
                   <button
-                    key={cat.id}
-                    onClick={() => handleSelectCategory(cat)}
-                    className="card p-5 flex flex-col items-center gap-3 hover:shadow-md hover:border-blue-200 hover:-translate-y-0.5 transition-all cursor-pointer group border border-transparent"
+                    onClick={() => toggleCategory(cat.id)}
+                    className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-left transition-colors cursor-pointer hover:bg-gray-50 ${
+                      selectedCategory?.id === cat.id ? 'text-blue-700' : 'text-gray-700'
+                    }`}
                   >
-                    <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-100 transition-colors">
+                    <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition-colors ${
+                      selectedCategory?.id === cat.id ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'
+                    }`}>
                       {CATEGORY_ICONS[cat.id] || (
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                         </svg>
                       )}
                     </div>
-                    <div className="text-center">
-                      <p className="text-sm font-semibold text-gray-800">{cat.name}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{count} 款产品</p>
-                    </div>
+                    <span className="flex-1 text-sm font-semibold truncate">{cat.name}</span>
+                    <span className="text-[10px] text-gray-400 flex-shrink-0">{catCount}</span>
+                    <svg
+                      className={`w-3.5 h-3.5 text-gray-400 flex-shrink-0 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                      fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
                   </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
 
-        {/* 步骤二：选择子类 */}
-        {step === 'subcategory' && selectedCategory && (
-          <div>
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-                {CATEGORY_ICONS[selectedCategory.id]}
-              </div>
-              <div>
-                <h2 className="text-base font-bold text-gray-900">{selectedCategory.name}</h2>
-                <p className="text-xs text-gray-500 mt-0.5">选择具体子品类查看产品列表</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {selectedCategory.subCategories.map(sub => {
-                const count = SAMPLE_PRODUCTS.filter(p => p.subCategoryId === sub.id).length;
-                return (
-                  <button
-                    key={sub.id}
-                    onClick={() => handleSelectSubCategory(sub)}
-                    className="card p-5 flex flex-col gap-2 text-left hover:shadow-md hover:border-blue-200 hover:-translate-y-0.5 transition-all cursor-pointer border border-transparent group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold text-gray-800">{sub.name}</span>
-                      <svg className="w-4 h-4 text-gray-300 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
+                  {/* 子类列表 */}
+                  {isExpanded && (
+                    <div className="bg-gray-50">
+                      {cat.subCategories.map(sub => {
+                        const isActive = selectedSubCategory?.id === sub.id && selectedCategory?.id === cat.id;
+                        const subCount = getSubCount(sub.id);
+                        const isCombo = sub.id === 'custom-combo';
+                        return (
+                          <button
+                            key={sub.id}
+                            onClick={() => handleSelectSubCategory(cat, sub)}
+                            className={`w-full flex items-center gap-2 pl-10 pr-4 py-2 text-left transition-colors cursor-pointer ${
+                              isActive
+                                ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600'
+                                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
+                            }`}
+                          >
+                            <span className="flex-1 text-xs truncate">
+                              {sub.name}
+                              {isCombo && <span className="ml-1 text-[10px] bg-orange-100 text-orange-600 px-1 py-0.5 rounded">定制</span>}
+                            </span>
+                            <span className={`text-[10px] flex-shrink-0 ${isActive ? 'text-blue-500' : 'text-gray-400'}`}>{subCount || ''}</span>
+                          </button>
+                        );
+                      })}
                     </div>
-                    <p className="text-xs text-gray-400">计量：{sub.unit}</p>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      {sub.colors.slice(0, 5).map(c => (
-                        <span
-                          key={c}
-                          className="w-4 h-4 rounded-full border border-gray-200"
-                          style={{ backgroundColor: COLOR_DOTS[c] || '#e5e7eb' }}
-                          title={c}
-                        />
-                      ))}
-                      {sub.colors.length > 5 && <span className="text-xs text-gray-400">+{sub.colors.length - 5}</span>}
-                    </div>
-                    <p className="text-xs text-blue-600 font-medium mt-0.5">
-                      {count > 0 ? `${count} 款可选` : '暂无产品'}
-                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </aside>
+
+        {/* 右侧内容区 */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-5 space-y-4">
+            {/* 已选产品面板 */}
+            {(selectedItems.length > 0 || selectedCombos.length > 0) && showSelectedPanel && (
+              <div className="card overflow-hidden border-green-200">
+                <div className="px-5 py-3 bg-green-50 border-b border-green-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h3 className="text-sm font-semibold text-green-800">
+                      已选产品 ({selectedItems.length})
+                      {selectedCombos.length > 0 && <span className="text-orange-600"> + 组合品 {selectedCombos.length}</span>}
+                    </h3>
+                  </div>
+                  <button onClick={() => setShowSelectedPanel(false)} className="text-green-600 hover:text-green-800 cursor-pointer">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                    </svg>
                   </button>
-                );
-              })}
-            </div>
+                </div>
+                <div className="divide-y divide-gray-50 max-h-60 overflow-y-auto">
+                  {selectedCombos.map(combo => (
+                    <div key={combo.id} className="px-5 py-3 flex items-center justify-between bg-orange-50/50">
+                      <div className="flex items-center gap-3">
+                        {combo.imageUrl && (
+                          <img src={combo.imageUrl} alt={combo.comboName} className="w-10 h-10 rounded-lg object-cover bg-gray-100 flex-shrink-0" />
+                        )}
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-semibold text-gray-900">{combo.comboName}</p>
+                            <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-medium">组合</span>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-0.5">{combo.components.length} 个组件</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-sm font-bold text-blue-700">${combo.totalPrice.toFixed(2)}</span>
+                        <button onClick={() => removeCombo(combo.id)} className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {selectedItems.map(item => (
+                    <div key={item.id} className="px-5 py-2.5 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{item.productName}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{item.color} · {item.size} · {item.quantity} {item.unit}</p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-sm font-semibold text-gray-900">${(item.quantity * item.unitPrice).toFixed(2)}</span>
+                        <button onClick={() => removeItem(item.id)} className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 产品列表视图 */}
+            {contentMode === 'list' && selectedCategory && selectedSubCategory && (
+              <ProductListView
+                category={selectedCategory}
+                subCategory={selectedSubCategory}
+                selectedItems={selectedItems}
+                onViewDetail={(p) => handleViewDetail(p)}
+                onQuickAdd={(p) => handleQuickAdd(p)}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+              />
+            )}
+
+            {/* 搜索结果 */}
+            {contentMode === 'search' && (
+              <SearchResultView
+                keyword={searchKeyword}
+                selectedItems={selectedItems}
+                onViewDetail={(p, cat, sub) => handleViewDetail(p, cat, sub)}
+                onQuickAdd={(p, cat, sub) => handleQuickAdd(p, cat, sub)}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+              />
+            )}
+
+            {/* 产品详情 */}
+            {contentMode === 'detail' && detailProduct && detailCat && detailSub && (
+              <ProductDetailModal
+                product={detailProduct}
+                category={detailCat}
+                subCategory={detailSub}
+                selectedItems={selectedItems}
+                onAddToList={handleAddFromDetail}
+                onClose={() => setContentMode('list')}
+              />
+            )}
+
+            {/* 组合品类型选择 */}
+            {contentMode === 'combo-type' && selectedCategory && (
+              <ComboTypeView
+                category={selectedCategory}
+                onSelectCombo={(combo) => {
+                  setActiveComboProduct(combo);
+                  setContentMode('combo-config');
+                }}
+                onBack={() => setContentMode('list')}
+              />
+            )}
+
+            {/* 组合品配置 */}
+            {contentMode === 'combo-config' && activeComboProduct && (
+              <ComboConfigView
+                comboProduct={activeComboProduct}
+                onConfirm={handleComboConfirm}
+                onBack={() => setContentMode('combo-type')}
+              />
+            )}
+
+            {/* 空状态提示（没选子类时） */}
+            {contentMode === 'list' && (!selectedCategory || !selectedSubCategory) && (
+              <div className="flex flex-col items-center gap-3 py-20 text-gray-400">
+                <svg className="w-12 h-12 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+                <p className="text-sm">请从左侧选择品类</p>
+              </div>
+            )}
           </div>
-        )}
-
-        {/* 搜索结果 */}
-        {step === 'search' && (
-          <SearchResultView
-            keyword={searchKeyword}
-            selectedItems={selectedItems}
-            onViewDetail={(p, cat, sub) => {
-              setPrevStep('search');
-              handleViewDetail(p, cat, sub);
-            }}
-            onQuickAdd={(p, cat, sub) => handleQuickAdd(p, cat, sub)}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-          />
-        )}
-
-        {/* 步骤三：产品列表+筛选 */}
-        {step === 'list' && selectedCategory && selectedSubCategory && (
-          <ProductListView
-            category={selectedCategory}
-            subCategory={selectedSubCategory}
-            selectedItems={selectedItems}
-            onViewDetail={handleViewDetail}
-            onQuickAdd={handleQuickAdd}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            activeRegionId={activeRegionId}
-            onRegionChange={setActiveRegionId}
-          />
-        )}
-
-        {/* 组合品类型选择 */}
-        {step === 'combo-type' && selectedCategory && (
-          <ComboTypeView
-            category={selectedCategory}
-            onSelectCombo={(combo) => {
-              setActiveComboProduct(combo);
-              setStep('combo-config');
-            }}
-            onBack={() => setStep('subcategory')}
-          />
-        )}
-
-        {/* 组合品组件配置 */}
-        {step === 'combo-config' && activeComboProduct && (
-          <ComboConfigView
-            comboProduct={activeComboProduct}
-            onConfirm={handleComboConfirm}
-            onBack={() => setStep('combo-type')}
-          />
-        )}
-      </main>
-
-      {/* 步骤四：产品详情弹窗 */}
-      {step === 'detail' && detailProduct && (detailCat || selectedCategory) && (detailSub || selectedSubCategory) && (
-        <ProductDetailModal
-          product={detailProduct}
-          category={(detailCat || selectedCategory)!}
-          subCategory={(detailSub || selectedSubCategory)!}
-          selectedItems={selectedItems}
-          onAddToList={handleAddFromDetail}
-          onClose={() => {
-            if (prevStep === 'search') { setStep('search'); }
-            else { setStep('list'); }
-            setDetailProduct(null); setDetailCat(null); setDetailSub(null);
-          }}
-        />
-      )}
+        </main>
+      </div>
     </div>
   );
 }
