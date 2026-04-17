@@ -79,6 +79,15 @@ export interface StandardProduct {
   // 多供应商支持
   supplierId?: string;        // 默认供应商ID（兼容旧数据）
   supplierPrices?: SupplierPrice[]; // 多供应商价格列表
+  // 产品标签
+  tags?: ProductTag[];         // 标签列表（如热销、推荐、新品等）
+}
+
+// 产品标签类型
+export interface ProductTag {
+  type: 'hot' | 'recommend' | 'new' | 'sale' | 'percent' | 'sample' | 'custom'; // 热销/推荐/新品/特价/百分产品/展厅样板/自定义
+  label?: string;              // 自定义标签的文字（type为custom时必填）
+  quoteCount?: number;         // 报价引用次数
 }
 
 // 报价行
@@ -89,6 +98,7 @@ export interface QuoteItem {
   libraryId?: string;         // 产品库ID / 产品编号
   supplierProductId?: string; // 供应商产品ID / 型号
   productName: string;
+  areaName?: string;          // 区域名称（如浴室、卧室、客厅），陶瓷模版专用
   categoryName?: string;      // 产品类型
   subCategoryName?: string;
   spec: string;
@@ -132,8 +142,37 @@ export interface Quote {
   currency: string;
   paymentTerms: string;
   deliveryTerms: string;
+  templateId?: string;  // 报价单模版 ID（'default' | 'ceramic' | 'sanitary'）
   remark?: string;
-}
+
+  // ===== 业务系统扩展字段 =====
+
+  // 基本信息
+  quoteName?: string;           // 报价单名称
+  customQuoteNo?: boolean;      // 是否自定义单号（默认false）
+  preCommissionAmount?: number; // 折前含佣金额（只读，自动计算）
+  postCommissionAmount?: number; // 折后含佣金额（只读，自动计算）
+  commission?: number;           // 佣金（金额）
+  userInvoice?: boolean;         // 是否用户开票（默认false）
+  salesType?: string;           // 销售类型
+  businessDept?: string;        // 业务部门
+
+  // 其他人员
+  collaborators?: string[];     // 协作人员列表
+  collabRatio?: number;         // 协作比例（0~1）
+  needDesigner?: boolean;       // 是否需要设计师（默认false）
+  orderAssistant?: string;      // 跟单助理
+  translator?: string;          // 翻译人员
+
+  // Note
+  depositRatio?: number;        // 定金比例（0~1，如 0.3 = 30%）
+  packingMethods?: string[];    // 打包方式（多选：Wooden Box, Carton, Pallet）
+  deliveryPlace?: string;      // 交货地点
+
+  // 列表展示字段
+  salesperson?: string;         // 报价人
+  department?: string;          // 部门
+  erpStatus?: string;           // ERP状态（如"已同步"、"待同步"、"同步失败"）
 
 // ===== 非标品/组合品类型 =====
 

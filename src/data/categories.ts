@@ -1,5 +1,5 @@
 import type { Category, StandardProduct, Supplier, Region } from '../types';
-import { CERAMIC_PRODUCTS } from '../../ceramic_products';
+import { CERAMIC_PRODUCTS } from './ceramic_products';
 
 // ===== 供应商列表 =====
 export const SUPPLIERS: Supplier[] = [

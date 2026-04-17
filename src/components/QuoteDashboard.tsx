@@ -118,7 +118,7 @@ export function QuoteDashboard({ quotes, onNewQuote, onEditQuote, onViewQuote, o
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-100 bg-gray-50/60">
-                    {['报价单号', '客户名称', '国家', '产品数', '报价金额', '状态', '有效期', '操作'].map(h => (
+                    {['单号', '报价人', '总金额', '部门', 'ERP状态', '操作'].map(h => (
                       <th key={h} className="text-left text-xs font-medium text-gray-500 px-5 py-3 uppercase tracking-wide">{h}</th>
                     ))}
                   </tr>
@@ -126,6 +126,16 @@ export function QuoteDashboard({ quotes, onNewQuote, onEditQuote, onViewQuote, o
                 <tbody>
                   {filteredQuotes.map((quote, i) => {
                     const total = quote.items.reduce((s, item) => s + item.quantity * item.unitPrice, 0);
+                    // 扩展字段
+                    const extQuote = quote as Quote & {
+                      salesperson?: string;
+                      department?: string;
+                      erpStatus?: string;
+                    };
+                    // 模拟数据
+                    const mockSalesperson = extQuote.salesperson || '王经理';
+                    const mockDepartment = extQuote.department || '陶瓷一部';
+                    const hasErp = !!extQuote.erpStatus;
                     return (
                       <tr key={quote.id} className={`border-b border-gray-50 hover:bg-blue-50/30 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
                         <td className="px-5 py-3.5">
@@ -133,16 +143,37 @@ export function QuoteDashboard({ quotes, onNewQuote, onEditQuote, onViewQuote, o
                             {quote.quoteNo}
                           </button>
                         </td>
-                        <td className="px-5 py-3.5 text-sm text-gray-900">{quote.customerName || '-'}</td>
-                        <td className="px-5 py-3.5 text-sm text-gray-600">{quote.customerCountry || '-'}</td>
-                        <td className="px-5 py-3.5 text-sm text-gray-600">{quote.items.length}</td>
-                        <td className="px-5 py-3.5 text-sm font-semibold text-gray-900">{formatCurrency(total, quote.currency)}</td>
+                        {/* 报价人：头像+名称 */}
                         <td className="px-5 py-3.5">
-                          <span className={`badge ${getStatusColor(quote.status)}`}>
-                            {getStatusLabel(quote.status)}
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
+                              {mockSalesperson.slice(0, 1)}
+                            </div>
+                            <span className="text-sm text-gray-900">{mockSalesperson}</span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3.5 text-sm font-semibold text-gray-900">{formatCurrency(total, quote.currency)}</td>
+                        {/* 部门 */}
+                        <td className="px-5 py-3.5 text-sm text-gray-600">{mockDepartment}</td>
+                        {/* 报价单状态：草稿/已提交 */}
+                        <td className="px-5 py-3.5">
+                          <span className={`badge ${quote.status === 'draft' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200' : 'bg-green-100 text-green-700 border border-green-200'}`}>
+                            {quote.status === 'draft' ? '草稿' : '已提交'}
                           </span>
                         </td>
-                        <td className="px-5 py-3.5 text-sm text-gray-600">{quote.validUntil}</td>
+                        {/* ERP状态：无/有 */}
+                        <td className="px-5 py-3.5">
+                          {hasErp ? (
+                            <span className="badge bg-emerald-100 text-emerald-700 border border-emerald-200">
+                              <svg className="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              有
+                            </span>
+                          ) : (
+                            <span className="badge bg-gray-100 text-gray-400 border border-gray-200">无</span>
+                          )}
+                        </td>
                         <td className="px-5 py-3.5">
                           <div className="flex items-center gap-2">
                             <button onClick={() => onViewQuote(quote)} className="text-gray-500 hover:text-blue-600 transition-colors cursor-pointer p-1 rounded" title="查看">

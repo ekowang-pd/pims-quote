@@ -227,6 +227,12 @@ function App() {
       currency: 'USD',
       paymentTerms: 'T/T 30% deposit, 70% before shipment',
       deliveryTerms: 'FOB',
+      // 业务系统扩展字段
+      customQuoteNo: false,
+      userInvoice: false,
+      needDesigner: false,
+      depositRatio: 0.3,
+      packingMethods: [],
     };
     setCurrentQuote(newQuote);
     setView('editor');
@@ -246,6 +252,11 @@ function App() {
       currency: 'USD',
       paymentTerms: 'T/T 30% deposit, 70% before shipment',
       deliveryTerms: 'FOB',
+      customQuoteNo: false,
+      userInvoice: false,
+      needDesigner: false,
+      depositRatio: 0.3,
+      packingMethods: [],
     };
     setCurrentQuote(newQuote);
     setView('editor');

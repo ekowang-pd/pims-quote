@@ -1,7 +1,146 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { Quote, QuoteItem, ComboQuoteItem, AnyQuoteItem } from '../types';
 import { CURRENCIES, PAYMENT_TERMS, DELIVERY_TERMS } from '../data/categories';
 import { formatCurrency } from '../utils/format';
+import { ALL_TEMPLATES, DEFAULT_TEMPLATE } from '../data/quoteTemplates';
+import type { QuoteTemplate, QuoteColumn } from '../data/quoteTemplates';
+
+// ===== 模版单元格组件 =====
+type ExtendedQuoteItem = QuoteItem & {
+  pcsPerCtn?: number;
+  sqmPerCtn?: number;
+  discountPct?: number;
+};
+
+function TemplateCell({
+  col,
+  item,
+  idx,
+  currency,
+  onUpdate,
+  onRemove,
+  isSubmitted,
+}: {
+  col: QuoteColumn;
+  item: ExtendedQuoteItem;
+  idx: number;
+  currency: string;
+  onUpdate: (field: string, val: unknown) => void;
+  onRemove: () => void;
+  isSubmitted?: boolean;
+}) {
+  const alignClass = col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left';
+  const cellBase = `px-3 py-2.5 ${alignClass}`;
+
+  // 序号列
+  if (col.key === 'no') {
+    return <td className={`${cellBase} text-xs text-gray-500 select-none`}>{idx + 1}</td>;
+  }
+
+  // 删除按钮列
+  if (col.key === 'action') {
+    return (
+      <td className="px-3 py-2.5 text-center">
+        <button
+          onClick={onRemove}
+          disabled={isSubmitted}
+          className={`transition-colors cursor-pointer ${isSubmitted ? 'text-gray-200 cursor-not-allowed' : 'text-gray-400 hover:text-red-500'}`}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </td>
+    );
+  }
+
+  // 图片列（image / image2 都显示同一张图）
+  if (col.key === 'image' || col.key === 'image2') {
+    return (
+      <td className={cellBase}>
+        {item.imageUrl ? (
+          <img src={item.imageUrl} alt="" className="w-12 h-10 object-cover rounded-lg" />
+        ) : (
+          <div className="w-12 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+            <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+        )}
+      </td>
+    );
+  }
+
+  // 计算型列
+  if (col.type === 'calculated' && col.calc) {
+    const val = col.calc(item as unknown as Record<string, unknown>);
+    const isNum = typeof val === 'number';
+    return (
+      <td className={`${cellBase} text-xs font-semibold ${col.key === 'amount' ? 'text-gray-900 whitespace-nowrap' : 'text-gray-700'}`}>
+        {col.key === 'amount'
+          ? formatCurrency(isNum ? val : Number(val) || 0, currency)
+          : (val === '-' || val === undefined ? '-' : String(val))}
+      </td>
+    );
+  }
+
+  // 只读型：categoryName / libraryId / basePrice 等
+  if (!col.editable) {
+    const rawVal = (item as Record<string, unknown>)[col.key];
+    if (col.key === 'libraryId') {
+      return (
+        <td className={cellBase}>
+          <span className="font-mono text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+            {(rawVal as string) || '-'}
+          </span>
+        </td>
+      );
+    }
+    if (col.key === 'basePrice') {
+      return (
+        <td className={`${cellBase} text-xs text-gray-500 whitespace-nowrap`}>
+          {item.basePrice ? formatCurrency(item.basePrice, currency) : '-'}
+        </td>
+      );
+    }
+    if (col.key === 'categoryName') {
+      return (
+        <td className={cellBase}>
+          <span className={`badge text-xs ${item.type === 'standard' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
+            {(rawVal as string) || (item.type === 'standard' ? '标品' : '非标')}
+          </span>
+        </td>
+      );
+    }
+    return (
+      <td className={`${cellBase} text-xs text-gray-600`}>
+        {rawVal !== undefined && rawVal !== null ? String(rawVal) : '-'}
+      </td>
+    );
+  }
+
+  // 可编辑型
+  const rawVal = (item as Record<string, unknown>)[col.key];
+  const isNumericField = col.type === 'number' ||
+    ['length','width','height','quantity','unitPrice','margin','weight','pcsPerCtn','sqmPerCtn','discountPct'].includes(col.key);
+
+  return (
+    <td className={cellBase}>
+      <input
+        type={isNumericField ? 'number' : 'text'}
+        min={isNumericField ? 0 : undefined}
+        step={col.key === 'margin' || col.key === 'discountPct' || col.key === 'unitPrice' ? 0.01 : undefined}
+        disabled={isSubmitted}
+        className={`input-field text-xs py-1 ${
+          isNumericField ? 'text-right w-20' : 'w-full'
+        } ${col.key === 'productName' || col.key === 'areaName' || col.key === 'description' || col.key === 'remark' ? 'min-w-[80px]' : ''} ${isSubmitted ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+        placeholder={col.label}
+        value={rawVal !== undefined && rawVal !== null ? String(rawVal) : ''}
+        onChange={e => !isSubmitted && onUpdate(col.key, isNumericField ? Number(e.target.value) || 0 : e.target.value)}
+      />
+    </td>
+  );
+}
 
 // ===== 组合品行组件（可展开） =====
 function ComboItemRow({
@@ -9,11 +148,13 @@ function ComboItemRow({
   idx,
   currency,
   onRemove,
+  isSubmitted,
 }: {
   item: ComboQuoteItem;
   idx: number;
   currency: string;
   onRemove: () => void;
+  isSubmitted?: boolean;
 }) {
   const [expanded, setExpanded] = useState(true); // 默认展开
   const finalPrice = item.totalPrice * (1 + item.margin);
@@ -67,7 +208,11 @@ function ComboItemRow({
         </td>
         <td className="px-3 py-3" colSpan={2}></td>
         <td className="px-3 py-3">
-          <button onClick={onRemove} className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer">
+          <button
+            onClick={onRemove}
+            disabled={isSubmitted}
+            className={`transition-colors cursor-pointer ${isSubmitted ? 'text-gray-200 cursor-not-allowed' : 'text-gray-400 hover:text-red-500'}`}
+          >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -418,6 +563,47 @@ export function QuoteEditor({ quote, onSave, onCancel, onAddProducts, onBatchAdd
   const [showCustomForm, setShowCustomForm] = useState(false);
   const [activeTab, setActiveTab] = useState<'info' | 'items'>('items');
   const [viewMode, setViewMode] = useState<'system' | 'excel'>('system'); // 系统列表 / Excel模式
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+
+  // 是否已提交（不可编辑）
+  const isSubmitted = quote.status === 'sent' || quote.status === 'confirmed' || quote.status === 'cancelled';
+
+  // 提交报价单
+  const handleSubmit = () => {
+    const submittedQuote = { ...quote, status: 'sent' as const };
+    onSave(submittedQuote);
+    setShowSubmitConfirm(false);
+  };
+
+  // 模版选择：优先用 quote.templateId，否则从产品品类自动检测
+  const autoTemplateId = useMemo(() => {
+    if (quote.templateId) return quote.templateId;
+    const catIds = [...new Set(
+      quote.items
+        .filter(i => i.type !== 'combo')
+        .map(i => (i as QuoteItem).categoryName?.toLowerCase() || '')
+        .filter(Boolean)
+    )];
+    // 简单映射：如果有陶瓷关键字 → ceramic；有卫浴/淋浴/浴室 → sanitary
+    const hasCeramic = catIds.some(c => c.includes('陶瓷') || c.includes('瓷砖') || c.includes('ceramic'));
+    const hasSanitary = catIds.some(c => c.includes('卫浴') || c.includes('淋浴') || c.includes('浴室') || c.includes('sanitary'));
+    if (hasCeramic) return 'ceramic';
+    if (hasSanitary) return 'sanitary';
+    return 'default';
+  }, [quote.templateId, quote.items]);
+
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>(autoTemplateId);
+
+  const activeTemplate: QuoteTemplate = useMemo(
+    () => ALL_TEMPLATES.find(t => t.id === selectedTemplateId) ?? DEFAULT_TEMPLATE,
+    [selectedTemplateId]
+  );
+
+  // 切换模版时同步到 quote.templateId
+  const handleTemplateChange = (tplId: string) => {
+    setSelectedTemplateId(tplId);
+    onChange({ ...quote, templateId: tplId });
+  };
 
   const updateField = (field: keyof Quote, value: unknown) => {
     onChange({ ...quote, [field]: value });
@@ -476,7 +662,7 @@ export function QuoteEditor({ quote, onSave, onCancel, onAddProducts, onBatchAdd
     <div className="min-h-screen bg-gray-50">
       {/* 顶部栏 */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-full mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button onClick={onCancel} className="text-gray-500 hover:text-gray-700 cursor-pointer p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -514,17 +700,70 @@ export function QuoteEditor({ quote, onSave, onCancel, onAddProducts, onBatchAdd
               基本信息
             </button>
             <button onClick={onCancel} className="btn-secondary">取消</button>
-            <button onClick={() => onSave(quote)} className="btn-primary">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              保存报价单
-            </button>
+            {/* 已提交状态 */}
+            {isSubmitted ? (
+              <div className="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
+                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-sm font-medium text-green-700">
+                  {quote.status === 'sent' ? '已提交' : quote.status === 'confirmed' ? '已确认' : '已取消'}
+                </span>
+              </div>
+            ) : (
+              <>
+                <button onClick={() => onSave(quote)} className="btn-secondary">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                  </svg>
+                  保存草稿
+                </button>
+                <button onClick={() => setShowSubmitConfirm(true)} className="btn-primary">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                  提交报价单
+                </button>
+              </>
+            )}
           </div>
         </div>
 
+        {/* 提交确认弹窗 */}
+        {showSubmitConfirm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-2xl w-[400px] p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">确认提交报价单</h3>
+                  <p className="text-sm text-gray-500">提交后将无法再编辑，确定要提交吗？</p>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => setShowSubmitConfirm(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  确认提交
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Tab导航 */}
-        <div className="max-w-7xl mx-auto px-6 flex gap-1 pb-0">
+        <div className="max-w-full mx-auto px-6 flex gap-1 pb-0">
           {[
             { key: 'info', label: '基本信息' },
             { key: 'items', label: `产品明细 (${quote.items.length})` },
@@ -544,92 +783,306 @@ export function QuoteEditor({ quote, onSave, onCancel, onAddProducts, onBatchAdd
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-6">
+      <main className="max-w-full mx-auto px-6 py-6">
         {activeTab === 'info' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-6">
+            {/* 基本信息 */}
+            <div className="card p-6">
+              <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">基本信息</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">报价单名称</label>
+                  <input type="text" className="input-field text-sm"
+                    placeholder="输入报价单名称"
+                    value={quote.quoteName || ''}
+                    onChange={e => updateField('quoteName', e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">是否自定义单号</label>
+                  <div className="flex items-center gap-3 h-[38px]">
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="radio" name="customQuoteNo" value="false"
+                        checked={quote.customQuoteNo !== true}
+                        onChange={() => updateField('customQuoteNo', false)}
+                        className="w-3.5 h-3.5 accent-blue-600 cursor-pointer" />
+                      <span className="text-sm text-gray-700">否</span>
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="radio" name="customQuoteNo" value="true"
+                        checked={quote.customQuoteNo === true}
+                        onChange={() => updateField('customQuoteNo', true)}
+                        className="w-3.5 h-3.5 accent-blue-600 cursor-pointer" />
+                      <span className="text-sm text-gray-700">是</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">折前含佣金额(RMB)</label>
+                  <div className="input-field text-sm bg-gray-50 text-gray-600 h-[38px] flex items-center">
+                    {quote.preCommissionAmount?.toFixed(2) || '0.00'}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">折后含佣金额(RMB)</label>
+                  <div className="input-field text-sm bg-gray-50 text-gray-600 h-[38px] flex items-center">
+                    {quote.postCommissionAmount?.toFixed(2) || '0.00'}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">佣金</label>
+                  <input type="number" className="input-field text-sm"
+                    placeholder="输入佣金"
+                    value={quote.commission || ''}
+                    onChange={e => updateField('commission', Number(e.target.value))} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">是否用户开票</label>
+                  <div className="flex items-center gap-3 h-[38px]">
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="radio" name="userInvoice" value="false"
+                        checked={quote.userInvoice !== true}
+                        onChange={() => updateField('userInvoice', false)}
+                        className="w-3.5 h-3.5 accent-blue-600 cursor-pointer" />
+                      <span className="text-sm text-gray-700">否</span>
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="radio" name="userInvoice" value="true"
+                        checked={quote.userInvoice === true}
+                        onChange={() => updateField('userInvoice', true)}
+                        className="w-3.5 h-3.5 accent-blue-600 cursor-pointer" />
+                      <span className="text-sm text-gray-700">是</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">销售类型</label>
+                  <select className="input-field text-sm"
+                    value={quote.salesType || ''}
+                    onChange={e => updateField('salesType', e.target.value)}>
+                    <option value="">请选择</option>
+                    <option value="内销">内销</option>
+                    <option value="外销">外销</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">业务部门</label>
+                  <select className="input-field text-sm"
+                    value={quote.businessDept || ''}
+                    onChange={e => updateField('businessDept', e.target.value)}>
+                    <option value="">请选择</option>
+                    <option value="销售一部">销售一部</option>
+                    <option value="销售二部">销售二部</option>
+                    <option value="电商部">电商部</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* 其他人员 */}
+            <div className="card p-6">
+              <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">其他人员</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">协作人员</label>
+                  <select className="input-field text-sm"
+                    value={quote.collaborators?.[0] || ''}
+                    onChange={e => updateField('collaborators', e.target.value ? [e.target.value] : [])}>
+                    <option value="">请选择</option>
+                    <option value="张三">张三</option>
+                    <option value="李四">李四</option>
+                    <option value="王五">王五</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">协作比例</label>
+                  <select className="input-field text-sm"
+                    value={quote.collabRatio?.toString() || ''}
+                    onChange={e => updateField('collabRatio', Number(e.target.value) / 100)}>
+                    <option value="">请选择</option>
+                    <option value="10">10%</option>
+                    <option value="20">20%</option>
+                    <option value="30">30%</option>
+                    <option value="40">40%</option>
+                    <option value="50">50%</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">是否需要设计师</label>
+                  <div className="flex items-center gap-3 h-[38px]">
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="radio" name="needDesigner" value="false"
+                        checked={quote.needDesigner !== true}
+                        onChange={() => updateField('needDesigner', false)}
+                        className="w-3.5 h-3.5 accent-blue-600 cursor-pointer" />
+                      <span className="text-sm text-gray-700">否</span>
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="radio" name="needDesigner" value="true"
+                        checked={quote.needDesigner === true}
+                        onChange={() => updateField('needDesigner', true)}
+                        className="w-3.5 h-3.5 accent-blue-600 cursor-pointer" />
+                      <span className="text-sm text-gray-700">是</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">跟单助理</label>
+                  <select className="input-field text-sm"
+                    value={quote.orderAssistant || ''}
+                    onChange={e => updateField('orderAssistant', e.target.value)}>
+                    <option value="">请选择</option>
+                    <option value="助理A">助理A</option>
+                    <option value="助理B">助理B</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">翻译人员</label>
+                  <select className="input-field text-sm"
+                    value={quote.translator || ''}
+                    onChange={e => updateField('translator', e.target.value)}>
+                    <option value="">请选择</option>
+                    <option value="翻译A">翻译A</option>
+                    <option value="翻译B">翻译B</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
             {/* 客户信息 */}
             <div className="card p-6">
               <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">客户信息</h3>
-              <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">客户名称</label>
-                  <input type="text" className="input-field" placeholder="输入客户公司名称"
+                  <label className="block text-xs font-medium text-gray-500 mb-1">客户名称</label>
+                  <input type="text" className="input-field text-sm" placeholder="输入客户公司名称"
                     value={quote.customerName} onChange={e => updateField('customerName', e.target.value)} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">目标国家</label>
-                  <input type="text" className="input-field" placeholder="如：United States, UK"
+                  <label className="block text-xs font-medium text-gray-500 mb-1">目标国家</label>
+                  <input type="text" className="input-field text-sm" placeholder="如：United States, UK"
                     value={quote.customerCountry} onChange={e => updateField('customerCountry', e.target.value)} />
                 </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">报价日期</label>
+                  <input type="date" className="input-field text-sm"
+                    value={quote.createdAt} onChange={e => updateField('createdAt', e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">有效期至</label>
+                  <input type="date" className="input-field text-sm"
+                    value={quote.validUntil} onChange={e => updateField('validUntil', e.target.value)} />
+                </div>
               </div>
             </div>
 
-            {/* 报价条款 */}
+            {/* Note */}
             <div className="card p-6">
-              <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">报价条款</h3>
+              <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Note</h3>
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">报价币种</label>
-                  <select className="input-field" value={quote.currency} onChange={e => updateField('currency', e.target.value)}>
-                    {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">交货方式</label>
+                    <select className="input-field text-sm"
+                      value={quote.deliveryMethod || ''}
+                      onChange={e => updateField('deliveryMethod', e.target.value)}>
+                      <option value="">请选择</option>
+                      <option value="EXW">EXW</option>
+                      <option value="FOB">FOB</option>
+                      <option value="CIF">CIF</option>
+                      <option value="DDP">DDP</option>
+                      <option value="DAP">DAP</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">定金比例</label>
+                    <div className="relative">
+                      <input type="number" className="input-field text-sm pr-8"
+                        placeholder="输入定金比例"
+                        min="0" max="100"
+                        value={quote.depositRatio !== undefined ? (quote.depositRatio * 100).toFixed(0) : ''}
+                        onChange={e => updateField('depositRatio', Number(e.target.value) / 100)} />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">%</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">交货地点</label>
+                    <input type="text" className="input-field text-sm"
+                      placeholder="如：Foshan"
+                      value={quote.deliveryPlace || ''}
+                      onChange={e => updateField('deliveryPlace', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">报价币种</label>
+                    <select className="input-field text-sm"
+                      value={quote.currency}
+                      onChange={e => updateField('currency', e.target.value)}>
+                      {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">付款方式</label>
-                  <select className="input-field" value={quote.paymentTerms} onChange={e => updateField('paymentTerms', e.target.value)}>
-                    {PAYMENT_TERMS.map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">打包方式</label>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { key: 'wooden_box', label: 'Wooden Box' },
+                      { key: 'carton', label: 'Carton' },
+                      { key: 'pallet', label: 'Pallet' },
+                    ].map(opt => (
+                      <button
+                        key={opt.key}
+                        onClick={() => {
+                          const current = quote.packingMethods || [];
+                          const updated = current.includes(opt.key)
+                            ? current.filter(m => m !== opt.key)
+                            : [...current, opt.key];
+                          updateField('packingMethods', updated);
+                        }}
+                        className={`px-3 py-1.5 text-xs rounded-lg border transition-colors cursor-pointer ${
+                          (quote.packingMethods || []).includes(opt.key)
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">贸易术语</label>
-                  <select className="input-field" value={quote.deliveryTerms} onChange={e => updateField('deliveryTerms', e.target.value)}>
-                    {DELIVERY_TERMS.map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">条款</label>
+                  <textarea
+                    className="input-field text-sm resize-none"
+                    rows={3}
+                    placeholder="输入条款备注..."
+                    value={quote.terms || ''}
+                    onChange={e => updateField('terms', e.target.value)} />
                 </div>
               </div>
-            </div>
-
-            {/* 日期 */}
-            <div className="card p-6">
-              <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">日期设置</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">报价日期</label>
-                  <input type="date" className="input-field" value={quote.createdAt} onChange={e => updateField('createdAt', e.target.value)} />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">有效期至</label>
-                  <input type="date" className="input-field" value={quote.validUntil} onChange={e => updateField('validUntil', e.target.value)} />
-                </div>
-              </div>
-            </div>
-
-            {/* 备注 */}
-            <div className="card p-6">
-              <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">备注</h3>
-              <textarea
-                className="input-field resize-none"
-                rows={5}
-                placeholder="输入报价备注，如特殊包装要求、认证需求等..."
-                value={quote.remark || ''}
-                onChange={e => updateField('remark', e.target.value)}
-              />
             </div>
           </div>
         )}
 
         {activeTab === 'items' && (
           <div className="space-y-5">
-            {/* 操作按钮 */}
-            <div className="flex items-center justify-between">
+            {/* 操作工具栏 */}
+            <div className="card overflow-hidden">
+            <div className="px-6 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <button onClick={onAddProducts} className="btn-primary">
+                <button
+                  onClick={onAddProducts}
+                  disabled={isSubmitted}
+                  className={`btn-primary ${isSubmitted ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                   选择标品
                 </button>
-                <button onClick={onBatchAdd} className="btn-secondary border-purple-300 text-purple-700 hover:bg-purple-50">
+                <button
+                  onClick={onBatchAdd}
+                  disabled={isSubmitted}
+                  className={`btn-secondary border-purple-300 text-purple-700 hover:bg-purple-50 ${isSubmitted ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                   </svg>
@@ -675,11 +1128,31 @@ export function QuoteEditor({ quote, onSave, onCancel, onAddProducts, onBatchAdd
                     </span>
                   </button>
                 </div>
+
+                {/* 报价模版选择器 */}
+                {viewMode === 'system' && (
+                  <div className="flex items-center gap-2 ml-1 pl-3 border-l border-gray-200">
+                    <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span className="text-xs text-gray-500 whitespace-nowrap">报价模版</span>
+                    <select
+                      value={selectedTemplateId}
+                      onChange={e => handleTemplateChange(e.target.value)}
+                      className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 cursor-pointer"
+                    >
+                      {ALL_TEMPLATES.map(t => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
               <div className="text-right">
                 <p className="text-sm text-gray-500">报价总额</p>
                 <p className="text-2xl font-bold text-blue-700">{formatCurrency(total, quote.currency)}</p>
               </div>
+            </div>
             </div>
 
             {/* 非标品表单 */}
@@ -762,7 +1235,7 @@ export function QuoteEditor({ quote, onSave, onCancel, onAddProducts, onBatchAdd
                 />
               </div>
             ) : (
-              // 系统列表模式
+              // 系统列表模式（模版驱动）
               quote.items.length === 0 ? (
                 <div className="card py-16 flex flex-col items-center gap-3">
                   <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center">
@@ -776,33 +1249,21 @@ export function QuoteEditor({ quote, onSave, onCancel, onAddProducts, onBatchAdd
               ) : (
                 <div className="card overflow-hidden">
                   <div className="overflow-x-auto">
-                    <table className="w-full min-w-[1600px]">
+                    <table className="w-full">
                       <thead>
                         <tr className="border-b border-gray-200 bg-gray-50">
-                          <th className="text-left text-xs font-medium text-gray-500 px-3 py-3 uppercase">#</th>
-                          <th className="text-left text-xs font-medium text-gray-500 px-3 py-3 uppercase">图片</th>
-                          <th className="text-left text-xs font-medium text-gray-500 px-3 py-3 uppercase">产品编号</th>
-                          <th className="text-left text-xs font-medium text-gray-500 px-3 py-3 uppercase">产品类型</th>
-                          <th className="text-left text-xs font-medium text-gray-500 px-3 py-3 uppercase">产品名称</th>
-                          <th className="text-left text-xs font-medium text-gray-500 px-3 py-3 uppercase">型号</th>
-                          <th className="text-left text-xs font-medium text-gray-500 px-3 py-3 uppercase">长(mm)</th>
-                          <th className="text-left text-xs font-medium text-gray-500 px-3 py-3 uppercase">宽(mm)</th>
-                          <th className="text-left text-xs font-medium text-gray-500 px-3 py-3 uppercase">高(mm)</th>
-                          <th className="text-left text-xs font-medium text-gray-500 px-3 py-3 uppercase">描述</th>
-                          <th className="text-left text-xs font-medium text-gray-500 px-3 py-3 uppercase">数量</th>
-                          <th className="text-left text-xs font-medium text-gray-500 px-3 py-3 uppercase">单位</th>
-                          <th className="text-left text-xs font-medium text-gray-500 px-3 py-3 uppercase">产品库价格</th>
-                          <th className="text-left text-xs font-medium text-gray-500 px-3 py-3 uppercase">单价</th>
-                          <th className="text-left text-xs font-medium text-gray-500 px-3 py-3 uppercase">总价</th>
-                          <th className="text-left text-xs font-medium text-gray-500 px-3 py-3 uppercase">体积(m³)</th>
-                          <th className="text-left text-xs font-medium text-gray-500 px-3 py-3 uppercase">重量(kg)</th>
-                          <th className="text-left text-xs font-medium text-gray-500 px-3 py-3 uppercase">备注</th>
-                          <th className="text-left text-xs font-medium text-gray-500 px-3 py-3 uppercase"></th>
+                          {activeTemplate.columns.map(col => (
+                            <th
+                              key={col.key}
+                              className={`text-left text-xs font-medium text-gray-500 px-3 py-3 uppercase whitespace-nowrap ${col.width ?? ''} ${col.minWidth ?? ''}`}
+                            >
+                              {col.label}
+                            </th>
+                          ))}
                         </tr>
                       </thead>
                       <tbody>
                         {quote.items.map((item, idx) => {
-                          // 组合品行
                           if (item.type === 'combo') {
                             const combo = item as ComboQuoteItem;
                             return (
@@ -812,107 +1273,47 @@ export function QuoteEditor({ quote, onSave, onCancel, onAddProducts, onBatchAdd
                                 idx={idx}
                                 currency={quote.currency}
                                 onRemove={() => removeItem(item.id)}
+                                isSubmitted={isSubmitted}
                               />
                             );
                           }
-                          // 标品行
                           const stdItem = item as QuoteItem;
-                          const subtotal = stdItem.quantity * stdItem.unitPrice;
-                          const volume = stdItem.length && stdItem.width && stdItem.height
-                            ? (stdItem.length * stdItem.width * stdItem.height) / 1000000000
-                            : null;
+                          // 扩展字段（陶瓷特有）
+                          const extItem = stdItem as QuoteItem & {
+                            pcsPerCtn?: number;
+                            sqmPerCtn?: number;
+                            discountPct?: number;
+                          };
                           return (
                             <tr key={item.id} className="border-b border-gray-100 hover:bg-blue-50/20 transition-colors">
-                              <td className="px-3 py-3 text-sm text-gray-500">{idx + 1}</td>
-                              <td className="px-3 py-3">
-                                {item.imageUrl ? (
-                                  <img src={item.imageUrl} alt="" className="w-12 h-12 object-cover rounded-lg" />
-                                ) : (
-                                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                                    <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                  </div>
-                                )}
-                              </td>
-                              <td className="px-3 py-3">
-                                <span className="font-mono text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
-                                  {item.libraryId || '-'}
-                                </span>
-                              </td>
-                              <td className="px-3 py-3">
-                                <span className={`badge text-xs ${item.type === 'standard' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
-                                  {item.type === 'standard' ? '标品' : '非标'}
-                                </span>
-                                {item.categoryName && <div className="text-xs text-gray-500 mt-0.5">{item.categoryName}</div>}
-                              </td>
-                              <td className="px-3 py-3">
-                                <div className="text-sm font-medium text-gray-900 max-w-32 truncate" title={item.productName}>{item.productName}</div>
-                                {item.color && <div className="text-xs text-gray-400">{item.color} / {item.spec}</div>}
-                              </td>
-                              <td className="px-3 py-3">
-                                <span className="font-mono text-xs text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded">
-                                  {item.supplierProductId || '-'}
-                                </span>
-                              </td>
-                              <td className="px-3 py-3">
-                                <input type="number" className="input-field w-16 text-xs py-1 text-center" min="0"
-                                  value={item.length || ''} onChange={e => updateItem(item.id, 'length', Number(e.target.value))} />
-                              </td>
-                              <td className="px-3 py-3">
-                                <input type="number" className="input-field w-16 text-xs py-1 text-center" min="0"
-                                  value={item.width || ''} onChange={e => updateItem(item.id, 'width', Number(e.target.value))} />
-                              </td>
-                              <td className="px-3 py-3">
-                                <input type="number" className="input-field w-16 text-xs py-1 text-center" min="0"
-                                  value={item.height || ''} onChange={e => updateItem(item.id, 'height', Number(e.target.value))} />
-                              </td>
-                              <td className="px-3 py-3">
-                                <input type="text" className="input-field w-24 text-xs py-1" placeholder="描述"
-                                  value={item.description || ''} onChange={e => updateItem(item.id, 'description', e.target.value)} />
-                              </td>
-                              <td className="px-3 py-3">
-                                <input type="number" className="input-field w-16 text-xs py-1 text-center" min="1"
-                                  value={item.quantity} onChange={e => updateItem(item.id, 'quantity', Number(e.target.value))} />
-                              </td>
-                              <td className="px-3 py-3 text-xs text-gray-600">{item.unit}</td>
-                              <td className="px-3 py-3 text-xs text-gray-500 whitespace-nowrap">
-                                {item.basePrice ? formatCurrency(item.basePrice, quote.currency) : '-'}
-                              </td>
-                              <td className="px-3 py-3">
-                                <input type="number" className="input-field w-20 text-xs py-1 text-right" min="0" step="0.01"
-                                  value={item.unitPrice} onChange={e => updateItem(item.id, 'unitPrice', Number(e.target.value))} />
-                              </td>
-                              <td className="px-3 py-3 text-sm font-semibold text-gray-900 whitespace-nowrap">
-                                {formatCurrency(subtotal, quote.currency)}
-                              </td>
-                              <td className="px-3 py-3 text-xs text-gray-600">
-                                {volume !== null ? volume.toFixed(6) : '-'}
-                              </td>
-                              <td className="px-3 py-3">
-                                <input type="number" className="input-field w-16 text-xs py-1 text-center" min="0"
-                                  value={item.weight || ''} onChange={e => updateItem(item.id, 'weight', Number(e.target.value))} />
-                              </td>
-                              <td className="px-3 py-3">
-                                <input type="text" className="input-field w-20 text-xs py-1" placeholder="备注"
-                                  value={item.remark || ''} onChange={e => updateItem(item.id, 'remark', e.target.value)} />
-                              </td>
-                              <td className="px-3 py-3">
-                                <button onClick={() => removeItem(item.id)} className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer">
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                  </svg>
-                                </button>
-                              </td>
+                              {activeTemplate.columns.map(col => (
+                                <TemplateCell
+                                  key={col.key}
+                                  col={col}
+                                  item={extItem}
+                                  idx={idx}
+                                  currency={quote.currency}
+                                  onUpdate={(field, val) => updateItem(item.id, field as keyof QuoteItem, val)}
+                                  onRemove={() => removeItem(item.id)}
+                                  isSubmitted={isSubmitted}
+                                />
+                              ))}
                             </tr>
                           );
                         })}
                       </tbody>
                       <tfoot>
                         <tr className="bg-blue-50/60 border-t-2 border-blue-200">
-                          <td colSpan={14} className="px-3 py-3 text-sm font-semibold text-gray-700 text-right">合计 Total</td>
-                          <td className="px-3 py-3 text-base font-bold text-blue-700 whitespace-nowrap">{formatCurrency(total, quote.currency)}</td>
-                          <td colSpan={4}></td>
+                          <td
+                            colSpan={activeTemplate.columns.findIndex(c => c.key === 'amount')}
+                            className="px-3 py-3 text-sm font-semibold text-gray-700 text-right"
+                          >
+                            合计 Total
+                          </td>
+                          <td className="px-3 py-3 text-base font-bold text-blue-700 whitespace-nowrap">
+                            {formatCurrency(total, quote.currency)}
+                          </td>
+                          <td colSpan={activeTemplate.columns.length - activeTemplate.columns.findIndex(c => c.key === 'amount') - 1}></td>
                         </tr>
                       </tfoot>
                     </table>

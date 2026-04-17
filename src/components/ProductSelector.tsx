@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import type {
-  QuoteItem, Category, SubCategory, StandardProduct,
+  QuoteItem, Category, SubCategory, StandardProduct, ProductTag,
   ComboProduct, ComboComponent, ComboSelectedProduct, ComboQuoteItem,
 } from '../types';
 import {
@@ -11,6 +11,81 @@ import {
 interface Props {
   onSelect: (items: QuoteItem[], combos?: ComboQuoteItem[]) => void;
   onCancel: () => void;
+}
+
+// 标签配置
+const TAG_STYLES: Record<string, { bg: string; text: string; icon?: JSX.Element }> = {
+  hot: {
+    bg: 'bg-red-500',
+    text: 'text-white',
+    icon: (
+      <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd" />
+      </svg>
+    ),
+  },
+  recommend: {
+    bg: 'bg-amber-500',
+    text: 'text-white',
+    icon: (
+      <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+      </svg>
+    ),
+  },
+  new: {
+    bg: 'bg-emerald-500',
+    text: 'text-white',
+    icon: (
+      <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+      </svg>
+    ),
+  },
+  sale: {
+    bg: 'bg-orange-500',
+    text: 'text-white',
+    icon: (
+      <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm2.5 3a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm6.207.293a1 1 0 00-1.414 0l-6 6a1 1 0 101.414 1.414l6-6a1 1 0 000-1.414zM12.5 10a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" clipRule="evenodd" />
+      </svg>
+    ),
+  },
+  percent: {
+    bg: 'bg-orange-600',
+    text: 'text-white',
+    icon: (
+      <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M4 4a2 2 0 100 4 2 2 0 000-4zm12 0a2 2 0 10-4 4 2 2 0 004 4zM4 12a2 2 0 114 0 2 2 0 01-4 0zm8 0a2 2 0 10-4 4 2 2 0 004-4z" clipRule="evenodd" />
+      </svg>
+    ),
+  },
+  sample: {
+    bg: 'bg-purple-600',
+    text: 'text-white',
+    icon: (
+      <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+      </svg>
+    ),
+  },
+  custom: {
+    bg: 'bg-gray-500',
+    text: 'text-white',
+  },
+};
+
+function getTagLabel(tag: ProductTag): string {
+  if (tag.type === 'custom' && tag.label) return tag.label;
+  const labels: Record<string, string> = {
+    hot: '热销',
+    recommend: '推荐',
+    new: '新品',
+    sale: '特价',
+    percent: '百分产品',
+    sample: '展厅样板',
+  };
+  return labels[tag.type] || tag.type;
 }
 
 const CATEGORY_ICONS: Record<string, JSX.Element> = {
@@ -280,6 +355,10 @@ function ProductListView({
   const [supplierSearch, setSupplierSearch] = useState('');
   const [selectedSupplier, setSelectedSupplier] = useState<string>('');
   const [showSupplierDropdown, setShowSupplierDropdown] = useState(false);
+  const [filterExpanded, setFilterExpanded] = useState(false);
+  const [sortBy, setSortBy] = useState<'default' | 'price_asc' | 'price_desc' | 'name'>('default');
+  const [priceMin, setPriceMin] = useState('');
+  const [priceMax, setPriceMax] = useState('');
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
 
   // 该子类下的所有产品
@@ -328,9 +407,12 @@ function ProductListView({
   const clearFilters = () => {
     setActiveFilters({});
     setSelectedSupplier('');
+    setSortBy('default');
+    setPriceMin('');
+    setPriceMax('');
   };
 
-  const hasFilter = selectedSupplier || Object.values(activeFilters).some(Boolean);
+  const hasFilter = selectedSupplier || supplierSearch || showSupplierDropdown || Object.values(activeFilters).some(Boolean);
 
   const filterGroups = subCategory.filterGroups ?? [];
 
@@ -385,188 +467,223 @@ function ProductListView({
         </div>
       </div>
 
-      {/* ===== 供应商搜索选择区 ===== */}
-      <div className="card p-4">
-        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5 mb-3">
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-          </svg>
-          供应商
-        </h3>
-
-        <div className="flex items-start gap-3">
-          {/* 搜索框 + 下拉 */}
-          <div className="relative flex-1 max-w-xs">
-            <div className="relative">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      {/* ===== JD风格筛选条 ===== */}
+      <div className="bg-white border border-gray-200 rounded-xl px-4 py-2.5 space-y-2">
+        {/* 第一行：供应商 + 筛选开关 + 清除 */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* 供应商下拉 */}
+          <div className="relative">
+            <button
+              onClick={() => setShowSupplierDropdown(v => !v)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border transition-colors cursor-pointer ${
+                selectedSupplier ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+              }`}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
-              <input
-                type="text"
-                className="w-full pl-8 pr-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
-                placeholder="搜索供应商名称..."
-                value={supplierSearch}
-                onChange={e => { setSupplierSearch(e.target.value); setShowSupplierDropdown(true); }}
-                onFocus={() => setShowSupplierDropdown(true)}
-                onBlur={() => setTimeout(() => setShowSupplierDropdown(false), 150)}
-              />
-            </div>
-            {showSupplierDropdown && filteredSuppliers.length > 0 && (
-              <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-44 overflow-y-auto">
-                {filteredSuppliers.map(s => (
+              <span>{selectedSupplier ? (SUPPLIERS.find(s => s.id === selectedSupplier)?.name ?? '供应商') : '供应商'}</span>
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {showSupplierDropdown && (
+              <div className="absolute z-30 top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
+                <div className="p-2 border-b border-gray-100">
+                  <div className="relative">
+                    <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input
+                      type="text"
+                      autoFocus
+                      className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:border-blue-400"
+                      placeholder="搜索供应商..."
+                      value={supplierSearch}
+                      onChange={e => { setSupplierSearch(e.target.value); }}
+                    />
+                  </div>
+                </div>
+                <div className="max-h-48 overflow-y-auto">
                   <button
-                    key={s.id}
-                    onMouseDown={() => {
-                      setSelectedSupplier(s.id);
-                      setSupplierSearch('');
-                      setShowSupplierDropdown(false);
-                    }}
-                    className="w-full text-left px-3 py-2.5 hover:bg-blue-50 transition-colors border-b border-gray-50 last:border-0"
+                    onClick={() => { setSelectedSupplier(''); setSupplierSearch(''); setShowSupplierDropdown(false); }}
+                    className="w-full text-left px-3 py-2 text-xs hover:bg-blue-50 border-b border-gray-50 transition-colors cursor-pointer"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-gray-800">{s.name}</span>
-                      <div className="flex items-center gap-0.5">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <svg key={i} className={`w-2.5 h-2.5 ${i < s.rating ? 'text-amber-400' : 'text-gray-200'}`} fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        ))}
-                      </div>
-                    </div>
-                    {s.tags && s.tags.length > 0 && (
-                      <div className="flex gap-1 mt-1">
-                        {s.tags.map(t => (
-                          <span key={t} className="px-1.5 py-0.5 text-[10px] bg-gray-100 text-gray-500 rounded">{t}</span>
-                        ))}
-                      </div>
-                    )}
+                    <span className="font-medium text-gray-700">全部供应商</span>
+                    <span className="text-gray-400 ml-1">({allProducts.length}款)</span>
                   </button>
-                ))}
+                  {filteredSuppliers.map(s => (
+                    <button
+                      key={s.id}
+                      onClick={() => { setSelectedSupplier(s.id); setSupplierSearch(''); setShowSupplierDropdown(false); }}
+                      className="w-full text-left px-3 py-2.5 hover:bg-blue-50 border-b border-gray-50 last:border-0 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-gray-800">{s.name}</span>
+                        <div className="flex items-center gap-0.5">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <svg key={i} className={`w-2 h-2 ${i < s.rating ? 'text-amber-400' : 'text-gray-200'}`} fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[10px] text-gray-400">{s.country}</span>
+                        {s.tags?.map(t => <span key={t} className="text-[10px] text-gray-400">{t}</span>)}
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
 
-          {/* 快捷选择：该品类有产品的供应商 */}
-          <div className="flex flex-wrap gap-1.5 flex-1">
-            <button
-              onClick={() => setSelectedSupplier('')}
-              className={`px-2.5 py-1.5 text-xs rounded-lg border transition-colors cursor-pointer ${
-                !selectedSupplier
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400'
-              }`}
-            >
-              全部供应商
-            </button>
-            {availableSuppliers.map(s => (
-              <button
-                key={s.id}
-                onClick={() => setSelectedSupplier(selectedSupplier === s.id ? '' : s.id)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-lg border transition-colors cursor-pointer ${
-                  selectedSupplier === s.id
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400'
-                }`}
-              >
-                {s.name}
-                {selectedSupplier !== s.id && (
-                  <div className="flex items-center gap-0.5">
-                    {Array.from({ length: s.rating }).map((_, i) => (
-                      <svg key={i} className="w-2 h-2 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                  </div>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 已选供应商信息栏 */}
-        {selectedSupplierInfo && (
-          <div className="mt-3 flex items-center gap-3 px-3 py-2 bg-blue-50 rounded-lg border border-blue-100">
-            <div className="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <span className="text-xs font-semibold text-blue-800">{selectedSupplierInfo.name}</span>
-              <span className="text-xs text-blue-500 ml-2">{selectedSupplierInfo.country}</span>
-              {selectedSupplierInfo.tags && (
-                <span className="ml-2 text-xs text-blue-400">{selectedSupplierInfo.tags.join(' · ')}</span>
-              )}
-            </div>
-            <div className="flex items-center gap-0.5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <svg key={i} className={`w-3 h-3 ${i < selectedSupplierInfo.rating ? 'text-amber-400' : 'text-gray-200'}`} fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-              ))}
-            </div>
-            <button onClick={() => setSelectedSupplier('')} className="text-blue-400 hover:text-blue-600 cursor-pointer ml-1">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* ===== 专属筛选条件 ===== */}
-      {filterGroups.length > 0 && (
-        <div className="card p-4 space-y-3">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
+          {/* 筛选按钮 */}
+          <button
+            onClick={() => setFilterExpanded(v => !v)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border transition-colors cursor-pointer ${
+              filterExpanded ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+            }`}
+          >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
             </svg>
-            筛选条件
-          </h3>
+            {filterExpanded ? '收起' : '筛选'}
+            {hasFilter && !filterExpanded && (
+              <span className="bg-blue-600 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+                {Object.values(activeFilters).filter(Boolean).length + (selectedSupplier ? 1 : 0)}
+              </span>
+            )}
+          </button>
 
-          {filterGroups.map(group => (
-            <div key={group.key} className="flex items-center gap-3">
-              <span className="text-xs text-gray-500 w-16 flex-shrink-0">{group.label}</span>
-              <div className="flex flex-wrap gap-1.5">
-                {group.type === 'color' ? (
-                  group.options.map(opt => (
+          {/* 已选标签 */}
+          {hasFilter && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {selectedSupplier && (
+                <span className="flex items-center gap-1 px-2 py-1 bg-blue-50 border border-blue-200 text-blue-700 text-xs rounded-lg">
+                  {SUPPLIERS.find(s => s.id === selectedSupplier)?.name}
+                  <button onClick={() => setSelectedSupplier('')} className="cursor-pointer ml-0.5 hover:text-blue-900">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              )}
+              {Object.entries(activeFilters).filter(([, v]) => v).map(([key, val]) => (
+                <span key={key} className="flex items-center gap-1 px-2 py-1 bg-blue-50 border border-blue-200 text-blue-700 text-xs rounded-lg">
+                  {val}
+                  <button onClick={() => setActiveFilters(prev => ({ ...prev, [key]: '' }))} className="cursor-pointer ml-0.5 hover:text-blue-900">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              ))}
+              <button onClick={clearFilters} className="text-xs text-gray-400 hover:text-gray-600 cursor-pointer ml-1">
+                清除筛选
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* 展开：筛选组 + 排序 + 价格区间 */}
+        {filterExpanded && (
+          <div className="border-t border-gray-100 pt-2.5 space-y-2.5">
+            {/* 筛选组 */}
+            {filterGroups.map(group => (
+              <div key={group.key} className="flex items-center gap-2">
+                <span className="text-xs text-gray-500 w-12 flex-shrink-0">{group.label}</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {group.type === 'color' ? (
+                    group.options.map(opt => (
+                      <button
+                        key={opt.value}
+                        onClick={() => toggleFilter(group.key, opt.value)}
+                        title={opt.label}
+                        className={`flex items-center gap-1 px-2 py-1 text-xs rounded-md border transition-colors cursor-pointer ${
+                          activeFilters[group.key] === opt.value
+                            ? 'border-blue-500 bg-blue-50 text-blue-700'
+                            : 'border-gray-200 hover:border-gray-400 text-gray-600'
+                        }`}
+                      >
+                        <span
+                          className="w-3 h-3 rounded-full border border-gray-300 flex-shrink-0"
+                          style={{ backgroundColor: opt.colorHex || COLOR_DOTS[opt.value] || '#e5e7eb' }}
+                        />
+                        {opt.label}
+                      </button>
+                    ))
+                  ) : (
+                    group.options.map(opt => (
+                      <button
+                        key={opt.value}
+                        onClick={() => toggleFilter(group.key, opt.value)}
+                        className={`px-2.5 py-1 text-xs rounded-md border transition-colors cursor-pointer ${
+                          activeFilters[group.key] === opt.value
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {/* 排序 + 价格区间 */}
+            <div className="flex items-center gap-4 pt-1 border-t border-gray-100">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">排序：</span>
+                <div className="flex gap-1">
+                  {[
+                    { key: 'default', label: '默认' },
+                    { key: 'price_asc', label: '价格↑' },
+                    { key: 'price_desc', label: '价格↓' },
+                    { key: 'name', label: '名称' },
+                  ].map(o => (
                     <button
-                      key={opt.value}
-                      onClick={() => toggleFilter(group.key, opt.value)}
-                      title={opt.label}
-                      className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-md border transition-colors cursor-pointer ${
-                        activeFilters[group.key] === opt.value
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
-                          : 'border-gray-200 hover:border-gray-400 text-gray-600'
+                      key={o.key}
+                      onClick={() => setSortBy(o.key as typeof sortBy)}
+                      className={`px-2.5 py-1 text-xs rounded-md border cursor-pointer transition-colors ${
+                        sortBy === o.key ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-gray-200 text-gray-600 hover:border-blue-300'
                       }`}
                     >
-                      <span
-                        className="w-3 h-3 rounded-full border border-gray-300 flex-shrink-0"
-                        style={{ backgroundColor: opt.colorHex || COLOR_DOTS[opt.value] || '#e5e7eb' }}
-                      />
-                      {opt.label}
+                      {o.label}
                     </button>
-                  ))
-                ) : (
-                  group.options.map(opt => (
-                    <button
-                      key={opt.value}
-                      onClick={() => toggleFilter(group.key, opt.value)}
-                      className={`px-2.5 py-1 text-xs rounded-md border transition-colors cursor-pointer ${
-                        activeFilters[group.key] === opt.value
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))
-                )}
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">价格：</span>
+                <input
+                  type="number"
+                  placeholder="最低"
+                  className="w-20 px-2 py-1 text-xs border border-gray-200 rounded-md focus:outline-none focus:border-blue-400"
+                  value={priceMin}
+                  onChange={e => setPriceMin(e.target.value)}
+                />
+                <span className="text-gray-400">-</span>
+                <input
+                  type="number"
+                  placeholder="最高"
+                  className="w-20 px-2 py-1 text-xs border border-gray-200 rounded-md focus:outline-none focus:border-blue-400"
+                  value={priceMax}
+                  onChange={e => setPriceMax(e.target.value)}
+                />
+                <button
+                  onClick={() => { setPriceMin(''); setPriceMax(''); }}
+                  className="text-xs text-gray-400 hover:text-red-500 cursor-pointer"
+                >
+                  重置
+                </button>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
 
       {/* 产品列表 */}
       {filtered.length === 0 ? (
@@ -676,7 +793,7 @@ function ProductListView({
         </div>
       ) : (
         /* ===== 卡片视图 ===== */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
           {filtered.map(product => renderProductCard(product))}
         </div>
       )}
@@ -711,6 +828,27 @@ function ProductListView({
             >
               <div className="text-gray-400 opacity-50">{CATEGORY_ICONS[category.id]}</div>
               <span className="text-xs text-gray-400">暂无图片</span>
+            </div>
+          )}
+
+          {/* 标签区域 */}
+          {product.tags && product.tags.length > 0 && (
+            <div className="absolute top-2 left-2 flex flex-col gap-1">
+              {product.tags.map((tag, idx) => {
+                const style = TAG_STYLES[tag.type] || TAG_STYLES.custom;
+                return (
+                  <div
+                    key={idx}
+                    className={`${style.bg} ${style.text} text-xs px-1.5 py-0.5 rounded flex items-center gap-0.5 shadow-sm`}
+                  >
+                    {style.icon}
+                    <span className="font-medium">{getTagLabel(tag)}</span>
+                    {tag.quoteCount !== undefined && (
+                      <span className="text-white/80">×{tag.quoteCount}</span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
 
@@ -762,22 +900,35 @@ function ProductListView({
             <span className="text-gray-400">{product.size}</span>
           </div>
 
-          {/* 供应商标签 */}
-          {supplier && (
-            <div className="flex items-center gap-1 mb-2">
-              <svg className="w-3 h-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-              <span className="text-xs text-gray-500 truncate">{supplier.name}</span>
-              <div className="flex items-center gap-0.5 ml-auto flex-shrink-0">
-                {Array.from({ length: supplier.rating }).map((_, i) => (
-                  <svg key={i} className="w-2.5 h-2.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                ))}
+          {/* 供应商信息 */}
+          <div className="flex items-center gap-2 mb-2">
+            {supplier && (
+              <>
+                <svg className="w-3 h-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                <span className="text-xs text-gray-500 truncate flex-1">{supplier.name}</span>
+                <div className="flex items-center gap-0.5 flex-shrink-0">
+                  {Array.from({ length: supplier.rating }).map((_, i) => (
+                    <svg key={i} className="w-2.5 h-2.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+              </>
+            )}
+            {/* 报价引用次数 */}
+            {product.tags?.some(t => t.quoteCount !== undefined) && (
+              <div className="flex items-center gap-0.5 text-xs text-orange-500 flex-shrink-0">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>
+                  {product.tags?.find(t => t.quoteCount !== undefined)?.quoteCount}次引用
+                </span>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           <div className="flex items-center justify-between pt-2 border-t border-gray-100">
             <div>
@@ -1334,7 +1485,7 @@ function SearchResultView({
             </div>
           ) : (
             /* 卡片视图 */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 mb-2">
               {items.map(({ product, cat: c, sub }) => {
                 const alreadyAdded = selectedItems.some(i => i.productId === product.id);
                 const hasImgError = imgErrors[product.id];
@@ -1346,69 +1497,79 @@ function SearchResultView({
                     onClick={() => onViewDetail(product, c, sub)}
                   >
                     {/* 图片区域 */}
-                    <div className="relative h-36 overflow-hidden bg-gray-100">
+                    <div className="relative bg-gray-100">
                       {product.imageUrl && !hasImgError ? (
                         <img
                           src={product.imageUrl}
                           alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="w-full object-contain"
+                          style={{ maxHeight: '180px' }}
                           onError={() => setImgErrors(prev => ({ ...prev, [product.id]: true }))}
                         />
                       ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center gap-1"
+                        <div className="w-full aspect-square flex flex-col items-center justify-center gap-1"
                           style={{ backgroundColor: COLOR_DOTS[product.color] || '#f3f4f6' }}>
                           <div className="text-gray-400 opacity-40">{CATEGORY_ICONS[c.id]}</div>
-                          <span className="text-xs text-gray-400">暂无图片</span>
+                          <span className="text-[10px] text-gray-400">暂无图片</span>
                         </div>
                       )}
                       {alreadyAdded && (
-                        <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="absolute top-1.5 right-1.5 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                          <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                           </svg>
                           已添加
                         </div>
                       )}
                       {/* 子类标签 */}
-                      <div className="absolute bottom-2 left-2">
-                        <span className="text-[10px] bg-black/50 text-white px-2 py-0.5 rounded-full">
+                      <div className="absolute bottom-1.5 left-1.5">
+                        <span className="text-[9px] bg-black/50 text-white px-1.5 py-0.5 rounded-full">
                           {sub.name}
                         </span>
                       </div>
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                        <span className="bg-white text-gray-800 text-xs font-medium px-3 py-1.5 rounded-full shadow-md">查看详情</span>
+                        <span className="bg-white text-gray-800 text-[10px] font-medium px-2 py-1 rounded-full shadow-md">查看详情</span>
                       </div>
                     </div>
                     {/* 产品信息 */}
-                    <div className="p-3">
-                      <div className="flex items-center gap-1 mb-1 flex-wrap">
+                    <div className="p-2">
+                      <div className="flex items-center gap-1 mb-0.5 flex-wrap">
                         {product.libraryId && (
-                          <span className="font-mono text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">{product.libraryId}</span>
+                          <span className="font-mono text-[9px] text-blue-600 bg-blue-50 px-1 py-0.5 rounded border border-blue-100">{product.libraryId}</span>
                         )}
+                        {/* JD风格标签：百分产品、展厅样板 */}
+                        {product.tags?.slice(0, 2).map((tag, idx) => {
+                          const style = TAG_STYLES[tag.type] || TAG_STYLES.custom;
+                          return (
+                            <span key={idx} className={`${style.bg} ${style.text} text-[9px] px-1 py-0.5 rounded-sm font-medium`}>
+                              {getTagLabel(tag)}
+                            </span>
+                          );
+                        })}
                       </div>
-                      <h4 className="text-sm font-semibold text-gray-900 mb-1 truncate">{product.name}</h4>
-                      <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-2">
-                        <span className="px-1.5 py-0.5 bg-gray-100 rounded">{product.spec}</span>
-                        <span className="flex items-center gap-1">
-                          <span className="w-2.5 h-2.5 rounded-full border border-gray-300" style={{ backgroundColor: COLOR_DOTS[product.color] || '#e5e7eb' }} />
+                      <h4 className="text-xs font-semibold text-gray-900 mb-0.5 truncate">{product.name}</h4>
+                      <div className="flex items-center gap-1 text-[10px] text-gray-500 mb-1">
+                        <span className="px-1 py-0.5 bg-gray-100 rounded">{product.spec}</span>
+                        <span className="flex items-center gap-0.5">
+                          <span className="w-2 h-2 rounded-full border border-gray-300" style={{ backgroundColor: COLOR_DOTS[product.color] || '#e5e7eb' }} />
                           {product.color}
                         </span>
                       </div>
                       {supplier && (
-                        <p className="text-xs text-gray-400 mb-2 truncate">{supplier.name}</p>
+                        <p className="text-[10px] text-gray-400 mb-1 truncate">{supplier.name}</p>
                       )}
-                      <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                      <div className="flex items-center justify-between pt-1.5 border-t border-gray-100">
                         <div>
-                          <span className="text-sm font-bold text-blue-700">${product.basePrice}</span>
-                          <span className="text-xs text-gray-400 ml-1">/ {product.unit}</span>
+                          <span className="text-xs font-bold text-blue-700">${product.basePrice}</span>
+                          <span className="text-[10px] text-gray-400 ml-0.5">/ {product.unit}</span>
                         </div>
                         <button
                           onClick={e => { e.stopPropagation(); if (!alreadyAdded) onQuickAdd(product, c, sub); }}
-                          className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
+                          className={`px-1.5 py-0.5 text-[10px] font-medium rounded-md transition-colors cursor-pointer ${
                             alreadyAdded ? 'bg-green-100 text-green-700 cursor-default' : 'bg-blue-700 text-white hover:bg-blue-800'
                           }`}
                         >
-                          {alreadyAdded ? '已添加' : '快速添加'}
+                          {alreadyAdded ? '已添加' : '+ 添加'}
                         </button>
                       </div>
                     </div>

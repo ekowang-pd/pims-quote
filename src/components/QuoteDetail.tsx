@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import type { Quote, QuoteItem, ComboQuoteItem, AnyQuoteItem } from '../types';
 import { formatCurrency, getStatusLabel, getStatusColor } from '../utils/format';
-
-type ViewMode = 'excel' | 'list';
+import { QUOTE_INFO_FIELDS, QUOTE_INFO_SECTIONS } from '../data/quoteInfoConfig';
+import { ALL_TEMPLATES } from '../data/quoteTemplates';
+import type { QuoteTemplate } from '../data/quoteTemplates';
 
 interface Props {
   quote: Quote;
@@ -12,6 +13,52 @@ interface Props {
 
 export function QuoteDetail({ quote, onBack, onEdit }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>('excel');
+  const [infoExpanded, setInfoExpanded] = useState(false);
+
+  // 根据报价单模版ID或产品类型自动选择模版
+  const activeTemplate: QuoteTemplate = ALL_TEMPLATES.find(t => t.id === (quote.templateId || 'ceramic')) || ALL_TEMPLATES[0];
+
+  // 读取 QuoteItem 字段值（详情只读展示）
+  const getItemCellValue = (item: QuoteItem, col: { key: string; calc?: (item: Record<string, unknown>) => unknown }) => {
+    if (col.key === 'no') return '';
+    if (col.key === 'action') return null;
+    if (col.key === 'image' || col.key === 'image2') return null;
+    if (col.calc) return col.calc(item as unknown as Record<string, unknown>);
+    const raw = (item as Record<string, unknown>)[col.key];
+    if (raw === undefined || raw === null) return '-';
+    if (col.key === 'basePrice') return formatCurrency(raw as number, quote.currency);
+    if (col.key === 'unitPrice') return formatCurrency(raw as number, quote.currency);
+    if (col.key === 'amount') {
+      const q = Number((item as Record<string, unknown>['quantity']) || 0);
+      const p = Number(raw) || 0;
+      return formatCurrency(q * p, quote.currency);
+    }
+    return String(raw);
+  };
+
+  // 读取字段值的格式化展示
+  const getInfoValue = (key: string): string => {
+    // @ts-ignore
+    const val = quote[key as keyof Quote];
+    if (val === undefined || val === null || val === '') return '-';
+    if (typeof val === 'boolean') return val ? '是' : '否';
+    if (key === 'preCommissionAmount' || key === 'postCommissionAmount') {
+      return typeof val === 'number' ? val.toFixed(2) + ' RMB' : '-';
+    }
+    if (key === 'commission') {
+      return typeof val === 'number' ? val.toString() : '-';
+    }
+    if (key === 'depositRatio') {
+      return typeof val === 'number' ? (val * 100).toFixed(0) + '%' : '-';
+    }
+    if (key === 'packingMethods' && Array.isArray(val)) {
+      return val.length > 0 ? val.join(', ') : '-';
+    }
+    if (key === 'collaborators' && Array.isArray(val)) {
+      return val.join(', ') || '-';
+    }
+    return String(val);
+  };
 
   // 计算总价（支持组合品）
   const total = quote.items.reduce((s, item) => {
@@ -40,71 +87,6 @@ export function QuoteDetail({ quote, onBack, onEdit }: Props) {
   }, 0);
 
   const handlePrint = () => window.print();
-
-  // Excel 表格列定义
-  const excelColumns = [
-    { key: 'index', label: '#', width: 'w-10' },
-    { key: 'image', label: '图片', width: 'w-16' },
-    { key: 'libraryId', label: '产品编号', width: 'w-28' },
-    { key: 'categoryName', label: '产品类型', width: 'w-20' },
-    { key: 'productName', label: '产品名称', width: 'w-40' },
-    { key: 'supplierProductId', label: '型号', width: 'w-24' },
-    { key: 'length', label: '长(mm)', width: 'w-16' },
-    { key: 'width', label: '宽(mm)', width: 'w-16' },
-    { key: 'height', label: '高(mm)', width: 'w-16' },
-    { key: 'description', label: '描述', width: 'w-40' },
-    { key: 'quantity', label: '数量', width: 'w-14' },
-    { key: 'unit', label: '单位', width: 'w-14' },
-    { key: 'basePrice', label: '产品库价格', width: 'w-20' },
-    { key: 'unitPrice', label: '单价', width: 'w-20' },
-    { key: 'totalPrice', label: '总价', width: 'w-20' },
-    { key: 'volume', label: '体积(m³)', width: 'w-20' },
-    { key: 'weight', label: '重量(kg)', width: 'w-16' },
-  ];
-
-  const getCellValue = (item: QuoteItem, key: string) => {
-    const volume = item.length && item.width && item.height
-      ? (item.quantity * item.length * item.width * item.height) / 1000000000
-      : null;
-    switch (key) {
-      case 'index':
-        return '';
-      case 'image':
-        return null;
-      case 'libraryId':
-        return item.libraryId || '-';
-      case 'categoryName':
-        return item.categoryName || (item.type === 'standard' ? '标品' : '非标');
-      case 'productName':
-        return item.productName;
-      case 'supplierProductId':
-        return item.supplierProductId || '-';
-      case 'length':
-        return item.length || '-';
-      case 'width':
-        return item.width || '-';
-      case 'height':
-        return item.height || '-';
-      case 'description':
-        return item.description || '-';
-      case 'quantity':
-        return item.quantity;
-      case 'unit':
-        return item.unit;
-      case 'basePrice':
-        return item.basePrice ? formatCurrency(item.basePrice, quote.currency) : '-';
-      case 'unitPrice':
-        return formatCurrency(item.unitPrice, quote.currency);
-      case 'totalPrice':
-        return formatCurrency(item.quantity * item.unitPrice, quote.currency);
-      case 'volume':
-        return volume !== null ? volume.toFixed(6) : '-';
-      case 'weight':
-        return item.weight ? `${item.quantity * item.weight}` : '-';
-      default:
-        return '';
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -173,7 +155,68 @@ export function QuoteDetail({ quote, onBack, onEdit }: Props) {
         </div>
       </header>
 
-      <main className="max-w-full mx-auto px-6 py-6">
+<main className="max-w-full mx-auto px-6 py-6">
+        {/* 基本信息折叠区 */}
+        <div className="card overflow-hidden mb-5">
+          <button
+            onClick={() => setInfoExpanded(!infoExpanded)}
+            className="w-full px-6 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between hover:bg-gray-100/50 transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm font-semibold text-gray-700">基本信息</span>
+              <span className={`badge text-xs ${quote.status === 'draft' ? 'bg-gray-100 text-gray-500' : 'bg-blue-100 text-blue-700'}`}>
+                {getStatusLabel(quote.status)}
+              </span>
+            </div>
+            <svg
+              className={`w-4 h-4 text-gray-400 transition-transform ${infoExpanded ? 'rotate-180' : ''}`}
+              fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {infoExpanded && (
+            <div className="px-6 py-4 space-y-5">
+              {QUOTE_INFO_SECTIONS.map(section => {
+                const fields = QUOTE_INFO_FIELDS.filter(f => f.section === section.key);
+                return (
+                  <div key={section.key}>
+                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">{section.label}</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-8 gap-y-3 text-sm">
+                      {fields.map(field => {
+                        const val = getInfoValue(field.key);
+                        if (val === '-' && ['preCommissionAmount', 'postCommissionAmount'].includes(field.key)) return null;
+                        return (
+                          <div key={field.key}>
+                            <div className="text-xs text-gray-400 mb-0.5">{field.label}</div>
+                            <div className="text-gray-800 font-medium truncate">{val}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {!infoExpanded && (
+            <div className="px-6 py-2.5 bg-gray-50/30 flex items-center gap-4 text-xs text-gray-500">
+              <span>客户：{quote.customerName || '-'}</span>
+              <span>|</span>
+              <span>国家：{quote.customerCountry || '-'}</span>
+              <span>|</span>
+              <span>币种：{quote.currency}</span>
+              <span>|</span>
+              <span>金额：<span className="font-semibold text-blue-700">{formatCurrency(total, quote.currency)}</span></span>
+            </div>
+          )}
+        </div>
+
         {/* 产品明细区域 */}
         <div className="card overflow-hidden">
           {/* 表头 */}
@@ -211,10 +254,10 @@ export function QuoteDetail({ quote, onBack, onEdit }: Props) {
               <table className="w-full min-w-[1800px]">
                 <thead>
                   <tr className="border-b border-gray-200 bg-blue-50">
-                    {excelColumns.map(col => (
-                      <th 
-                        key={col.key} 
-                        className={`${col.width} text-left text-xs font-semibold text-blue-800 px-3 py-3 uppercase tracking-wide`}
+                    {activeTemplate.columns.map(col => (
+                      <th
+                        key={col.key}
+                        className={`${col.width ?? ''} ${col.minWidth ?? ''} text-left text-xs font-semibold text-blue-800 px-3 py-3 uppercase tracking-wide whitespace-nowrap`}
                       >
                         {col.label}
                       </th>
@@ -245,11 +288,11 @@ export function QuoteDetail({ quote, onBack, onEdit }: Props) {
                             </td>
                             <td className="px-3 py-3"><span className="font-mono text-xs text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded">{combo.comboProductId}</span></td>
                             <td className="px-3 py-3"><span className="badge text-xs bg-orange-100 text-orange-700">组合</span></td>
-                            <td className="px-3 py-3 col-span-2">
+                            <td className="px-3 py-3 col-span-3">
                               <div className="text-sm font-semibold text-orange-800">{combo.comboName}</div>
                               <div className="text-xs text-orange-500">含 {combo.components.length} 个组件</div>
                             </td>
-                            <td colSpan={12} className="px-3 py-3 text-right">
+                            <td colSpan={16} className="px-3 py-3 text-right">
                               <span className="text-sm font-bold text-orange-700">{formatCurrency(finalPrice, quote.currency)}</span>
                             </td>
                           </tr>
@@ -293,43 +336,48 @@ export function QuoteDetail({ quote, onBack, onEdit }: Props) {
                         key={item.id}
                         className={`border-b border-gray-100 hover:bg-blue-50/30 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}
                       >
-                        {excelColumns.map(col => (
-                          <td
-                            key={col.key}
-                            className={`${col.width} px-3 py-2.5 text-sm ${col.key === 'index' ? 'text-gray-400' : 'text-gray-900'}`}
-                          >
-                            {col.key === 'index' ? idx + 1 :
-                             col.key === 'image' ? (
-                               item.imageUrl ? (
-                                 <img src={item.imageUrl} alt="" className="w-10 h-10 object-cover rounded" />
+                        {activeTemplate.columns.map(col => {
+                          const cellVal = col.key === 'no' ? idx + 1 : getItemCellValue(item, col);
+                          const alignClass = col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left';
+                          return (
+                            <td
+                              key={col.key}
+                              className={`${col.width ?? ''} ${col.minWidth ?? ''} px-3 py-2.5 text-sm ${col.key === 'no' ? 'text-gray-400' : 'text-gray-900'} ${alignClass} ${col.key === 'libraryId' ? 'font-mono text-xs' : ''}`}
+                            >
+                              {col.key === 'no' ? cellVal :
+                               col.key === 'image' || col.key === 'image2' ? (
+                                 item.imageUrl ? (
+                                   <img src={item.imageUrl} alt="" className="w-10 h-10 object-cover rounded" />
+                                 ) : (
+                                   <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center">
+                                     <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                     </svg>
+                                   </div>
+                                 )
+                               ) : (cellVal === '-' || cellVal === null || cellVal === undefined) ? (
+                                 <span className="text-gray-400">-</span>
+                               ) : col.key === 'amount' || col.key === 'unitPrice' || col.key === 'basePrice' ? (
+                                 <span className="font-semibold text-gray-900 whitespace-nowrap">{String(cellVal)}</span>
                                ) : (
-                                 <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center">
-                                   <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                   </svg>
-                                 </div>
-                               )
-                             ) : getCellValue(item, col.key)}
-                          </td>
-                        ))}
+                                 String(cellVal)
+                               )}
+                            </td>
+                          );
+                        })}
                       </tr>
                     );
                   })}
                 </tbody>
                 <tfoot>
                   <tr className="bg-blue-100 border-t-2 border-blue-200">
-                    <td colSpan={13} className="px-3 py-3 text-sm font-bold text-blue-900 text-right uppercase tracking-wide">
+                    <td colSpan={activeTemplate.columns.findIndex(c => c.key === 'amount')} className="px-3 py-3 text-sm font-bold text-blue-900 text-right uppercase tracking-wide">
                       合计 Total
                     </td>
                     <td className="px-3 py-3 text-base font-bold text-blue-700 whitespace-nowrap">
                       {formatCurrency(total, quote.currency)}
                     </td>
-                    <td className="px-3 py-3 text-sm font-medium text-blue-700">
-                      {totalVolume.toFixed(6)}
-                    </td>
-                    <td className="px-3 py-3 text-sm font-medium text-blue-700">
-                      {totalWeight.toFixed(2)}
-                    </td>
+                    <td colSpan={activeTemplate.columns.length - activeTemplate.columns.findIndex(c => c.key === 'amount') - 1} className="px-3 py-3 text-sm font-medium text-blue-700"></td>
                   </tr>
                 </tfoot>
               </table>
