@@ -81,6 +81,10 @@ export interface StandardProduct {
   supplierPrices?: SupplierPrice[]; // 多供应商价格列表
   // 产品标签
   tags?: ProductTag[];         // 标签列表（如热销、推荐、新品等）
+  // 条码支持（H5扫码）
+  barcode?: string;           // 条形码（线下展厅产品）
+  qrcode?: string;            // 二维码（线上/线下产品）
+  source?: 'online' | 'showroom'; // 产品来源：线上/展厅
 }
 
 // 产品标签类型

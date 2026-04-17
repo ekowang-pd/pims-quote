@@ -5,6 +5,7 @@ import { QuoteEditor } from './components/QuoteEditor';
 import { QuoteDetail } from './components/QuoteDetail';
 import { ProductSelector } from './components/ProductSelector';
 import { ProductCatalog } from './components/ProductCatalog';
+import { H5ScanSelector } from './components/H5ScanSelector';
 import { SAMPLE_PRODUCTS, CATEGORIES } from './data/categories';
 
 export type AppView = 'dashboard' | 'editor' | 'detail' | 'product-select' | 'catalog';
@@ -213,6 +214,8 @@ function App() {
   const [viewingQuote, setViewingQuote] = useState<Quote | null>(null);
   const [selectingForQuote, setSelectingForQuote] = useState<string | null>(null);
   const [showBatchAddModal, setShowBatchAddModal] = useState(false);
+  const [showH5Scan, setShowH5Scan] = useState(false);
+  const [h5CartItems, setH5CartItems] = useState<QuoteItem[]>([]);
 
   const handleNewQuote = () => {
     const newQuote: Quote = {
@@ -323,6 +326,49 @@ function App() {
     } : prev);
   };
 
+  // H5扫码添加
+  const handleH5ScanAdd = (items: QuoteItem[]) => {
+    setH5CartItems(prev => {
+      const merged = [...prev];
+      items.forEach(item => {
+        const exist = merged.find(i => i.productId === item.productId);
+        if (exist) {
+          exist.quantity += item.quantity;
+        } else {
+          merged.push(item);
+        }
+      });
+      return merged;
+    });
+  };
+
+  // H5扫码后生成报价单
+  const handleH5GenerateQuote = () => {
+    if (h5CartItems.length === 0) return;
+    const newQuote: Quote = {
+      id: `q_${Date.now()}`,
+      quoteNo: `QT-${new Date().getFullYear()}-${String(quotes.length + 1).padStart(4, '0')}`,
+      customerName: '',
+      customerCountry: '',
+      createdAt: new Date().toISOString().split('T')[0],
+      validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      status: 'draft',
+      items: h5CartItems,
+      currency: 'USD',
+      paymentTerms: 'T/T 30% deposit, 70% before shipment',
+      deliveryTerms: 'FOB',
+      customQuoteNo: false,
+      userInvoice: false,
+      needDesigner: false,
+      depositRatio: 0.3,
+      packingMethods: [],
+    };
+    setCurrentQuote(newQuote);
+    setH5CartItems([]);
+    setShowH5Scan(false);
+    setView('editor');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* ===== 全局顶部 Tab 导航（仅在非全屏子页时显示）===== */}
@@ -378,7 +424,21 @@ function App() {
                 新建报价单
               </button>
             )}
-            {mainTab === 'products' && <div className="w-28" />}
+            {mainTab === 'products' && (
+              <>
+                <button
+                  onClick={() => setShowH5Scan(true)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                  </svg>
+                  H5扫码
+                </button>
+                <div className="w-4" />
+              </>
+            )}
           </div>
         </header>
       )}
@@ -420,6 +480,35 @@ function App() {
         <ProductCatalog
           onAddToCart={handleCartGenerateQuote}
         />
+      )}
+
+      {/* H5扫码选品 */}
+      {showH5Scan && (
+        <H5ScanSelector
+          onAddToCart={handleH5ScanAdd}
+          onClose={() => setShowH5Scan(false)}
+        />
+      )}
+
+      {/* H5购物车气泡 */}
+      {h5CartItems.length > 0 && (
+        <div className="fixed bottom-6 right-6 z-40">
+          <button
+            onClick={handleH5GenerateQuote}
+            className="flex items-center gap-3 px-5 py-3 bg-blue-600 text-white rounded-full shadow-2xl hover:bg-blue-700 transition-all hover:scale-105 group"
+          >
+            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-lg font-bold">
+              {h5CartItems.reduce((sum, i) => sum + i.quantity, 0)}
+            </div>
+            <div>
+              <p className="font-semibold text-base leading-tight">扫码选品</p>
+              <p className="text-white/70 text-xs">{h5CartItems.length} 个产品 · 生成报价单</p>
+            </div>
+            <svg className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
       )}
 
       {/* 批量添加弹窗 */}
