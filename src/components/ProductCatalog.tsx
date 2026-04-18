@@ -1385,10 +1385,10 @@ export function ProductCatalog({ onAddToCart }: Props) {
                           <div key={p.id}
                             onClick={() => handleSelectComponentProduct(comp, p)}
                             className={`relative border rounded-xl overflow-hidden cursor-pointer transition-all ${isSelected ? 'border-blue-400 bg-blue-50 ring-1 ring-blue-300' : 'border-gray-100 bg-white hover:border-blue-200 hover:shadow-sm'}`}>
-                            {/* 产品图片 - 固定4:3比例 */}
-                            <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
+                            {/* 产品图片 - 同产品列表风格 */}
+                            <div className="relative h-[180px] bg-gray-100 overflow-hidden flex items-center justify-center">
                               {p.imageUrl ? (
-                                <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                                <img src={p.imageUrl} alt={p.name} className="max-w-full object-contain" style={{ maxHeight: '180px' }} />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">
                                   <span className="text-xs text-gray-400">暂无图片</span>
