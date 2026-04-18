@@ -855,7 +855,7 @@ export function ProductCatalog({ onAddToCart }: Props) {
         productName: product.name,
         length: product.length,
         width: product.width,
-        dimensionValue: dimensionValue,
+        dimensionValue: initDimensionValue,
         basePrice: product.basePrice,
         unitPrice: product.basePrice,
         quantity: 1,
