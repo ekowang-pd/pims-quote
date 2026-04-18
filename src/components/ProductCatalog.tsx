@@ -841,9 +841,10 @@ export function ProductCatalog({ onAddToCart }: Props) {
 
   // 选产品
   const handleSelectComponentProduct = (comp: import('../types').ComboComponent, product: StandardProduct) => {
-    const dimensionValue = comp.priceDimension === 'width' ? product.width :
-                          comp.priceDimension === 'length' ? product.length :
-                          (product.length && product.width ? (product.length * product.width / 1_000_000) : 1);
+    // dimensionValue 初始化为该组件的基准维度值（统一基准，所有产品共用）
+    const initDimensionValue = comp.priceDimension === 'width' ? (comp.baseWidth || 1000)
+      : comp.priceDimension === 'length' ? (comp.baseLength || 1000)
+      : (comp.baseArea || 1);
     setSelectedComponents(prev => ({
       ...prev,
       [comp.id]: {
