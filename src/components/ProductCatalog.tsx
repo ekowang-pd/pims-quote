@@ -1114,7 +1114,7 @@ export function ProductCatalog({ onAddToCart }: Props) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex items-center gap-2 ml-auto relative">
           {/* 清除筛选按钮 */}
           {hasFilter && (
             <button
@@ -1678,7 +1678,7 @@ export function ProductCatalog({ onAddToCart }: Props) {
       {showCart && (
         <div
           id="cart-popover"
-          className="absolute right-6 top-full mt-2 w-[420px] max-h-[520px] bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 overflow-hidden flex flex-col"
+          className="fixed right-6 bottom-20 w-[420px] max-h-[520px] bg-white rounded-2xl shadow-2xl border border-gray-200 z-[100] overflow-hidden flex flex-col"
         >
           {/* 气泡尖角 */}
           <div className="absolute -top-2 right-6 w-4 h-4 bg-white border-l border-t border-gray-200 transform rotate-45" />
