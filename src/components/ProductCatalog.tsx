@@ -1332,7 +1332,7 @@ export function ProductCatalog({ onAddToCart }: Props) {
                   const compProducts = COMBO_PRODUCTS_CATALOG.filter(p => p.subCategoryId === comp.subCategoryId);
                   const dimLabel = comp.priceDimension === 'width' ? '宽度(mm)' : comp.priceDimension === 'length' ? '长度(mm)' : '面积(m²)';
                   return (
-                  <div key={comp.id} className={`card p-4 ${sel ? 'border-2 border-blue-200 bg-blue-50/30' : ''}`}>
+                  <div key={comp.id} className={`card p-3 ${sel ? 'border-2 border-blue-200 bg-blue-50/30' : ''}`}>
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${comp.required ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
@@ -1377,18 +1377,18 @@ export function ProductCatalog({ onAddToCart }: Props) {
                     )}
 
                     {/* 该组件下的可选产品 */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
                       {compProducts.map(p => {
                         const isSelected = sel?.productId === p.id;
                         const supplier = SUPPLIERS.find(s => s.id === p.supplierId);
                         return (
                           <div key={p.id}
                             onClick={() => handleSelectComponentProduct(comp, p)}
-                            className={`relative border rounded-xl overflow-hidden cursor-pointer transition-all ${isSelected ? 'border-blue-400 bg-blue-50 ring-1 ring-blue-300' : 'border-gray-100 bg-white hover:border-blue-200 hover:shadow-sm'}`}>
+                            className={`relative border rounded-lg overflow-hidden cursor-pointer transition-all ${isSelected ? 'border-blue-400 bg-blue-50 ring-1 ring-blue-300' : 'border-gray-100 bg-white hover:border-blue-200 hover:shadow-sm'}`}>
                             {/* 产品图片 - 同产品列表风格 */}
-                            <div className="relative h-[180px] bg-gray-100 overflow-hidden flex items-center justify-center">
+                            <div className="relative h-[160px] bg-gray-100 overflow-hidden flex items-center justify-center">
                               {p.imageUrl ? (
-                                <img src={p.imageUrl} alt={p.name} className="max-w-full object-contain" style={{ maxHeight: '180px' }} />
+                                <img src={p.imageUrl} alt={p.name} className="max-w-full object-contain" style={{ maxHeight: '160px' }} />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">
                                   <span className="text-xs text-gray-400">暂无图片</span>
@@ -1396,15 +1396,15 @@ export function ProductCatalog({ onAddToCart }: Props) {
                               )}
                               {/* 选中角标 */}
                               {isSelected && (
-                                <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center shadow-sm">
-                                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div className="absolute top-1 right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center shadow-sm">
+                                  <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                   </svg>
                                 </div>
                               )}
                             </div>
                             {/* 产品信息 */}
-                            <div className="p-2">
+                            <div className="p-1.5">
                               {/* 规格/颜色/尺寸标签 */}
                               <div className="flex flex-wrap gap-0.5 mb-1">
                                 {p.spec && <span className="px-1 py-0.5 bg-gray-100 rounded text-[10px] text-gray-600">{p.spec}</span>}
