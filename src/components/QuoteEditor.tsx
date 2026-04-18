@@ -142,7 +142,67 @@ function TemplateCell({
   );
 }
 
-// ===== 组合品行组件（可展开） =====
+// ===== 组合品组件行（每个组件作为独立行，类似标品） =====
+function ComboComponentRow({
+  item,
+  comp,
+  compIdx,
+  comboIdx,
+  currency,
+  onRemove,
+  isSubmitted,
+  columns,
+}: {
+  item: ComboQuoteItem;
+  comp: ComboSelectedProduct;
+  compIdx: number;
+  comboIdx: number;
+  currency: string;
+  onRemove: () => void;
+  isSubmitted?: boolean;
+  columns: Array<{key: string; label: string; width?: string; minWidth?: string}>;
+}) {
+  const finalPrice = comp.unitPrice * (1 + (comp as any).margin || item.margin) * comp.quantity;
+  const cellBase = 'px-3 py-2.5 align-middle';
+
+  const getVal = (key: string) => {
+    switch (key) {
+      case 'imageUrl': return null;
+      case 'productName': return (
+        <div className="flex items-center gap-2">
+          <span className="text-[9px] font-mono bg-purple-100 text-purple-600 px-1 py-0.5 rounded border border-purple-200">组合#{comboIdx + 1}</span>
+          <span className="text-xs font-semibold text-gray-800">{comp.productName}</span>
+        </div>
+      );
+      case 'categoryName': return <span className="badge text-xs bg-purple-100 text-purple-700">定制品</span>;
+      case 'spec': return <span className="text-xs text-gray-500">{item.comboName}</span>;
+      case 'quantity': return <span className="text-xs text-gray-600">{comp.quantity}</span>;
+      case 'unit': return <span className="text-xs text-gray-500">{comp.unit}</span>;
+      case 'unitPrice': return <span className="text-xs text-gray-600">${comp.unitPrice.toFixed(2)}</span>;
+      case 'totalPrice': return <span className="text-xs font-medium text-gray-800">${finalPrice.toFixed(2)}</span>;
+      case 'remark': return <span className="text-xs text-gray-400">含 {item.components.length} 件 · {comp.componentId.replace('c-vanity-', '').replace('c-balcony-', '')}</span>;
+      default: return null;
+    }
+  };
+
+  return (
+    <tr className="border-b border-purple-100 bg-purple-50/20 hover:bg-purple-50/40 transition-colors">
+      {columns.map(col => (
+        <td key={col.key} className={`${cellBase} ${col.width ?? ''} ${col.minWidth ?? ''}`}>
+          {col.key === 'imageUrl' ? (
+            comp.length && comp.width ? (
+              <span className="text-[9px] text-gray-400 bg-gray-100 px-1 py-0.5 rounded">{comp.width}×{comp.length}mm</span>
+            ) : (
+              <span className="text-[9px] text-gray-400">-</span>
+            )
+          ) : getVal(col.key)}
+        </td>
+      ))}
+    </tr>
+  );
+}
+
+// ===== 组合品主行（展开按钮 + 汇总行） =====
 function ComboItemRow({
   item,
   idx,
@@ -156,75 +216,25 @@ function ComboItemRow({
   onRemove: () => void;
   isSubmitted?: boolean;
 }) {
-  const [expanded, setExpanded] = useState(true); // 默认展开
   const finalPrice = item.totalPrice * (1 + item.margin);
 
   return (
     <>
-      {/* 组合品主行：跨越全部列 */}
-      <tr className="border-b border-orange-200 bg-orange-50/40">
-        <td colSpan={100} className="px-4 py-3">
-          <div className="flex items-center gap-4">
-            {/* 展开/折叠按钮 */}
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="w-8 h-8 rounded-lg bg-orange-100 hover:bg-orange-200 flex items-center justify-center cursor-pointer transition-colors flex-shrink-0"
-            >
-              <svg
-                className={`w-4 h-4 text-orange-600 transition-transform ${expanded ? 'rotate-90' : ''}`}
-                fill="none" stroke="currentColor" viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-
-            {/* 图片 */}
-            {item.imageUrl ? (
-              <img src={item.imageUrl} alt={item.comboName} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
-            ) : (
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+      {/* 组合品展开控制行（不影响表格布局） */}
+      <tr className="bg-orange-50/30">
+        <td colSpan={100} className="px-4 py-1.5">
+          <div className="flex items-center gap-2">
+            <span className="badge text-[10px] bg-orange-100 text-orange-700">组合品 #{idx + 1}</span>
+            <span className="text-xs font-medium text-gray-700">{item.comboName}</span>
+            <span className="text-xs text-gray-400">({item.components.length} 件)</span>
+            <span className="ml-2 text-xs font-semibold text-orange-600">${finalPrice.toFixed(2)}</span>
+            {!isSubmitted && (
+              <button onClick={onRemove} className="ml-auto text-gray-400 hover:text-red-500 cursor-pointer">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
-              </div>
+              </button>
             )}
-
-            {/* 信息 */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="font-mono text-xs text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded">{item.comboProductId}</span>
-                <span className="badge text-xs bg-orange-100 text-orange-700">组合</span>
-                <span className="text-sm font-semibold text-orange-800">{item.comboName}</span>
-                <span className="text-xs text-orange-500">含 {item.components.length} 个组件</span>
-              </div>
-              {expanded && (
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {item.components.map((comp, ci) => (
-                    <span key={comp.componentId} className="text-xs bg-white border border-orange-200 rounded px-2 py-1 text-gray-600">
-                      {ci + 1}. {comp.productName}
-                      <span className="text-orange-500 ml-1">${comp.unitPrice.toFixed(2)} × {comp.quantity}</span>
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* 价格 */}
-            <div className="text-right flex-shrink-0">
-              <div className="text-sm font-bold text-orange-700">{formatCurrency(finalPrice, currency)}</div>
-              <div className="text-xs text-gray-400 mt-0.5">成本 {formatCurrency(item.totalPrice, currency)}</div>
-            </div>
-
-            {/* 删除 */}
-            <button
-              onClick={onRemove}
-              disabled={isSubmitted}
-              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer flex-shrink-0 ${isSubmitted ? 'text-gray-200 cursor-not-allowed' : 'text-gray-400 hover:text-red-500 hover:bg-red-50'}`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
           </div>
         </td>
       </tr>
@@ -1237,15 +1247,30 @@ export function QuoteEditor({ quote, onSave, onCancel, onAddProducts, onBatchAdd
                         {quote.items.map((item, idx) => {
                           if (item.type === 'combo') {
                             const combo = item as ComboQuoteItem;
+                            // 每个组件作为独立行，组合品汇总行在上方
                             return (
-                              <ComboItemRow
-                                key={item.id}
-                                item={combo}
-                                idx={idx}
-                                currency={quote.currency}
-                                onRemove={() => removeItem(item.id)}
-                                isSubmitted={isSubmitted}
-                              />
+                              <tbody key={item.id} className="combo-group">
+                                <ComboItemRow
+                                  item={combo}
+                                  idx={idx}
+                                  currency={quote.currency}
+                                  onRemove={() => removeItem(item.id)}
+                                  isSubmitted={isSubmitted}
+                                />
+                                {combo.components.map((comp, ci) => (
+                                  <ComboComponentRow
+                                    key={`${item.id}-${comp.componentId}`}
+                                    item={combo}
+                                    comp={comp}
+                                    compIdx={ci}
+                                    comboIdx={idx}
+                                    currency={quote.currency}
+                                    onRemove={() => removeItem(item.id)}
+                                    isSubmitted={isSubmitted}
+                                    columns={activeTemplate.columns}
+                                  />
+                                ))}
+                              </tbody>
                             );
                           }
                           const stdItem = item as QuoteItem;
