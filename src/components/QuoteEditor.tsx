@@ -34,7 +34,12 @@ function TemplateCell({
 
   // 序号列
   if (col.key === 'no') {
-    return <td className={`${cellBase} text-xs text-gray-500 select-none`}>{idx + 1}</td>;
+    // 组合品组件显示 "1.1"、"1.2" 格式，标品显示 "1"、"2"
+    const comboIdx = (item as any)._comboIdx;
+    const displayNo = comboIdx !== undefined
+      ? `${comboIdx + 1}.${idx + 1}`
+      : idx + 1;
+    return <td className={`${cellBase} text-xs text-gray-500 select-none`}>{displayNo}</td>;
   }
 
   // 删除按钮列
@@ -208,12 +213,8 @@ function ComboComponentRow({
 
   return (
     <tr className="border-b border-purple-100 bg-purple-50/20 hover:bg-purple-50/40 transition-colors">
-      {/* 第1列：序号 */}
-      <td className="px-3 py-2.5 text-xs text-gray-400 select-none text-center">
-        {compIdx + 1}
-      </td>
-      {/* 其余列用 TemplateCell */}
-      {DEFAULT_TEMPLATE.columns.filter(c => c.key !== 'no').map(col => (
+      {/* 所有列用 TemplateCell 统一渲染，保持与标品行完全一致 */}
+      {DEFAULT_TEMPLATE.columns.map(col => (
         <TemplateCell
           key={col.key}
           col={col}
@@ -1274,30 +1275,45 @@ export function QuoteEditor({ quote, onSave, onCancel, onAddProducts, onBatchAdd
                         {quote.items.map((item, idx) => {
                           if (item.type === 'combo') {
                             const combo = item as ComboQuoteItem;
-                            // 每个组件作为独立行，组合品汇总行在上方
-                            return (
-                              <tbody key={item.id} className="combo-group">
-                                <ComboItemRow
+                            const comboFinalPrice = combo.totalPrice * (1 + combo.margin);
+                            // 使用 Fragment 而非嵌套 tbody，保持表格列结构正确
+                            const comboRows: React.ReactNode[] = [];
+                            // 汇总行
+                            comboRows.push(
+                              <tr key={`${item.id}-header`} className="bg-orange-50/30">
+                                <td colSpan={activeTemplate.columns.length} className="px-4 py-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="badge text-[10px] bg-orange-100 text-orange-700">组合品 #{idx + 1}</span>
+                                    <span className="text-xs font-medium text-gray-700">{item.comboName}</span>
+                                    <span className="text-xs text-gray-400">({item.components.length} 件)</span>
+                                    <span className="ml-2 text-xs font-semibold text-orange-600">${comboFinalPrice.toFixed(2)}</span>
+                                    {!isSubmitted && (
+                                      <button onClick={() => removeItem(item.id)} className="ml-auto text-gray-400 hover:text-red-500 cursor-pointer">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                            // 每个组件行
+                            combo.components.forEach((comp, ci) => {
+                              comboRows.push(
+                                <ComboComponentRow
+                                  key={`${item.id}-${comp.componentId}`}
                                   item={combo}
-                                  idx={idx}
+                                  comp={comp}
+                                  compIdx={ci}
+                                  comboIdx={idx}
                                   currency={quote.currency}
                                   onRemove={() => removeItem(item.id)}
                                   isSubmitted={isSubmitted}
                                 />
-                                {combo.components.map((comp, ci) => (
-                                  <ComboComponentRow
-                                    key={`${item.id}-${comp.componentId}`}
-                                    item={combo}
-                                    comp={comp}
-                                    compIdx={ci}
-                                    comboIdx={idx}
-                                    currency={quote.currency}
-                                    onRemove={() => removeItem(item.id)}
-                                    isSubmitted={isSubmitted}
-                                  />
-                                ))}
-                              </tbody>
-                            );
+                              );
+                            });
+                            return <>{comboRows}</>;
                           }
                           const stdItem = item as QuoteItem;
                           // 扩展字段（陶瓷特有）
