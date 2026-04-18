@@ -107,8 +107,25 @@ function TemplateCell({
       return (
         <td className={cellBase}>
           <span className={`badge text-xs ${item.type === 'standard' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
-            {(rawVal as string) || (item.type === 'standard' ? '标品' : '非标')}
+            {/* categoryName 可能是字符串或对象 */}
+            {typeof rawVal === 'object' && rawVal !== null && 'name' in rawVal
+              ? (rawVal as { name: string }).name
+              : (rawVal as string) || (item.type === 'standard' ? '标品' : '非标')}
           </span>
+        </td>
+      );
+    }
+    if (col.key === 'productName') {
+      return (
+        <td className={cellBase}>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {(item as any)._comboIdx !== undefined ? (
+              <span className="text-[9px] font-mono bg-purple-100 text-purple-600 px-1 py-0.5 rounded border border-purple-200 flex-shrink-0">
+                组合#{(item as any)._comboIdx + 1}
+              </span>
+            ) : null}
+            <span className="text-xs font-semibold text-gray-900">{item.productName || '-'}</span>
+          </div>
         </td>
       );
     }
@@ -161,14 +178,14 @@ function ComboComponentRow({
   isSubmitted?: boolean;
 }) {
   // 将 ComboSelectedProduct 透转为 QuoteItem 格式，供 TemplateCell 直接使用
-  const rowItem: QuoteItem = {
+  const rowItem: ExtendedQuoteItem & { _comboIdx?: number } = {
     id: `${item.id}-${comp.componentId}`,
     type: 'standard',
     productId: comp.productId,
     libraryId: comp.libraryId,
     supplierProductId: comp.supplierProductId,
     productName: comp.productName,
-    categoryName: '定制品',
+    categoryName: { id: 'combo', name: '定制品' },
     spec: item.comboName,
     color: '',
     size: '',
@@ -185,6 +202,8 @@ function ComboComponentRow({
     margin: item.margin,
     remark: `${item.comboName} · 组合#${comboIdx + 1} 第${compIdx + 1}件`,
     imageUrl: undefined,
+    // 附加字段：让TemplateCell知道这是组合品第几个组件
+    _comboIdx: comboIdx,
   };
 
   return (
