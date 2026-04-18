@@ -1380,27 +1380,51 @@ export function ProductCatalog({ onAddToCart }: Props) {
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {compProducts.map(p => {
                         const isSelected = sel?.productId === p.id;
+                        const supplier = SUPPLIERS.find(s => s.id === p.supplierId);
                         return (
                           <div key={p.id}
                             onClick={() => handleSelectComponentProduct(comp, p)}
-                            className={`border rounded-lg p-2 cursor-pointer transition-all ${isSelected ? 'border-blue-400 bg-blue-50 ring-1 ring-blue-300' : 'border-gray-100 bg-gray-50 hover:border-blue-200 hover:bg-blue-50/50'}`}>
-                            {p.imageUrl ? (
-                              <img src={p.imageUrl} alt={p.name} className="w-full h-16 object-cover rounded mb-1.5" />
-                            ) : (
-                              <div className="w-full h-16 bg-gray-200 rounded mb-1.5 flex items-center justify-center">
-                                <span className="text-xs text-gray-400">暂无图片</span>
+                            className={`relative border rounded-xl overflow-hidden cursor-pointer transition-all ${isSelected ? 'border-blue-400 bg-blue-50 ring-1 ring-blue-300' : 'border-gray-100 bg-white hover:border-blue-200 hover:shadow-sm'}`}>
+                            {/* 产品图片 - 固定16:10比例 */}
+                            <div className="relative aspect-[16/10] bg-gray-100 overflow-hidden">
+                              {p.imageUrl ? (
+                                <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <span className="text-xs text-gray-400">暂无图片</span>
+                                </div>
+                              )}
+                              {/* 选中角标 */}
+                              {isSelected && (
+                                <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center shadow-sm">
+                                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </div>
+                              )}
+                            </div>
+                            {/* 产品信息 */}
+                            <div className="p-2">
+                              {/* 规格/颜色/尺寸标签 */}
+                              <div className="flex flex-wrap gap-0.5 mb-1">
+                                {p.spec && <span className="px-1 py-0.5 bg-gray-100 rounded text-[10px] text-gray-600">{p.spec}</span>}
+                                {p.color && (
+                                  <span className="flex items-center gap-0.5 px-1 py-0.5 bg-gray-100 rounded text-[10px] text-gray-600">
+                                    <span className="w-2 h-2 rounded-full border border-gray-300 flex-shrink-0" style={{ backgroundColor: COLOR_DOTS[p.color] || '#e5e7eb' }} />
+                                    {p.color}
+                                  </span>
+                                )}
+                                {p.size && <span className="px-1 py-0.5 bg-blue-50 rounded text-[10px] text-blue-600 font-medium">{p.size}</span>}
                               </div>
-                            )}
-                            <p className="text-xs font-medium text-gray-800 truncate">{p.name}</p>
-                            {p.spec && <p className="text-[10px] text-gray-500">{p.spec}</p>}
-                            <p className="text-xs font-bold text-blue-700 mt-1">${p.basePrice}/{p.unit}</p>
-                            {isSelected && (
-                              <div className="absolute top-1 right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                                <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                </svg>
+                              <p className="text-xs font-semibold text-gray-900 leading-snug line-clamp-2 mb-1">{p.name}</p>
+                              {supplier && <p className="text-[10px] text-gray-400 truncate mb-1.5">{supplier.name}</p>}
+                              <div className="flex items-center justify-between pt-1 border-t border-gray-100">
+                                <div>
+                                  <span className="text-xs font-bold text-blue-700">${p.basePrice.toFixed(2)}</span>
+                                  <span className="text-[10px] text-gray-400 ml-0.5">/{p.unit}</span>
+                                </div>
                               </div>
-                            )}
+                            </div>
                           </div>
                         );
                       })}
