@@ -142,7 +142,7 @@ function TemplateCell({
   );
 }
 
-// ===== 组合品组件行（每个组件作为独立行，类似标品） =====
+// ===== 组合品组件行（每个组件作为独立行，用TemplateCell渲染，保持字段结构一致） =====
 function ComboComponentRow({
   item,
   comp,
@@ -151,7 +151,6 @@ function ComboComponentRow({
   currency,
   onRemove,
   isSubmitted,
-  columns,
 }: {
   item: ComboQuoteItem;
   comp: ComboSelectedProduct;
@@ -160,43 +159,52 @@ function ComboComponentRow({
   currency: string;
   onRemove: () => void;
   isSubmitted?: boolean;
-  columns: Array<{key: string; label: string; width?: string; minWidth?: string}>;
 }) {
-  const finalPrice = comp.unitPrice * (1 + (comp as any).margin || item.margin) * comp.quantity;
-  const cellBase = 'px-3 py-2.5 align-middle';
-
-  const getVal = (key: string) => {
-    switch (key) {
-      case 'imageUrl': return null;
-      case 'productName': return (
-        <div className="flex items-center gap-2">
-          <span className="text-[9px] font-mono bg-purple-100 text-purple-600 px-1 py-0.5 rounded border border-purple-200">组合#{comboIdx + 1}</span>
-          <span className="text-xs font-semibold text-gray-800">{comp.productName}</span>
-        </div>
-      );
-      case 'categoryName': return <span className="badge text-xs bg-purple-100 text-purple-700">定制品</span>;
-      case 'spec': return <span className="text-xs text-gray-500">{item.comboName}</span>;
-      case 'quantity': return <span className="text-xs text-gray-600">{comp.quantity}</span>;
-      case 'unit': return <span className="text-xs text-gray-500">{comp.unit}</span>;
-      case 'unitPrice': return <span className="text-xs text-gray-600">${comp.unitPrice.toFixed(2)}</span>;
-      case 'totalPrice': return <span className="text-xs font-medium text-gray-800">${finalPrice.toFixed(2)}</span>;
-      case 'remark': return <span className="text-xs text-gray-400">含 {item.components.length} 件 · {comp.componentId.replace('c-vanity-', '').replace('c-balcony-', '')}</span>;
-      default: return null;
-    }
+  // 将 ComboSelectedProduct 透转为 QuoteItem 格式，供 TemplateCell 直接使用
+  const rowItem: QuoteItem = {
+    id: `${item.id}-${comp.componentId}`,
+    type: 'standard',
+    productId: comp.productId,
+    libraryId: comp.libraryId,
+    supplierProductId: comp.supplierProductId,
+    productName: comp.productName,
+    categoryName: '定制品',
+    spec: item.comboName,
+    color: '',
+    size: '',
+    length: comp.length,
+    width: comp.width,
+    height: 0,
+    unit: comp.unit,
+    quantity: comp.quantity,
+    basePrice: comp.basePrice,
+    unitPrice: comp.unitPrice,
+    totalPrice: comp.unitPrice * comp.quantity,
+    volume: 0,
+    weight: 0,
+    margin: item.margin,
+    remark: `${item.comboName} · 组合#${comboIdx + 1} 第${compIdx + 1}件`,
+    imageUrl: undefined,
   };
 
   return (
     <tr className="border-b border-purple-100 bg-purple-50/20 hover:bg-purple-50/40 transition-colors">
-      {columns.map(col => (
-        <td key={col.key} className={`${cellBase} ${col.width ?? ''} ${col.minWidth ?? ''}`}>
-          {col.key === 'imageUrl' ? (
-            comp.length && comp.width ? (
-              <span className="text-[9px] text-gray-400 bg-gray-100 px-1 py-0.5 rounded">{comp.width}×{comp.length}mm</span>
-            ) : (
-              <span className="text-[9px] text-gray-400">-</span>
-            )
-          ) : getVal(col.key)}
-        </td>
+      {/* 第1列：序号 */}
+      <td className="px-3 py-2.5 text-xs text-gray-400 select-none text-center">
+        {compIdx + 1}
+      </td>
+      {/* 其余列用 TemplateCell */}
+      {DEFAULT_TEMPLATE.columns.filter(c => c.key !== 'no').map(col => (
+        <TemplateCell
+          key={col.key}
+          col={col}
+          item={rowItem}
+          idx={compIdx}
+          currency={currency}
+          onUpdate={() => {}}
+          onRemove={onRemove}
+          isSubmitted={isSubmitted}
+        />
       ))}
     </tr>
   );
@@ -1267,7 +1275,6 @@ export function QuoteEditor({ quote, onSave, onCancel, onAddProducts, onBatchAdd
                                     currency={quote.currency}
                                     onRemove={() => removeItem(item.id)}
                                     isSubmitted={isSubmitted}
-                                    columns={activeTemplate.columns}
                                   />
                                 ))}
                               </tbody>
