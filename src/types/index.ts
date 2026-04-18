@@ -150,6 +150,7 @@ export interface Quote {
   deliveryTerms: string;
   templateId?: string;  // 报价单模版 ID（'default' | 'ceramic' | 'sanitary'）
   remark?: string;
+  batchId?: string;      // 批量报价单关联ID，同一次批量生成的所有报价单共享此ID
 
   // ===== 业务系统扩展字段 =====
 

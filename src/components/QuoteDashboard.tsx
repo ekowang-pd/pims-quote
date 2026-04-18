@@ -186,6 +186,34 @@ export function QuoteDashboard({ quotes, onNewQuote, onEditQuote, onViewQuote, o
                             {quote.quoteNo}
                           </button>
                           <p className="text-[11px] text-gray-400 mt-0.5">{quote.createdAt?.slice(0, 10)}</p>
+                          {/* 关联报价单标签 */}
+                          {quote.batchId && (() => {
+                            const batchQuotes = quotes.filter(q => q.batchId === quote.batchId);
+                            if (batchQuotes.length <= 1) return null;
+                            const otherQuotes = batchQuotes.filter(q => q.id !== quote.id);
+                            return (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                <span className="inline-flex items-center px-1.5 py-0.5 bg-orange-50 text-orange-600 text-[10px] rounded">
+                                  批量 {batchQuotes.length}
+                                </span>
+                                {otherQuotes.slice(0, 2).map(q => (
+                                  <button
+                                    key={q.id}
+                                    onClick={(e) => { e.stopPropagation(); onViewQuote(q); }}
+                                    className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] rounded hover:bg-gray-200 cursor-pointer"
+                                  >
+                                    <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                    {q.quoteNo}
+                                  </button>
+                                ))}
+                                {otherQuotes.length > 2 && (
+                                  <span className="text-[10px] text-gray-400">+{otherQuotes.length - 2}</span>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </td>
 
                         {/* 报价人：头像+中文名+英文名 */}

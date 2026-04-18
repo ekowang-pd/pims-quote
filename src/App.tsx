@@ -206,9 +206,107 @@ p001, p002, p003
   );
 }
 
+// ===== 拆分报价单确认弹窗 =====
+function SplitQuoteModal({
+  groups,
+  onSplit,      // 拆分成多个报价单
+  onMerge,      // 合并成一个报价单
+  onClose,
+}: {
+  groups: { categoryName: string; items: QuoteItem[]; subtotal: number }[];
+  onSplit: (groups: { categoryName: string; items: QuoteItem[]; subtotal: number }[]) => void;
+  onMerge: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200]" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-[480px] max-h-[80vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+        {/* 头部 */}
+        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-orange-50 to-amber-50">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
+              <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-gray-800">检测到多种产品类型</h2>
+              <p className="text-xs text-gray-500">是否需要拆分为多个报价单？</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 cursor-pointer p-1.5 rounded-lg hover:bg-gray-100">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* 分组预览 */}
+        <div className="flex-1 overflow-y-auto p-5">
+          <div className="space-y-3">
+            {groups.map((group, idx) => (
+              <div key={group.categoryName} className="border border-gray-200 rounded-xl overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-medium">{idx + 1}</span>
+                    <span className="text-sm font-medium text-gray-700">{group.categoryName}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-gray-500">
+                    <span>{group.items.length} 件产品</span>
+                    <span className="font-medium text-orange-600">${group.subtotal.toFixed(2)}</span>
+                  </div>
+                </div>
+                <div className="px-4 py-2 bg-white">
+                  <p className="text-xs text-gray-400 truncate">
+                    {group.items.slice(0, 3).map(i => i.productName).join('、')}
+                    {group.items.length > 3 && `...等 ${group.items.length} 件`}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* 合计 */}
+          <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">总计</span>
+              <span className="text-lg font-bold text-blue-700">
+                ${groups.reduce((sum, g) => sum + g.subtotal, 0).toFixed(2)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* 操作按钮 */}
+        <div className="px-5 py-4 border-t border-gray-100 bg-gray-50 flex flex-col gap-2">
+          <button
+            onClick={() => onSplit(groups)}
+            className="w-full py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors cursor-pointer flex items-center justify-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+            </svg>
+            拆分为 {groups.length} 个报价单
+          </button>
+          <button
+            onClick={onMerge}
+            className="w-full py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
+          >
+            合并为一个报价单
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [mainTab, setMainTab] = useState<MainTab>('quotes');
   const [view, setView] = useState<AppView>('dashboard');
+  // 拆分报价单弹窗
+  const [splitModalGroups, setSplitModalGroups] = useState<{ categoryName: string; items: QuoteItem[]; subtotal: number }[] | null>(null);
+  const [pendingItems, setPendingItems] = useState<QuoteItem[] | null>(null);
+
   const [quotes, setQuotes] = useState<Quote[]>([
     {
       id: 'q_001',
@@ -329,8 +427,35 @@ function App() {
 
   // 从产品库报价车生成报价单
   const handleCartGenerateQuote = (items: QuoteItem[]) => {
+    // 按 categoryName 分组
+    const grouped = items.reduce((acc, item) => {
+      const key = item.categoryName || '其他';
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(item);
+      return acc;
+    }, {} as Record<string, QuoteItem[]>);
+
+    const groups = Object.entries(grouped).map(([categoryName, groupItems]) => ({
+      categoryName,
+      items: groupItems,
+      subtotal: groupItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0),
+    }));
+
+    // 如果有多个类型，显示拆分确认弹窗
+    if (groups.length > 1) {
+      setSplitModalGroups(groups);
+      setPendingItems(items);
+      return;
+    }
+
+    // 只有一个类型，直接生成报价单
+    generateSingleQuote(items);
+  };
+
+  // 生成单个报价单
+  const generateSingleQuote = (items: QuoteItem[], batchId?: string) => {
     const newQuote: Quote = {
-      id: `q_${Date.now()}`,
+      id: `q_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
       quoteNo: `QT-${new Date().getFullYear()}-${String(quotes.length + 1).padStart(4, '0')}`,
       customerName: '',
       customerCountry: '',
@@ -341,6 +466,7 @@ function App() {
       currency: 'USD',
       paymentTerms: 'T/T 30% deposit, 70% before shipment',
       deliveryTerms: 'FOB',
+      batchId,
       customQuoteNo: false,
       userInvoice: false,
       needDesigner: false,
@@ -349,6 +475,46 @@ function App() {
     };
     setCurrentQuote(newQuote);
     setView('editor');
+  };
+
+  // 拆分生成多个报价单
+  const handleSplitQuotes = (groups: { categoryName: string; items: QuoteItem[]; subtotal: number }[]) => {
+    const batchId = `batch_${Date.now()}`;
+    // 生成第一个报价单并打开编辑器
+    const firstGroup = groups[0];
+    generateSingleQuote(firstGroup.items, batchId);
+    // 将其他报价单保存到 quotes 列表（草稿状态）
+    const otherQuotes: Quote[] = groups.slice(1).map((group, idx) => ({
+      id: `q_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      quoteNo: `QT-${new Date().getFullYear()}-${String(quotes.length + 2 + idx).padStart(4, '0')}`,
+      customerName: '',
+      customerCountry: '',
+      createdAt: new Date().toISOString().split('T')[0],
+      validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      status: 'draft' as const,
+      items: group.items,
+      currency: 'USD',
+      paymentTerms: 'T/T 30% deposit, 70% before shipment',
+      deliveryTerms: 'FOB',
+      batchId,
+      customQuoteNo: false,
+      userInvoice: false,
+      needDesigner: false,
+      depositRatio: 0.3,
+      packingMethods: [],
+    }));
+    setQuotes(prev => [...prev, ...otherQuotes]);
+    setSplitModalGroups(null);
+    setPendingItems(null);
+  };
+
+  // 合并生成一个报价单
+  const handleMergeQuote = () => {
+    if (pendingItems) {
+      generateSingleQuote(pendingItems);
+    }
+    setSplitModalGroups(null);
+    setPendingItems(null);
   };
 
   const handleEditQuote = (quote: Quote) => {
@@ -613,6 +779,16 @@ function App() {
         <BatchAddModal
           onAdd={handleBatchAddItems}
           onClose={() => setShowBatchAddModal(false)}
+        />
+      )}
+
+      {/* 拆分报价单确认弹窗 */}
+      {splitModalGroups && (
+        <SplitQuoteModal
+          groups={splitModalGroups}
+          onSplit={handleSplitQuotes}
+          onMerge={handleMergeQuote}
+          onClose={() => { setSplitModalGroups(null); setPendingItems(null); }}
         />
       )}
     </div>
