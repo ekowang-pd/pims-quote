@@ -906,7 +906,7 @@ export function ProductCatalog({ onAddToCart }: Props) {
       totalPrice: comboTotalPrice,
       margin: 0,
     };
-    onAddToCart(comboItem);
+    onAddToCart([comboItem]);
     setSelectedComponents({});
     setCatalogMode('combo-type');
     setActiveComboProduct(null);
