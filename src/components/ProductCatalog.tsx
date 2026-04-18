@@ -1385,8 +1385,8 @@ export function ProductCatalog({ onAddToCart }: Props) {
                           <div key={p.id}
                             onClick={() => handleSelectComponentProduct(comp, p)}
                             className={`relative border rounded-xl overflow-hidden cursor-pointer transition-all ${isSelected ? 'border-blue-400 bg-blue-50 ring-1 ring-blue-300' : 'border-gray-100 bg-white hover:border-blue-200 hover:shadow-sm'}`}>
-                            {/* 产品图片 - 固定16:10比例 */}
-                            <div className="relative aspect-[16/10] bg-gray-100 overflow-hidden">
+                            {/* 产品图片 - 固定4:3比例 */}
+                            <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
                               {p.imageUrl ? (
                                 <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
                               ) : (
@@ -1417,8 +1417,8 @@ export function ProductCatalog({ onAddToCart }: Props) {
                                 {p.size && <span className="px-1 py-0.5 bg-blue-50 rounded text-[10px] text-blue-600 font-medium">{p.size}</span>}
                               </div>
                               <p className="text-xs font-semibold text-gray-900 leading-snug line-clamp-2 mb-1">{p.name}</p>
-                              {supplier && <p className="text-[10px] text-gray-400 truncate mb-1.5">{supplier.name}</p>}
-                              <div className="flex items-center justify-between pt-1 border-t border-gray-100">
+                              {supplier && <p className="text-[10px] text-gray-400 truncate mb-1">{supplier.name}</p>}
+                              <div className="flex items-center justify-between pt-0.5 border-t border-gray-100">
                                 <div>
                                   <span className="text-xs font-bold text-blue-700">${p.basePrice.toFixed(2)}</span>
                                   <span className="text-[10px] text-gray-400 ml-0.5">/{p.unit}</span>
