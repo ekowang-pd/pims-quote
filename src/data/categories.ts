@@ -707,23 +707,36 @@ export const COMBO_PRODUCTS_CATALOG: StandardProduct[] = [
     imageUrl: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=400&h=300&fit=crop',
     length: 1500, width: 520, height: 550, weight: 45, description: '高档实木浴室柜，原木色开放漆，双开门+抽屉组合',
   },
+  // 洗手盆/面盆
+  {
+    id: 'bs001', libraryId: 'LIB-CMP-0051', supplierProductId: 'MW-BS-600A', categoryId: 'sanitary', subCategoryId: 'basin',
+    name: '台上陶瓷洗手盆', spec: '台上盆', color: '白色', size: '600x460mm', unit: '件', moq: 10, basePrice: 45,
+    imageUrl: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=400&h=300&fit=crop',
+    length: 600, width: 460, height: 150, weight: 18, description: '台上艺术陶瓷洗手盆，简约大方，安装方便',
+  },
+  {
+    id: 'bs002', libraryId: 'LIB-CMP-0052', supplierProductId: 'MW-BS-700A', categoryId: 'sanitary', subCategoryId: 'basin',
+    name: '台下陶瓷洗手盆', spec: '台下盆', color: '白色', size: '700x480mm', unit: '件', moq: 10, basePrice: 55,
+    imageUrl: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=400&h=300&fit=crop',
+    length: 700, width: 480, height: 150, weight: 22, description: '台下嵌入式陶瓷洗手盆，简洁美观，易于清洁',
+  },
   // 镜柜
   {
     id: 'mc001', libraryId: 'LIB-CMP-0011', supplierProductId: 'MW-MC-800-LED', categoryId: 'sanitary', subCategoryId: 'mirror-cabinet',
     name: 'LED智能镜柜', spec: 'LED镜', color: '银色', size: '0.8m', unit: '件', moq: 5, basePrice: 120,
-    imageUrl: 'https://images.unsplash.com/photo-1513506003901-1e6a35b66a37?w=400&h=300&fit=crop',
+    imageUrl: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=400&h=300&fit=crop',
     length: 800, width: 120, height: 600, weight: 15, description: 'LED背光智能镜柜，银色铝合金边框，除雾功能，三色可调',
   },
   {
     id: 'mc002', libraryId: 'LIB-CMP-0012', supplierProductId: 'MW-MC-1000-LED', categoryId: 'sanitary', subCategoryId: 'mirror-cabinet',
     name: 'LED智能镜柜宽版', spec: 'LED镜', color: '银色', size: '1.0m', unit: '件', moq: 5, basePrice: 145,
-    imageUrl: 'https://images.unsplash.com/photo-1513506003901-1e6a35b66a37?w=400&h=300&fit=crop',
+    imageUrl: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=400&h=300&fit=crop',
     length: 1000, width: 120, height: 600, weight: 18, description: 'LED背光智能镜柜宽版，银色边框，触屏控制',
   },
   {
     id: 'mc003', libraryId: 'LIB-CMP-0013', supplierProductId: 'MW-MC-800-S', categoryId: 'sanitary', subCategoryId: 'mirror-cabinet',
     name: '普通镜柜', spec: '普通镜', color: '白色', size: '0.8m', unit: '件', moq: 10, basePrice: 68,
-    imageUrl: 'https://images.unsplash.com/photo-1513506003901-1e6a35b66a37?w=400&h=300&fit=crop',
+    imageUrl: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=400&h=300&fit=crop',
     length: 800, width: 120, height: 600, weight: 12, description: '普通镜柜，白色边框，经济实用款',
   },
   // 阳台柜
