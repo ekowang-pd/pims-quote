@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import type { QuoteItem, StandardProduct, Category, SubCategory, ProductTag } from '../types';
-import { SAMPLE_PRODUCTS, CATEGORIES, SUPPLIERS, COMBO_PRODUCTS } from '../data/categories';
+import { SAMPLE_PRODUCTS, CATEGORIES, SUPPLIERS, COMBO_PRODUCTS, COMBO_PRODUCTS_CATALOG } from '../data/categories';
 import type { ComboProduct, ComboQuoteItem } from '../types';
 
 // 标签配置
@@ -1265,7 +1265,7 @@ export function ProductCatalog({ onAddToCart }: Props) {
                     </div>
                     {/* 该组件下的可选产品 */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {comp.products.map(p => {
+                      {COMBO_PRODUCTS_CATALOG.filter(p => p.subCategoryId === comp.subCategoryId).map(p => {
                         const supplier = SUPPLIERS.find(s => s.id === p.supplierId);
                         return (
                           <div key={p.id} className="border border-gray-100 rounded-lg p-2 bg-gray-50">
@@ -1362,9 +1362,12 @@ export function ProductCatalog({ onAddToCart }: Props) {
                             <span className="font-mono text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded text-[11px]">{product.libraryId || '-'}</span>
                           </td>
                           <td className="px-3 py-2.5">
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               {inCart && <svg className="w-3.5 h-3.5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>}
                               <span className="font-medium text-gray-900">{product.name}</span>
+                              {product.seriesName && (
+                                <span className="text-[9px] text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded border border-indigo-100">{product.seriesName}</span>
+                              )}
                             </div>
                           </td>
                           <td className="px-3 py-2.5 text-gray-600">{product.spec}</td>
@@ -1423,10 +1426,20 @@ export function ProductCatalog({ onAddToCart }: Props) {
                       </div>
                     </div>
                     <div className="p-2">
-                      <div className="flex items-center gap-1 mb-0.5 flex-wrap">
-                        {product.libraryId && <span className="font-mono text-[9px] text-blue-600 bg-blue-50 px-1 py-0.5 rounded border border-blue-100">{product.libraryId}</span>}
+                      {/* 三级系列名 + 供应商产品ID */}
+                      <div className="flex items-center gap-1 mb-1 flex-wrap">
+                        {product.seriesName && (
+                          <span className="text-[9px] font-medium text-teal-700 bg-teal-50 px-1 py-0.5 rounded border border-teal-100">
+                            {product.seriesName}
+                          </span>
+                        )}
+                        {product.supplierProductId && (
+                          <span className="font-mono text-[9px] text-gray-400 bg-gray-100 px-1 py-0.5 rounded truncate max-w-[90px]">
+                            {product.supplierProductId}
+                          </span>
+                        )}
                         {/* JD风格标签：百分产品、展厅样板 */}
-                        {product.tags?.slice(0, 2).map((tag, idx) => {
+                        {product.tags?.slice(0, 1).map((tag, idx) => {
                           const style = TAG_STYLES[tag.type] || TAG_STYLES.custom;
                           return (
                             <span key={idx} className={`${style.bg} ${style.text} text-[9px] px-1 py-0.5 rounded-sm font-medium`}>
@@ -1435,23 +1448,29 @@ export function ProductCatalog({ onAddToCart }: Props) {
                           );
                         })}
                       </div>
-                      <h4 className="text-xs font-semibold text-gray-900 mb-0.5 truncate">{product.name}</h4>
-                      <div className="flex items-center gap-1 text-[10px] text-gray-500 mb-1">
-                        <span className="px-1 py-0.5 bg-gray-100 rounded">{product.spec}</span>
-                        <span className="flex items-center gap-0.5">
-                          <span className="w-2 h-2 rounded-full border border-gray-300" style={{ backgroundColor: COLOR_DOTS[product.color] || '#e5e7eb' }} />
-                          {product.color}
-                        </span>
+                      <h4 className="text-xs font-semibold text-gray-900 mb-1 leading-snug line-clamp-2">{product.name}</h4>
+                      {/* 规格/颜色/尺寸标签 */}
+                      <div className="flex flex-wrap gap-0.5 mb-1">
+                        {product.spec && <span className="px-1 py-0.5 bg-gray-100 rounded text-[10px] text-gray-600">{product.spec}</span>}
+                        {product.color && (
+                          <span className="flex items-center gap-0.5 px-1 py-0.5 bg-gray-100 rounded text-[10px] text-gray-600">
+                            <span className="w-2 h-2 rounded-full border border-gray-300 flex-shrink-0" style={{ backgroundColor: COLOR_DOTS[product.color] || '#e5e7eb' }} />
+                            {product.color}
+                          </span>
+                        )}
+                        {product.size && (
+                          <span className="px-1 py-0.5 bg-blue-50 rounded text-[10px] text-blue-600 font-medium">{product.size}</span>
+                        )}
                       </div>
                       {supplier && <p className="text-[10px] text-gray-400 mb-1 truncate">{supplier.name}</p>}
                       <div className="flex items-center justify-between pt-1.5 border-t border-gray-100">
                         <div>
-                          <span className="text-xs font-bold text-blue-700">${product.basePrice}</span>
-                          <span className="text-[10px] text-gray-400 ml-0.5">/ {product.unit}</span>
+                          <span className="text-xs font-bold text-blue-700">${product.basePrice.toFixed(2)}</span>
+                          <span className="text-[10px] text-gray-400 ml-0.5">/{product.unit}</span>
                         </div>
                         <button onClick={e => { e.stopPropagation(); if (!inCart) handleQuickAddToCart(product); }}
                           className={`px-1.5 py-0.5 text-[10px] font-medium rounded-md transition-colors cursor-pointer ${inCart ? 'bg-green-100 text-green-700 cursor-default' : 'bg-blue-700 text-white hover:bg-blue-800'}`}>
-                          {inCart ? '已添加' : '+ 添加'}
+                          {inCart ? '✓ 已加' : '+ 加入'}
                         </button>
                       </div>
                     </div>
