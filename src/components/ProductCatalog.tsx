@@ -1377,20 +1377,20 @@ export function ProductCatalog({ onAddToCart }: Props) {
                     )}
 
                     {/* 该组件下的可选产品 */}
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                    <div className="flex flex-wrap gap-2">
                       {compProducts.map(p => {
                         const isSelected = sel?.productId === p.id;
                         const supplier = SUPPLIERS.find(s => s.id === p.supplierId);
                         return (
                           <div key={p.id}
                             onClick={() => handleSelectComponentProduct(comp, p)}
-                            className={`relative border rounded-lg overflow-hidden cursor-pointer transition-all ${isSelected ? 'border-blue-400 bg-blue-50 ring-1 ring-blue-300' : 'border-gray-100 bg-white hover:border-blue-200 hover:shadow-sm'}`}>
-                            {/* 产品图片 - 同产品列表风格 */}
-                            <div className="relative h-[160px] bg-gray-100 overflow-hidden flex items-center justify-center">
+                            className={`relative border rounded-lg overflow-hidden cursor-pointer transition-all w-fit ${isSelected ? 'border-blue-400 bg-blue-50 ring-1 ring-blue-300' : 'border-gray-100 bg-white hover:border-blue-200 hover:shadow-sm'}`}>
+                            {/* 产品图片 - 宽度自适应，高度固定 */}
+                            <div className="relative h-[160px] bg-gray-100 overflow-hidden">
                               {p.imageUrl ? (
-                                <img src={p.imageUrl} alt={p.name} className="max-w-full object-contain" style={{ maxHeight: '160px' }} />
+                                <img src={p.imageUrl} alt={p.name} className="h-full w-auto object-contain" />
                               ) : (
-                                <div className="w-full h-full flex items-center justify-center">
+                                <div className="w-40 h-full flex items-center justify-center">
                                   <span className="text-xs text-gray-400">暂无图片</span>
                                 </div>
                               )}
