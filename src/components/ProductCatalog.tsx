@@ -836,6 +836,81 @@ export function ProductCatalog({ onAddToCart }: Props) {
   type CatalogMode = 'list' | 'detail' | 'combo-type' | 'combo-config';
   const [catalogMode, setCatalogMode] = useState<CatalogMode>('list');
   const [activeComboProduct, setActiveComboProduct] = useState<ComboProduct | null>(null);
+  // 组件选择状态：componentId -> ComboSelectedProduct
+  const [selectedComponents, setSelectedComponents] = useState<Record<string, import('../types').ComboSelectedProduct>>({});
+
+  // 选产品
+  const handleSelectComponentProduct = (comp: import('../types').ComboComponent, product: StandardProduct) => {
+    const dimensionValue = comp.priceDimension === 'width' ? product.width :
+                          comp.priceDimension === 'length' ? product.length :
+                          (product.length && product.width ? (product.length * product.width / 1_000_000) : 1);
+    setSelectedComponents(prev => ({
+      ...prev,
+      [comp.id]: {
+        componentId: comp.id,
+        productId: product.id,
+        libraryId: product.libraryId,
+        supplierProductId: product.supplierProductId,
+        productName: product.name,
+        length: product.length,
+        width: product.width,
+        dimensionValue: dimensionValue,
+        basePrice: product.basePrice,
+        unitPrice: product.basePrice,
+        quantity: 1,
+        unit: product.unit,
+      }
+    }));
+  };
+
+  // 填尺寸（计价维度）
+  const handleDimensionChange = (componentId: string, value: number) => {
+    setSelectedComponents(prev => {
+      const sel = prev[componentId];
+      if (!sel) return prev;
+      const ratio = value / (sel.dimensionValue || 1);
+      return { ...prev, [componentId]: { ...sel, dimensionValue: value, unitPrice: Math.round(sel.basePrice * ratio * 100) / 100 } };
+    });
+  };
+
+  // 取消选择
+  const handleDeselectComponent = (componentId: string) => {
+    setSelectedComponents(prev => {
+      const next = { ...prev };
+      delete next[componentId];
+      return next;
+    });
+  };
+
+  // 计算总价
+  const comboTotalPrice = useMemo(() => {
+    return Object.values(selectedComponents).reduce((sum, c) => sum + c.unitPrice * c.quantity, 0);
+  }, [selectedComponents]);
+
+  // 能否加入报价车：所有必选组件都已选
+  const canAddToCart = useMemo(() => {
+    if (!activeComboProduct) return false;
+    return activeComboProduct.components.every(c => !c.required || selectedComponents[c.id]);
+  }, [activeComboProduct, selectedComponents]);
+
+  // 加入报价车
+  const handleAddComboToCart = () => {
+    if (!activeComboProduct || !canAddToCart) return;
+    const comboItem: import('../types').ComboQuoteItem = {
+      id: `combo-${Date.now()}`,
+      type: 'combo',
+      comboProductId: activeComboProduct.id,
+      comboName: activeComboProduct.name,
+      imageUrl: activeComboProduct.imageUrl,
+      components: Object.values(selectedComponents),
+      totalPrice: comboTotalPrice,
+      margin: 0,
+    };
+    onAddToCart(comboItem);
+    setSelectedComponents({});
+    setCatalogMode('combo-type');
+    setActiveComboProduct(null);
+  };
 
   const toggleCategory = (catId: string) => {
     setExpandedCategories(prev => {
@@ -1252,8 +1327,12 @@ export function ProductCatalog({ onAddToCart }: Props) {
               {/* 组件明细列表 */}
               <h3 className="text-sm font-semibold text-gray-700 mb-3">组件明细</h3>
               <div className="space-y-3">
-                {activeComboProduct.components.map(comp => (
-                  <div key={comp.id} className="card p-4">
+                {activeComboProduct.components.map(comp => {
+                  const sel = selectedComponents[comp.id];
+                  const compProducts = COMBO_PRODUCTS_CATALOG.filter(p => p.subCategoryId === comp.subCategoryId);
+                  const dimLabel = comp.priceDimension === 'width' ? '宽度(mm)' : comp.priceDimension === 'length' ? '长度(mm)' : '面积(m²)';
+                  return (
+                  <div key={comp.id} className={`card p-4 ${sel ? 'border-2 border-blue-200 bg-blue-50/30' : ''}`}>
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${comp.required ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
@@ -1261,39 +1340,103 @@ export function ProductCatalog({ onAddToCart }: Props) {
                         </span>
                         <span className="text-sm font-semibold text-gray-900">{comp.name}</span>
                       </div>
-                      <span className="text-xs text-gray-400">计价维度：{comp.pricingDimension === 'width' ? '宽度' : comp.pricingDimension === 'length' ? '长度' : '面积'}</span>
+                      {sel && (
+                        <button onClick={() => handleDeselectComponent(comp.id)}
+                          className="text-xs text-red-500 hover:text-red-700 cursor-pointer flex items-center gap-1">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          取消选择
+                        </button>
+                      )}
                     </div>
+
+                    {/* 已选择的产品 */}
+                    {sel && (
+                      <div className="mb-3 p-3 bg-white rounded-lg border border-blue-100">
+                        <div className="flex items-start gap-3">
+                          {compProducts.find(p => p.id === sel.productId)?.imageUrl && (
+                            <img src={compProducts.find(p => p.id === sel.productId)!.imageUrl} alt={sel.productName}
+                              className="w-16 h-16 object-cover rounded-lg flex-shrink-0" />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-900">{sel.productName}</p>
+                            <p className="text-xs text-gray-500">单价 $ {sel.basePrice} / {sel.unit}</p>
+                            {/* 尺寸调节 */}
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className="text-xs text-gray-500">{dimLabel}：</span>
+                              <input type="number" value={sel.dimensionValue}
+                                onChange={e => handleDimensionChange(comp.id, Number(e.target.value))}
+                                className="w-24 px-2 py-1 text-xs border border-gray-200 rounded-md focus:outline-none focus:border-blue-400" />
+                              <span className="text-xs text-gray-400">基准 {comp.priceDimension === 'width' ? comp.baseWidth : comp.priceDimension === 'length' ? comp.baseLength : comp.baseArea}</span>
+                            </div>
+                            <p className="text-sm font-bold text-blue-700 mt-1">小计：${(sel.unitPrice * sel.quantity).toFixed(2)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* 该组件下的可选产品 */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {COMBO_PRODUCTS_CATALOG.filter(p => p.subCategoryId === comp.subCategoryId).map(p => {
-                        const supplier = SUPPLIERS.find(s => s.id === p.supplierId);
+                      {compProducts.map(p => {
+                        const isSelected = sel?.productId === p.id;
                         return (
-                          <div key={p.id} className="border border-gray-100 rounded-lg p-2 bg-gray-50">
+                          <div key={p.id}
+                            onClick={() => handleSelectComponentProduct(comp, p)}
+                            className={`border rounded-lg p-2 cursor-pointer transition-all ${isSelected ? 'border-blue-400 bg-blue-50 ring-1 ring-blue-300' : 'border-gray-100 bg-gray-50 hover:border-blue-200 hover:bg-blue-50/50'}`}>
                             {p.imageUrl ? (
-                              <img src={p.imageUrl} alt={p.name} className="w-full h-20 object-cover rounded mb-1.5" />
+                              <img src={p.imageUrl} alt={p.name} className="w-full h-16 object-cover rounded mb-1.5" />
                             ) : (
-                              <div className="w-full h-20 bg-gray-200 rounded mb-1.5 flex items-center justify-center">
+                              <div className="w-full h-16 bg-gray-200 rounded mb-1.5 flex items-center justify-center">
                                 <span className="text-xs text-gray-400">暂无图片</span>
                               </div>
                             )}
                             <p className="text-xs font-medium text-gray-800 truncate">{p.name}</p>
                             {p.spec && <p className="text-[10px] text-gray-500">{p.spec}</p>}
                             <p className="text-xs font-bold text-blue-700 mt-1">${p.basePrice}/{p.unit}</p>
-                            {supplier && <p className="text-[10px] text-gray-400 truncate">{supplier.name}</p>}
+                            {isSelected && (
+                              <div className="absolute top-1 right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                                <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                            )}
                           </div>
                         );
                       })}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
 
-              {/* 底部操作提示 */}
-              <div className="mt-5 p-4 bg-orange-50 rounded-xl border border-orange-100 text-sm text-orange-700 flex items-center gap-2">
-                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                如需将此定制品加入报价单，请在<strong className="mx-1">报价编辑器</strong>内选品时通过定制品流程进行配置和报价。
+              {/* 报价汇总 */}
+              {Object.keys(selectedComponents).length > 0 && (
+                <div className="mt-5 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-600">已选组件</span>
+                    <span className="text-sm font-semibold text-gray-700">{Object.keys(selectedComponents).length} / {activeComboProduct.components.length}</span>
+                  </div>
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-base font-bold text-gray-900">组合总价</span>
+                    <span className="text-xl font-bold text-blue-700">${comboTotalPrice.toFixed(2)}</span>
+                  </div>
+                  <button
+                    onClick={handleAddComboToCart}
+                    disabled={!canAddToCart}
+                    className={`w-full py-3 rounded-xl font-semibold text-sm transition-colors cursor-pointer ${
+                      canAddToCart
+                        ? 'bg-blue-700 text-white hover:bg-blue-800'
+                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    }`}>
+                    {canAddToCart ? '✓ 加入报价车' : '请先完成必选组件'}
+                  </button>
+                </div>
+              )}
+
+              {/* 提示 */}
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-100 text-xs text-gray-500">
+                <p>💡 组件价格按{activeComboProduct.components[0]?.priceDimension === 'width' ? '宽度比例' : activeComboProduct.components[0]?.priceDimension === 'length' ? '长度比例' : '面积比例'}自动调整。调整尺寸后单价会按比例变化。</p>
               </div>
             </div>
           )}

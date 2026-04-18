@@ -161,102 +161,73 @@ function ComboItemRow({
 
   return (
     <>
-      {/* 组合品主行 */}
+      {/* 组合品主行：跨越全部列 */}
       <tr className="border-b border-orange-200 bg-orange-50/40">
-        <td className="px-3 py-3 text-sm text-gray-500">{idx + 1}</td>
-        <td className="px-3 py-3">
-          {item.imageUrl ? (
-            <img src={item.imageUrl} alt={item.comboName} className="w-12 h-12 object-cover rounded-lg" />
-          ) : (
-            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-            </div>
-          )}
-        </td>
-        <td className="px-3 py-3">
-          <span className="font-mono text-xs text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded">
-            {item.comboProductId}
-          </span>
-        </td>
-        <td className="px-3 py-3">
-          <span className="badge text-xs bg-orange-100 text-orange-700">组合</span>
-        </td>
-        <td className="px-3 py-3" colSpan={2}>
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-2 text-left cursor-pointer group"
-          >
-            <svg
-              className={`w-4 h-4 text-orange-500 transition-transform flex-shrink-0 ${expanded ? 'rotate-90' : ''}`}
-              fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        <td colSpan={100} className="px-4 py-3">
+          <div className="flex items-center gap-4">
+            {/* 展开/折叠按钮 */}
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="w-8 h-8 rounded-lg bg-orange-100 hover:bg-orange-200 flex items-center justify-center cursor-pointer transition-colors flex-shrink-0"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-            <div>
-              <span className="text-sm font-semibold text-orange-800 group-hover:text-orange-900">
-                {item.comboName}
-              </span>
-              <span className="text-xs text-orange-500 ml-2">含 {item.components.length} 个组件</span>
+              <svg
+                className={`w-4 h-4 text-orange-600 transition-transform ${expanded ? 'rotate-90' : ''}`}
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+
+            {/* 图片 */}
+            {item.imageUrl ? (
+              <img src={item.imageUrl} alt={item.comboName} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
+            ) : (
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+            )}
+
+            {/* 信息 */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-mono text-xs text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded">{item.comboProductId}</span>
+                <span className="badge text-xs bg-orange-100 text-orange-700">组合</span>
+                <span className="text-sm font-semibold text-orange-800">{item.comboName}</span>
+                <span className="text-xs text-orange-500">含 {item.components.length} 个组件</span>
+              </div>
+              {expanded && (
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {item.components.map((comp, ci) => (
+                    <span key={comp.componentId} className="text-xs bg-white border border-orange-200 rounded px-2 py-1 text-gray-600">
+                      {ci + 1}. {comp.productName}
+                      <span className="text-orange-500 ml-1">${comp.unitPrice.toFixed(2)} × {comp.quantity}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
-          </button>
-        </td>
-        <td className="px-3 py-3" colSpan={10}></td>
-        <td className="px-3 py-3 text-sm font-bold text-orange-700 whitespace-nowrap">
-          {formatCurrency(finalPrice, currency)}
-        </td>
-        <td className="px-3 py-3" colSpan={2}></td>
-        <td className="px-3 py-3">
-          <button
-            onClick={onRemove}
-            disabled={isSubmitted}
-            className={`transition-colors cursor-pointer ${isSubmitted ? 'text-gray-200 cursor-not-allowed' : 'text-gray-400 hover:text-red-500'}`}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+
+            {/* 价格 */}
+            <div className="text-right flex-shrink-0">
+              <div className="text-sm font-bold text-orange-700">{formatCurrency(finalPrice, currency)}</div>
+              <div className="text-xs text-gray-400 mt-0.5">成本 {formatCurrency(item.totalPrice, currency)}</div>
+            </div>
+
+            {/* 删除 */}
+            <button
+              onClick={onRemove}
+              disabled={isSubmitted}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer flex-shrink-0 ${isSubmitted ? 'text-gray-200 cursor-not-allowed' : 'text-gray-400 hover:text-red-500 hover:bg-red-50'}`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </td>
       </tr>
-
-      {/* 展开：组件明细 */}
-      {expanded && item.components.map((comp, cIdx) => (
-        <tr key={comp.componentId} className="border-b border-orange-100 bg-white">
-          <td className="px-3 py-2"></td>
-          <td className="px-3 py-2" colSpan={2}>
-            <div className="text-[11px] text-gray-400 pl-4">组件 {cIdx + 1}</div>
-          </td>
-          <td className="px-3 py-2">
-            <span className="text-xs font-medium text-gray-700">{comp.productName}</span>
-          </td>
-          <td className="px-3 py-2">
-            <span className="font-mono text-[11px] text-gray-500">{comp.supplierProductId || '-'}</span>
-          </td>
-          <td className="px-3 py-2">
-            <span className="text-xs text-gray-600">{comp.length || '-'}</span>
-          </td>
-          <td className="px-3 py-2">
-            <span className="text-xs text-gray-600">{comp.width || '-'}</span>
-          </td>
-          <td className="px-3 py-2" colSpan={10}>
-            <span className="text-xs text-gray-500">{comp.dimensionValue}mm</span>
-            {comp.remark && <span className="text-[10px] text-orange-500 ml-2">{comp.remark}</span>}
-          </td>
-          <td className="px-3 py-2">
-            <span className="text-xs font-medium text-gray-700">{comp.quantity}</span>
-          </td>
-          <td className="px-3 py-2">
-            <span className="text-xs text-gray-600">{comp.unit}</span>
-          </td>
-          <td className="px-3 py-2" colSpan={2}>
-            <span className="text-xs font-bold text-orange-600">
-              {formatCurrency(comp.unitPrice * comp.quantity, currency)}
-            </span>
-          </td>
-          <td className="px-3 py-2" colSpan={2}></td>
-        </tr>
-      ))}
     </>
   );
 }

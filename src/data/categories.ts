@@ -44,31 +44,217 @@ export const CATEGORIES: Category[] = [
     id: 'ceramic',
     name: '陶瓷',
     icon: 'ceramic',
+    // ── 二级分类（按品类）──
+    // 原"系列名"（素色系列/玉石系列等）下沉为三级，通过 seriesName 字段挂在产品卡上
     subCategories: [
-      { id: 'ceramic-01', name: '素色系列', specs: [], colors: ['灰', '黄', '米白', '米黄', '浅灰'], sizes: ['2400x1200mm', '2600x900mm', '2700x1200mm', '1800x900mm', '3200x1200mm', '600x600mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '超细哑干粒', label: '超细哑干粒' }, { value: '超细哑干粒哑雕', label: '超细哑干粒哑雕' }, { value: '平面刷抛', label: '平面刷抛' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '灰', label: '灰' }, { value: '黄', label: '黄' }, { value: '米白', label: '米白' }, { value: '米黄', label: '米黄' }, { value: '浅灰', label: '浅灰' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '2400x1200mm', label: '2400x1200mm' }, { value: '2600x900mm', label: '2600x900mm' }, { value: '2700x1200mm', label: '2700x1200mm' }, { value: '1800x900mm', label: '1800x900mm' }, { value: '3200x1200mm', label: '3200x1200mm' }, { value: '600x600mm', label: '600x600mm' }] }] },
-      { id: 'ceramic-02', name: '玉石系列', specs: [], colors: ['米白', '粉', '白', '金色', '白色', '浅黄'], sizes: ['3200x1600mm', '2800x1200mm', '2600x1000mm', '3000x1200mm', '3200x1200mm', '2600x800mm', '2700x900mm', '1200x600mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '亮光', label: '亮光' }, { value: 'Glossy', label: 'Glossy' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '干粒釉', label: '干粒釉' }, { value: '钻石结晶釉', label: '钻石结晶釉' }, { value: '超晶亮面', label: '超晶亮面' }, { value: '干粒抛', label: '干粒抛' }, { value: '透光石', label: '透光石' }, { value: '亮光', label: '亮光' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '米白', label: '米白' }, { value: '粉', label: '粉' }, { value: '白', label: '白' }, { value: '金色', label: '金色' }, { value: '白色', label: '白色' }, { value: '浅黄', label: '浅黄' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '3200x1600mm', label: '3200x1600mm' }, { value: '2800x1200mm', label: '2800x1200mm' }, { value: '2600x1000mm', label: '2600x1000mm' }, { value: '3000x1200mm', label: '3000x1200mm' }, { value: '3200x1200mm', label: '3200x1200mm' }, { value: '2600x800mm', label: '2600x800mm' }, { value: '2700x900mm', label: '2700x900mm' }, { value: '1200x600mm', label: '1200x600mm' }] }] },
-      { id: 'ceramic-03', name: '洞石系列', specs: [], colors: ['白', '米黄', '红', '灰', '深灰', '黑色', '米白', '中灰'], sizes: ['2700x1200mm', '3000x1000mm', '1200x600mm', '1500x750mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }, { value: 'Matt', label: 'Matt' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '哑面', label: '哑面' }, { value: '碎洞石模具(哑面)', label: '碎洞石模具(哑面)' }, { value: '数码模具（哑面）', label: '数码模具（哑面）' }, { value: '平面精雕', label: '平面精雕' }, { value: '超白坯模具喷釉刷抛', label: '超白坯模具喷釉刷抛' }, { value: '超白坯体模具刷抛', label: '超白坯体模具刷抛' }, { value: '白坯模具复刻哑雕', label: '白坯模具复刻哑雕' }, { value: '通体模具干粒', label: '通体模具干粒' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '白', label: '白' }, { value: '米黄', label: '米黄' }, { value: '红', label: '红' }, { value: '灰', label: '灰' }, { value: '深灰', label: '深灰' }, { value: '黑色', label: '黑色' }, { value: '米白', label: '米白' }, { value: '中灰', label: '中灰' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '2700x1200mm', label: '2700x1200mm' }, { value: '3000x1000mm', label: '3000x1000mm' }, { value: '1200x600mm', label: '1200x600mm' }, { value: '1500x750mm', label: '1500x750mm' }] }] },
-      { id: 'ceramic-04', name: '砂岩系列', specs: [], colors: ['米白', '米黄', '灰', '浅黄', '中灰', '深灰', '浅咖', '白'], sizes: ['2700x1200mm', '3000x1200mm', '3200x1600mm', '3200x1200mm', '2600x800mm', '2600x900mm', '1200x600mm', '600x600mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }, { value: 'Matt', label: 'Matt' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '哑面', label: '哑面' }, { value: '数码釉(哑面)', label: '数码釉(哑面)' }, { value: '星光干粒(哑面)', label: '星光干粒(哑面)' }, { value: '柔哑干粒', label: '柔哑干粒' }, { value: '精雕', label: '精雕' }, { value: '质感微光', label: '质感微光' }, { value: '白坯模具精雕仿古', label: '白坯模具精雕仿古' }, { value: '模具干粒釉', label: '模具干粒釉' }, { value: '全瓷', label: '全瓷' }, { value: '通体模具干粒', label: '通体模具干粒' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '米白', label: '米白' }, { value: '米黄', label: '米黄' }, { value: '灰', label: '灰' }, { value: '浅黄', label: '浅黄' }, { value: '中灰', label: '中灰' }, { value: '深灰', label: '深灰' }, { value: '浅咖', label: '浅咖' }, { value: '白', label: '白' }, { value: '咖色', label: '咖色' }, { value: '浅灰', label: '浅灰' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '2700x1200mm', label: '2700x1200mm' }, { value: '3000x1200mm', label: '3000x1200mm' }, { value: '3200x1600mm', label: '3200x1600mm' }, { value: '3200x1200mm', label: '3200x1200mm' }, { value: '2600x800mm', label: '2600x800mm' }, { value: '2600x900mm', label: '2600x900mm' }, { value: '1200x600mm', label: '1200x600mm' }, { value: '600x600mm', label: '600x600mm' }, { value: '1500x750mm', label: '1500x750mm' }, { value: '800x800mm', label: '800x800mm' }] }] },
-      { id: 'ceramic-05', name: '水泥系列', specs: [], colors: ['米白', '灰', '白', '黄', '深咖', '中咖', '黑古铜', '铁锈红'], sizes: ['2400x1200mm', '2600x800mm', '2600x1000mm', '1200x600mm', '600x600mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }, { value: 'Matt', label: 'Matt' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '丝滑面', label: '丝滑面' }, { value: '超细干粒', label: '超细干粒' }, { value: '平光釉+精雕', label: '平光釉+精雕' }, { value: '数码釉精雕蜡抛', label: '数码釉精雕蜡抛' }, { value: '星光干粒刷抛', label: '星光干粒刷抛' }, { value: '现代仿古砖哑光', label: '现代仿古砖哑光' }, { value: '白坯仿古', label: '白坯仿古' }, { value: '白坯平面精雕', label: '白坯平面精雕' }, { value: '全瓷仿古', label: '全瓷仿古' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '米白', label: '米白' }, { value: '灰', label: '灰' }, { value: '白', label: '白' }, { value: '黄', label: '黄' }, { value: '深咖', label: '深咖' }, { value: '中咖', label: '中咖' }, { value: '黑古铜', label: '黑古铜' }, { value: '铁锈红', label: '铁锈红' }, { value: '红古铜', label: '红古铜' }, { value: '红铜', label: '红铜' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '2400x1200mm', label: '2400x1200mm' }, { value: '2600x800mm', label: '2600x800mm' }, { value: '2600x1000mm', label: '2600x1000mm' }, { value: '1200x600mm', label: '1200x600mm' }, { value: '600x600mm', label: '600x600mm' }] }] },
-      { id: 'ceramic-06', name: '木纹系列', specs: [], colors: ['黄', '灰'], sizes: ['2700x900mm', '2700x1200mm', '2600x800mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '数码模具', label: '数码模具' }, { value: '哑面+精雕(哑面)', label: '哑面+精雕(哑面)' }, { value: '精雕', label: '精雕' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '黄', label: '黄' }, { value: '灰', label: '灰' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '2700x900mm', label: '2700x900mm' }, { value: '2700x1200mm', label: '2700x1200mm' }, { value: '2600x800mm', label: '2600x800mm' }] }] },
-      { id: 'ceramic-07', name: '莱姆石系列', specs: [], colors: ['灰', '米黄', '米灰', '中灰', '深灰', '米白', '浅灰', '米咖'], sizes: ['3000x1200mm', '2700x1200mm', '1200x600mm', '1500x750mm', '800x800mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }, { value: 'Matt', label: 'Matt' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '数码釉(哑面)', label: '数码釉(哑面)' }, { value: '质感微光（哑面）', label: '质感微光（哑面）' }, { value: '质感微光', label: '质感微光' }, { value: '白坯模具精雕', label: '白坯模具精雕' }, { value: '白坯精雕复刻釉', label: '白坯精雕复刻釉' }, { value: '数码雕刻釉', label: '数码雕刻釉' }, { value: '白胚模具+莫奈干粒', label: '白胚模具+莫奈干粒' }, { value: '斑点胚模具干粒', label: '斑点胚模具干粒' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '灰', label: '灰' }, { value: '米黄', label: '米黄' }, { value: '米灰', label: '米灰' }, { value: '中灰', label: '中灰' }, { value: '深灰', label: '深灰' }, { value: '米白', label: '米白' }, { value: '浅灰', label: '浅灰' }, { value: '米咖', label: '米咖' }, { value: '高级黑', label: '高级黑' }, { value: '黑色', label: '黑色' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '3000x1200mm', label: '3000x1200mm' }, { value: '2700x1200mm', label: '2700x1200mm' }, { value: '1200x600mm', label: '1200x600mm' }, { value: '1500x750mm', label: '1500x750mm' }, { value: '800x800mm', label: '800x800mm' }] }] },
-      { id: 'ceramic-08', name: '白色大理石系列', specs: [], colors: ['白', '米黄', '白色'], sizes: ['3000x900mm', '2400x1200mm', '2800x1200mm', '2700x900mm', '2600x1000mm', '2600x800mm', '1800x900mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '亮光', label: '亮光' }, { value: '柔光', label: '柔光' }, { value: '哑光', label: '哑光' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '亮光', label: '亮光' }, { value: '玉絮釉', label: '玉絮釉' }, { value: '柔光面', label: '柔光面' }, { value: '平光釉+精雕', label: '平光釉+精雕' }, { value: '干粒抛', label: '干粒抛' }, { value: 'B 类·金刚釉', label: 'B 类·金刚釉' }, { value: '蜡质釉D类', label: '蜡质釉D类' }, { value: '亮面', label: '亮面' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '白', label: '白' }, { value: '米黄', label: '米黄' }, { value: '白色', label: '白色' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '3000x900mm', label: '3000x900mm' }, { value: '2400x1200mm', label: '2400x1200mm' }, { value: '2800x1200mm', label: '2800x1200mm' }, { value: '2700x900mm', label: '2700x900mm' }, { value: '2600x1000mm', label: '2600x1000mm' }, { value: '2600x800mm', label: '2600x800mm' }, { value: '1800x900mm', label: '1800x900mm' }] }] },
-      { id: 'ceramic-09', name: '奢石系列', specs: [], colors: ['棕', '绿色', '黑金', '黑', '灰白色', '白色'], sizes: ['3200x1600mm', '2400x1200mm', '3200x1200mm', '1200x600mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '亮光', label: '亮光' }, { value: '哑光', label: '哑光' }, { value: 'Glossy', label: 'Glossy' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '亮光面', label: '亮光面' }, { value: '腊绒岩（模具）', label: '腊绒岩（模具）' }, { value: '透光石', label: '透光石' }, { value: '现代仿古砖哑光', label: '现代仿古砖哑光' }, { value: '通体中板亮光', label: '通体中板亮光' }, { value: '亮光', label: '亮光' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '棕', label: '棕' }, { value: '绿色', label: '绿色' }, { value: '黑金', label: '黑金' }, { value: '黑', label: '黑' }, { value: '灰白色', label: '灰白色' }, { value: '白色', label: '白色' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '3200x1600mm', label: '3200x1600mm' }, { value: '2400x1200mm', label: '2400x1200mm' }, { value: '3200x1200mm', label: '3200x1200mm' }, { value: '1200x600mm', label: '1200x600mm' }] }] },
-      { id: 'ceramic-10', name: '方正大板系列', specs: [], colors: ['灰', '白色'], sizes: ['1200x1200mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '亮光', label: '亮光' }, { value: 'Matt', label: 'Matt' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '全抛', label: '全抛' }, { value: '白坯哑光', label: '白坯哑光' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '灰', label: '灰' }, { value: '白色', label: '白色' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '1200x1200mm', label: '1200x1200mm' }] }] },
-      { id: 'ceramic-11', name: '中长规格系列', specs: [], colors: ['黄色', '咖色'], sizes: ['1200x600mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '精雕', label: '精雕' }, { value: '天鹅绒', label: '天鹅绒' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '黄色', label: '黄色' }, { value: '咖色', label: '咖色' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '1200x600mm', label: '1200x600mm' }] }] },
-      { id: 'ceramic-12', name: '超窄条系列', specs: [], colors: ['红色'], sizes: ['900x150mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '模具直边瓷木', label: '模具直边瓷木' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '红色', label: '红色' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '900x150mm', label: '900x150mm' }] }] },
-      { id: 'ceramic-13', name: '木纹拼花系列', specs: [], colors: ['米黄', '咖', '深咖'], sizes: ['1200x600mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '数码釉', label: '数码釉' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '米黄', label: '米黄' }, { value: '咖', label: '咖' }, { value: '深咖', label: '深咖' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '1200x600mm', label: '1200x600mm' }] }] },
-      { id: 'ceramic-14', name: '正方形系列', specs: [], colors: ['白色', '米色', '灰色', '蓝色', '混合色', '蓝'], sizes: ['300x300mm', '306x306mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }, { value: '亮光', label: '亮光' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '菠萝面', label: '菠萝面' }, { value: '冰裂', label: '冰裂' }, { value: '模具面', label: '模具面' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '白色', label: '白色' }, { value: '米色', label: '米色' }, { value: '灰色', label: '灰色' }, { value: '蓝色', label: '蓝色' }, { value: '混合色', label: '混合色' }, { value: '蓝', label: '蓝' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '300x300mm', label: '300x300mm' }, { value: '306x306mm', label: '306x306mm' }] }] },
-      { id: 'ceramic-15', name: '长方形系列', specs: [], colors: ['白色', '黑色', '红色', '黄色'], sizes: ['294x282mm', '301x301mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '亮光', label: '亮光' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '亮光', label: '亮光' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '白色', label: '白色' }, { value: '黑色', label: '黑色' }, { value: '红色', label: '红色' }, { value: '黄色', label: '黄色' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '294x282mm', label: '294x282mm' }, { value: '301x301mm', label: '301x301mm' }] }] },
-      { id: 'ceramic-16', name: '异形系列', specs: [], colors: ['绿色', '白色', '蓝色'], sizes: ['310x310mm', '48x40mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }, { value: '亮光', label: '亮光' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '哑光', label: '哑光' }, { value: '亮光', label: '亮光' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '绿色', label: '绿色' }, { value: '白色', label: '白色' }, { value: '蓝色', label: '蓝色' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '310x310mm', label: '310x310mm' }, { value: '48x40mm', label: '48x40mm' }] }] },
-      { id: 'ceramic-17', name: '大规格系列', specs: [], colors: ['蓝', '绿'], sizes: ['150x150mm', '600x300mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }, { value: '亮光', label: '亮光' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '模具面', label: '模具面' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '蓝', label: '蓝' }, { value: '绿', label: '绿' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '150x150mm', label: '150x150mm' }, { value: '600x300mm', label: '600x300mm' }] }] },
-      { id: 'ceramic-18', name: '简约系列', specs: [], colors: ['白色', '米色', '咖色', '黄色', '红色', '绿色', '蓝色', '黑色'], sizes: ['230x75mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }, { value: '亮光', label: '亮光' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '喷墨哑光微模', label: '喷墨哑光微模' }, { value: '喷墨亮光微模', label: '喷墨亮光微模' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '白色', label: '白色' }, { value: '米色', label: '米色' }, { value: '咖色', label: '咖色' }, { value: '黄色', label: '黄色' }, { value: '红色', label: '红色' }, { value: '绿色', label: '绿色' }, { value: '蓝色', label: '蓝色' }, { value: '黑色', label: '黑色' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '230x75mm', label: '230x75mm' }] }] },
-      { id: 'ceramic-19', name: '仿古系列', specs: [], colors: ['浅灰', '米色', '黄色', '绿色', '橙色', '咖色', '黑色', '白色'], sizes: ['300x75mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }, { value: '亮光', label: '亮光' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '喷墨哑光', label: '喷墨哑光' }, { value: '冰晶釉', label: '冰晶釉' }, { value: '微模+纳米精雕', label: '微模+纳米精雕' }, { value: '亮光模花', label: '亮光模花' }, { value: '哑光模花', label: '哑光模花' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '浅灰', label: '浅灰' }, { value: '米色', label: '米色' }, { value: '黄色', label: '黄色' }, { value: '绿色', label: '绿色' }, { value: '橙色', label: '橙色' }, { value: '咖色', label: '咖色' }, { value: '黑色', label: '黑色' }, { value: '白色', label: '白色' }, { value: '蓝色', label: '蓝色' }, { value: '棕色', label: '棕色' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '300x75mm', label: '300x75mm' }] }] },
-      { id: 'ceramic-20', name: '大理石系列', specs: [], colors: ['白', '灰', '中灰', '深灰', '浅灰', '米色', '米黄', '雾灰'], sizes: ['1200x600mm', '1500x750mm', '1800x900mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '莫奈干粒', label: '莫奈干粒' }, { value: '通体模具干粒', label: '通体模具干粒' }, { value: '臻石复刻釉+超白胚', label: '臻石复刻釉+超白胚' }, { value: '3D石刻釉', label: '3D石刻釉' }, { value: '胶水干粒半抛', label: '胶水干粒半抛' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '白', label: '白' }, { value: '灰', label: '灰' }, { value: '中灰', label: '中灰' }, { value: '深灰', label: '深灰' }, { value: '浅灰', label: '浅灰' }, { value: '米色', label: '米色' }, { value: '米黄', label: '米黄' }, { value: '雾灰', label: '雾灰' }, { value: '玛雅灰', label: '玛雅灰' }, { value: '拿破仑黑', label: '拿破仑黑' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '1200x600mm', label: '1200x600mm' }, { value: '1500x750mm', label: '1500x750mm' }, { value: '1800x900mm', label: '1800x900mm' }] }] },
-      { id: 'ceramic-21', name: '花砖系列', specs: [], colors: ['绿色'], sizes: ['1200x600mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '胶水干粒抛', label: '胶水干粒抛' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '绿色', label: '绿色' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '1200x600mm', label: '1200x600mm' }] }] },
-      { id: 'ceramic-22', name: '花岗岩系列', specs: [], colors: ['黑', '白', '黄', '深灰', '中灰', '浅灰', '米黄'], sizes: ['598x298mm', '600x300mm', '600x600mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '干粒面', label: '干粒面' }, { value: '荔枝面全通体', label: '荔枝面全通体' }, { value: '火烧面', label: '火烧面' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '黑', label: '黑' }, { value: '白', label: '白' }, { value: '黄', label: '黄' }, { value: '深灰', label: '深灰' }, { value: '中灰', label: '中灰' }, { value: '浅灰', label: '浅灰' }, { value: '米黄', label: '米黄' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '598x298mm', label: '598x298mm' }, { value: '600x300mm', label: '600x300mm' }, { value: '600x600mm', label: '600x600mm' }] }] },
-      { id: 'ceramic-23', name: '地铺石系列', specs: [], colors: ['中灰', '浅灰', '深灰', '红色', '米灰', '米黄', '白色'], sizes: ['600x300mm', '898x598mm', '1200x600mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '青石板', label: '青石板' }, { value: '流水石', label: '流水石' }, { value: '钻石釉', label: '钻石釉' }, { value: '钻石釉半抛70°', label: '钻石釉半抛70°' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '中灰', label: '中灰' }, { value: '浅灰', label: '浅灰' }, { value: '深灰', label: '深灰' }, { value: '红色', label: '红色' }, { value: '米灰', label: '米灰' }, { value: '米黄', label: '米黄' }, { value: '白色', label: '白色' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '600x300mm', label: '600x300mm' }, { value: '898x598mm', label: '898x598mm' }, { value: '1200x600mm', label: '1200x600mm' }] }] },
-      { id: 'ceramic-24', name: '幕墙景观砖系列', specs: [], colors: ['灰', '黑', '白', '蓝', '米黄'], sizes: ['1198x598mm', '1200x600mm', '798x798mm'], unit: '平方米', filterGroups: [{ key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }] }, { key: 'craft', label: '工艺', type: 'tag', options: [{ value: '微柔光', label: '微柔光' }, { value: '仿古面哑光', label: '仿古面哑光' }, { value: '柔光面、亚光面、模具面', label: '柔光面、亚光面、模具面' }, { value: '钻石釉', label: '钻石釉' }, { value: '微模面', label: '微模面' }] }, { key: 'color', label: '颜色', type: 'color', options: [{ value: '灰', label: '灰' }, { value: '黑', label: '黑' }, { value: '白', label: '白' }, { value: '蓝', label: '蓝' }, { value: '米黄', label: '米黄' }] }, { key: 'size', label: '尺寸', type: 'tag', options: [{ value: '1198x598mm', label: '1198x598mm' }, { value: '1200x600mm', label: '1200x600mm' }, { value: '798x798mm', label: '798x798mm' }] }] },
+      {
+        id: 'ceramic-tile',
+        name: '瓷砖',
+        specs: [],
+        colors: ['灰', '白', '米白', '米黄', '浅灰', '中灰', '深灰', '黑', '棕', '绿色', '黑金', '粉', '金色'],
+        sizes: ['2400x1200mm', '2600x900mm', '2700x1200mm', '1800x900mm', '3200x1200mm', '3200x1600mm', '2800x1200mm', '3000x1200mm', '1200x600mm', '1200x1200mm', '600x600mm', '800x800mm'],
+        unit: '平方米',
+        filterGroups: [
+          { key: 'series', label: '系列', type: 'tag', options: [
+            { value: '素色系列', label: '素色系列' }, { value: '玉石系列', label: '玉石系列' },
+            { value: '洞石系列', label: '洞石系列' }, { value: '砂岩系列', label: '砂岩系列' },
+            { value: '水泥系列', label: '水泥系列' }, { value: '莱姆石系列', label: '莱姆石系列' },
+            { value: '白色大理石系列', label: '白色大理石' }, { value: '奢石系列', label: '奢石系列' },
+            { value: '方正大板系列', label: '大板' }, { value: '大理石系列', label: '大理石系列' },
+          ] },
+          { key: 'surface', label: '表面', type: 'tag', options: [{ value: '亮光', label: '亮光' }, { value: '哑光', label: '哑光' }, { value: '柔光', label: '柔光' }] },
+          { key: 'craft', label: '工艺', type: 'tag', options: [
+            { value: '超细哑干粒', label: '超细哑干粒' }, { value: '干粒釉', label: '干粒釉' },
+            { value: '钻石结晶釉', label: '钻石结晶釉' }, { value: '质感微光', label: '质感微光' },
+            { value: '通体模具干粒', label: '通体模具干粒' }, { value: '平面刷抛', label: '平面刷抛' },
+          ] },
+          { key: 'color', label: '颜色', type: 'color', options: [
+            { value: '灰', label: '灰' }, { value: '白', label: '白' }, { value: '米白', label: '米白' },
+            { value: '米黄', label: '米黄' }, { value: '浅灰', label: '浅灰' }, { value: '深灰', label: '深灰' },
+            { value: '黑', label: '黑' }, { value: '棕', label: '棕' }, { value: '绿色', label: '绿色' },
+          ] },
+          { key: 'size', label: '尺寸', type: 'tag', options: [
+            { value: '3200x1600mm', label: '3200×1600' }, { value: '3200x1200mm', label: '3200×1200' },
+            { value: '2700x1200mm', label: '2700×1200' }, { value: '2400x1200mm', label: '2400×1200' },
+            { value: '1200x600mm', label: '1200×600' }, { value: '1200x1200mm', label: '1200×1200' },
+            { value: '600x600mm', label: '600×600' },
+          ] },
+        ],
+      },
+      {
+        id: 'ceramic-rockboard',
+        name: '岩板',
+        specs: [],
+        colors: ['黑', '白', '黄', '深灰', '中灰', '浅灰', '米黄', '灰', '蓝', '米黄'],
+        sizes: ['2400x1200mm', '2600x900mm', '2700x1200mm', '3200x1200mm', '3200x1600mm', '1800x900mm', '1200x600mm'],
+        unit: '平方米',
+        filterGroups: [
+          { key: 'series', label: '系列', type: 'tag', options: [
+            { value: '素色系列', label: '素色系列' }, { value: '玉石系列', label: '玉石系列' },
+            { value: '洞石系列', label: '洞石系列' }, { value: '砂岩系列', label: '砂岩系列' },
+            { value: '水泥系列', label: '水泥系列' }, { value: '莱姆石系列', label: '莱姆石系列' },
+            { value: '白色大理石系列', label: '白色大理石' }, { value: '奢石系列', label: '奢石系列' },
+            { value: '大理石系列', label: '大理石系列' }, { value: '黑色大理石系列', label: '黑色大理石' },
+            { value: '木纹系列', label: '木纹系列' }, { value: '水磨石系列', label: '水磨石系列' },
+            { value: '花砖系列', label: '花砖系列' }, { value: '对纹系列', label: '对纹系列' },
+          ] },
+          { key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }, { value: '亮光', label: '亮光' }, { value: '柔光', label: '柔光' }] },
+          { key: 'craft', label: '工艺', type: 'tag', options: [
+            { value: '超细哑干粒', label: '超细哑干粒' }, { value: '干粒釉', label: '干粒釉' },
+            { value: '干粒抛', label: '干粒抛' }, { value: '质感微光', label: '质感微光' },
+            { value: '透光石', label: '透光石' }, { value: '亮光', label: '亮光' },
+          ] },
+          { key: 'color', label: '颜色', type: 'color', options: [
+            { value: '黑', label: '黑' }, { value: '白', label: '白' }, { value: '灰', label: '灰' },
+            { value: '深灰', label: '深灰' }, { value: '米黄', label: '米黄' }, { value: '黄', label: '黄' },
+          ] },
+          { key: 'size', label: '尺寸', type: 'tag', options: [
+            { value: '3200x1600mm', label: '3200×1600' }, { value: '3200x1200mm', label: '3200×1200' },
+            { value: '2700x1200mm', label: '2700×1200' }, { value: '2400x1200mm', label: '2400×1200' },
+            { value: '1800x900mm', label: '1800×900' }, { value: '1200x600mm', label: '1200×600' },
+          ] },
+        ],
+      },
+      {
+        id: 'ceramic-wood',
+        name: '木纹砖',
+        specs: [],
+        colors: ['黄', '灰', '米黄', '咖', '深咖'],
+        sizes: ['2700x900mm', '2700x1200mm', '2600x800mm', '1200x600mm'],
+        unit: '平方米',
+        filterGroups: [
+          { key: 'series', label: '系列', type: 'tag', options: [
+            { value: '中长规格系列', label: '中长规格' }, { value: '超窄条系列', label: '超窄条' },
+            { value: '木纹拼花系列', label: '木纹拼花' },
+          ] },
+          { key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }] },
+          { key: 'craft', label: '工艺', type: 'tag', options: [
+            { value: '数码模具', label: '数码模具' }, { value: '精雕', label: '精雕' }, { value: '数码釉', label: '数码釉' },
+            { value: '模具直边瓷木', label: '瓷木模具' },
+          ] },
+          { key: 'color', label: '颜色', type: 'color', options: [
+            { value: '黄', label: '黄' }, { value: '灰', label: '灰' }, { value: '咖', label: '咖' }, { value: '深咖', label: '深咖' },
+            { value: '红色', label: '红色' }, { value: '米黄', label: '米黄' },
+          ] },
+          { key: 'size', label: '尺寸', type: 'tag', options: [
+            { value: '2700x900mm', label: '2700×900' }, { value: '2700x1200mm', label: '2700×1200' },
+            { value: '900x150mm', label: '900×150' }, { value: '1200x600mm', label: '1200×600' },
+          ] },
+        ],
+      },
+      {
+        id: 'ceramic-mosaic',
+        name: '马赛克',
+        specs: [],
+        colors: ['绿色', '白色', '蓝色', '红色'],
+        sizes: ['310x310mm', '48x40mm', '150x150mm', '600x300mm'],
+        unit: '平方米',
+        filterGroups: [
+          { key: 'series', label: '系列', type: 'tag', options: [
+            { value: '异形系列', label: '异形系列' }, { value: '正方形系列', label: '正方形' },
+            { value: '长方形系列', label: '长方形' }, { value: '大规格系列', label: '大规格' },
+          ] },
+          { key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }, { value: '亮光', label: '亮光' }] },
+          { key: 'craft', label: '工艺', type: 'tag', options: [
+            { value: '模具面', label: '模具面' }, { value: '亮光', label: '亮光' }, { value: '哑光', label: '哑光' },
+          ] },
+          { key: 'color', label: '颜色', type: 'color', options: [
+            { value: '绿色', label: '绿色' }, { value: '白色', label: '白色' }, { value: '蓝色', label: '蓝色' }, { value: '红色', label: '红色' },
+          ] },
+          { key: 'size', label: '尺寸', type: 'tag', options: [
+            { value: '310x310mm', label: '310×310' }, { value: '48x40mm', label: '48×40' },
+            { value: '150x150mm', label: '150×150' }, { value: '600x300mm', label: '600×300' },
+          ] },
+        ],
+      },
+      {
+        id: 'ceramic-art',
+        name: '艺术砖',
+        specs: [],
+        colors: ['白色', '米色', '灰色', '蓝色', '黑色', '红色', '黄色', '橙色', '咖色', '绿色'],
+        sizes: ['230x75mm', '300x75mm', '300x300mm', '306x306mm', '294x282mm', '301x301mm'],
+        unit: '平方米',
+        filterGroups: [
+          { key: 'series', label: '系列', type: 'tag', options: [
+            { value: '简约系列', label: '简约系列' }, { value: '仿古系列', label: '仿古系列' },
+            { value: '几何系列', label: '几何系列' },
+          ] },
+          { key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }, { value: '亮光', label: '亮光' }] },
+          { key: 'craft', label: '工艺', type: 'tag', options: [
+            { value: '喷墨哑光微模', label: '喷墨哑光' }, { value: '喷墨亮光微模', label: '喷墨亮光' },
+            { value: '喷墨哑光', label: '喷墨哑光' }, { value: '冰晶釉', label: '冰晶釉' },
+          ] },
+          { key: 'color', label: '颜色', type: 'color', options: [
+            { value: '白色', label: '白色' }, { value: '米色', label: '米色' }, { value: '灰色', label: '灰色' },
+            { value: '蓝色', label: '蓝色' }, { value: '黑色', label: '黑色' }, { value: '红色', label: '红色' },
+            { value: '黄色', label: '黄色' }, { value: '橙色', label: '橙色' }, { value: '绿色', label: '绿色' },
+          ] },
+          { key: 'size', label: '尺寸', type: 'tag', options: [
+            { value: '230x75mm', label: '230×75' }, { value: '300x75mm', label: '300×75' },
+            { value: '300x300mm', label: '300×300' }, { value: '294x282mm', label: '294×282' },
+          ] },
+        ],
+      },
+      {
+        id: 'ceramic-antique',
+        name: '仿古砖',
+        specs: [],
+        colors: ['白色', '米色', '灰色', '蓝色', '黑色', '红色', '黄色', '浅灰', '橙色', '咖色'],
+        sizes: ['300x300mm', '306x306mm', '294x282mm', '301x301mm', '600x600mm', '1200x600mm'],
+        unit: '平方米',
+        filterGroups: [
+          { key: 'series', label: '系列', type: 'tag', options: [
+            { value: '大理石系列', label: '大理石系列' }, { value: '水泥系列', label: '水泥系列' },
+            { value: '砂岩系列', label: '砂岩系列' }, { value: '莱姆石系列', label: '莱姆石系列' },
+            { value: '洞石系列', label: '洞石系列' }, { value: '板岩系列', label: '板岩系列' },
+            { value: '水磨石系列', label: '水磨石系列' }, { value: '古堡砖系列', label: '古堡砖系列' },
+            { value: '花砖系列', label: '花砖系列' },
+          ] },
+          { key: 'surface', label: '表面', type: 'tag', options: [{ value: '哑光', label: '哑光' }, { value: '亮光', label: '亮光' }] },
+          { key: 'craft', label: '工艺', type: 'tag', options: [
+            { value: '菠萝面', label: '菠萝面' }, { value: '冰裂', label: '冰裂' }, { value: '喷墨哑光', label: '喷墨哑光' },
+            { value: '模具面', label: '模具面' }, { value: '亮光', label: '亮光' },
+          ] },
+          { key: 'color', label: '颜色', type: 'color', options: [
+            { value: '白色', label: '白色' }, { value: '米色', label: '米色' }, { value: '灰色', label: '灰色' },
+            { value: '蓝色', label: '蓝色' }, { value: '黑色', label: '黑色' }, { value: '红色', label: '红色' },
+          ] },
+          { key: 'size', label: '尺寸', type: 'tag', options: [
+            { value: '300x300mm', label: '300×300' }, { value: '294x282mm', label: '294×282' },
+            { value: '600x600mm', label: '600×600' }, { value: '1200x600mm', label: '1200×600' },
+          ] },
+        ],
+      },
+      {
+        id: 'ceramic-floor',
+        name: '地铺石',
+        specs: [],
+        colors: ['灰', '黑', '米黄', '棕', '蓝', '绿', '白'],
+        sizes: ['600x300mm', '600x600mm', '798x798mm', '1200x600mm', '150x150mm'],
+        unit: '平方米',
+        filterGroups: [
+          { key: 'series', label: '系列', type: 'tag', options: [
+            { value: '花岗岩系列', label: '花岗岩' }, { value: '马蹄石系列', label: '马蹄石' },
+            { value: '地铺石系列', label: '地铺石' }, { value: '幕墙景观砖系列', label: '幕墙景观' },
+          ] },
+          { key: 'surface', label: '表面', type: 'tag', options: [
+            { value: '哑光', label: '哑光' }, { value: '亮光', label: '亮光' },
+            { value: '荔枝面', label: '荔枝面' }, { value: '火烧面', label: '火烧面' },
+          ] },
+          { key: 'craft', label: '工艺', type: 'tag', options: [
+            { value: '精雕', label: '精雕' }, { value: '天鹅绒', label: '天鹅绒' },
+            { value: '模具面', label: '模具面' }, { value: '荔枝面全通体', label: '荔枝面' },
+          ] },
+          { key: 'color', label: '颜色', type: 'color', options: [
+            { value: '灰', label: '灰' }, { value: '黑', label: '黑' }, { value: '米黄', label: '米黄' },
+            { value: '棕', label: '棕' }, { value: '蓝', label: '蓝' }, { value: '绿', label: '绿' },
+          ] },
+          { key: 'size', label: '尺寸', type: 'tag', options: [
+            { value: '600x300mm', label: '600×300' }, { value: '600x600mm', label: '600×600' },
+            { value: '1200x600mm', label: '1200×600' }, { value: '150x150mm', label: '150×150' },
+          ] },
+        ],
+      },
     ],
   },
   {
@@ -345,6 +531,8 @@ export const SAMPLE_PRODUCTS: StandardProduct[] = [
   { id: 'p006',  libraryId: 'LIB-2024-0022', supplierProductId: 'SC-MAR-6001',  categoryId: 'stone', subCategoryId: 'marble',  supplierId: 's010', name: '卡拉拉白大理石', spec: '亮光面', color: '白色', size: '600x1200mm', unit: '平方米', moq: 50,  basePrice: 85.0,  imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop', length: 600, width: 1200, height: 18, weight: 45, description: '意大利卡拉拉白大理石，亮光面处理，纹理自然', attrs: { origin: '意大利' } },
   { id: 'p006b', libraryId: 'LIB-2024-0023', supplierProductId: 'YF-MAR-8002',  categoryId: 'stone', subCategoryId: 'marble',  supplierId: 's009', name: '帝皇金大理石',   spec: '亮光面', color: '米黄', size: '800x800mm',  unit: '平方米', moq: 50,  basePrice: 120.0, imageUrl: 'https://images.unsplash.com/photo-1596395147635-c90bcd2c2a4f?w=400&h=300&fit=crop', length: 800, width: 800, height: 18, weight: 50, description: '西班牙帝皇金大理石，金色纹理，高贵典雅', attrs: { origin: '西班牙' } },
   { id: 'p006c', libraryId: 'LIB-2024-0024', supplierProductId: 'YF-GRA-6003',  categoryId: 'stone', subCategoryId: 'granite', supplierId: 's009', name: '芝麻黑花岗岩',   spec: '火烧面', color: '黑色', size: '600x600mm',  unit: '平方米', moq: 100, basePrice: 48.0,  imageUrl: 'https://images.unsplash.com/photo-1604082787521-6d13ab63dadb?w=400&h=300&fit=crop', length: 600, width: 600, height: 20, weight: 55, description: '芝麻黑花岗岩，火烧面处理，防滑耐用，适合室外', attrs: { useScene: '室外' } },
+  // H5扫码测试产品
+  { id: 'gy001', libraryId: 'LIB-GY-1249', supplierProductId: 'GY-BIGCC1249SU004Y-BNL', categoryId: 'ceramic', subCategoryId: 'modern', supplierId: 's001', name: 'BIG CUBE 系列陶瓷大板 1200×900mm', spec: 'BIG CUBE', color: '米白', size: '1200×900×9mm', unit: '平方米', moq: 50, basePrice: 88.0, imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop', length: 1200, width: 900, height: 9, weight: 24, description: 'BIG CUBE 系列陶瓷大板，米白色调，现代简约风格，大规格铺贴效果大气', attrs: { surface: '亮光面', antiSlip: 'R10' } },
 ];
 
 export const CURRENCIES = ['USD', 'EUR', 'GBP', 'AUD', 'CAD'];

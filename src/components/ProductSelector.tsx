@@ -873,80 +873,81 @@ function ProductListView({
         </div>
 
         {/* 产品信息 */}
-        <div className="p-4">
-          {/* 产品库ID / 供应商产品ID */}
+        <div className="p-3">
+          {/* 三级系列名 + 供应商产品ID */}
           <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
-            {product.libraryId && (
-              <span className="font-mono text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
-                {product.libraryId}
+            {product.seriesName && (
+              <span className="text-[10px] font-medium text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-100">
+                {product.seriesName}
               </span>
             )}
             {product.supplierProductId && (
-              <span className="font-mono text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+              <span className="font-mono text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded truncate max-w-[120px]">
                 {product.supplierProductId}
               </span>
             )}
           </div>
-          <h4 className="text-sm font-semibold text-gray-900 mb-1.5">{product.name}</h4>
-          <div className="flex items-center gap-2 text-xs text-gray-500 mb-2 flex-wrap">
-            <span className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600">{product.spec}</span>
-            <span className="flex items-center gap-1">
-              <span
-                className="w-2.5 h-2.5 rounded-full border border-gray-300"
-                style={{ backgroundColor: COLOR_DOTS[product.color] || '#e5e7eb' }}
-              />
-              {product.color}
-            </span>
-            <span className="text-gray-400">{product.size}</span>
+
+          {/* 产品名称 */}
+          <h4 className="text-sm font-semibold text-gray-900 mb-1.5 leading-snug line-clamp-2">{product.name}</h4>
+
+          {/* 规格标签行：工艺/颜色/尺寸 */}
+          <div className="flex flex-wrap gap-1 mb-2">
+            {product.spec && (
+              <span className="px-1.5 py-0.5 bg-gray-100 rounded text-[11px] text-gray-600">{product.spec}</span>
+            )}
+            {product.color && (
+              <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-gray-100 rounded text-[11px] text-gray-600">
+                <span
+                  className="w-2 h-2 rounded-full border border-gray-300 flex-shrink-0"
+                  style={{ backgroundColor: COLOR_DOTS[product.color] || '#e5e7eb' }}
+                />
+                {product.color}
+              </span>
+            )}
+            {product.size && (
+              <span className="px-1.5 py-0.5 bg-blue-50 rounded text-[11px] text-blue-600 font-medium">{product.size}</span>
+            )}
           </div>
 
-          {/* 供应商信息 */}
-          <div className="flex items-center gap-2 mb-2">
+          {/* 供应商 + 报价引用次数 */}
+          <div className="flex items-center gap-1.5 mb-2 min-h-[18px]">
             {supplier && (
               <>
                 <svg className="w-3 h-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
-                <span className="text-xs text-gray-500 truncate flex-1">{supplier.name}</span>
-                <div className="flex items-center gap-0.5 flex-shrink-0">
-                  {Array.from({ length: supplier.rating }).map((_, i) => (
-                    <svg key={i} className="w-2.5 h-2.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
+                <span className="text-[11px] text-gray-500 truncate flex-1">{supplier.name}</span>
               </>
             )}
-            {/* 报价引用次数 */}
             {product.tags?.some(t => t.quoteCount !== undefined) && (
-              <div className="flex items-center gap-0.5 text-xs text-orange-500 flex-shrink-0">
+              <div className="flex items-center gap-0.5 text-[11px] text-orange-500 flex-shrink-0 ml-auto">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                <span>
-                  {product.tags?.find(t => t.quoteCount !== undefined)?.quoteCount}次引用
-                </span>
+                <span>{product.tags?.find(t => t.quoteCount !== undefined)?.quoteCount}次</span>
               </div>
             )}
           </div>
 
+          {/* 底部：价格 + 快速添加 */}
           <div className="flex items-center justify-between pt-2 border-t border-gray-100">
             <div>
-              <span className="text-base font-bold text-blue-700">${product.basePrice}</span>
-              <span className="text-xs text-gray-400 ml-1">/ {product.unit}</span>
+              <span className="text-base font-bold text-blue-700">${product.basePrice.toFixed(2)}</span>
+              <span className="text-[11px] text-gray-400 ml-1">/{product.unit}</span>
             </div>
             <button
               onClick={e => {
                 e.stopPropagation();
                 if (!alreadyAdded) onQuickAdd(product);
               }}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
+              className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
                 alreadyAdded
                   ? 'bg-green-100 text-green-700 cursor-default'
                   : 'bg-blue-700 text-white hover:bg-blue-800'
               }`}
             >
-              {alreadyAdded ? '已添加' : '快速添加'}
+              {alreadyAdded ? '✓ 已加' : '+ 加入'}
             </button>
           </div>
         </div>
@@ -1536,6 +1537,12 @@ function SearchResultView({
                       <div className="flex items-center gap-1 mb-0.5 flex-wrap">
                         {product.libraryId && (
                           <span className="font-mono text-[9px] text-blue-600 bg-blue-50 px-1 py-0.5 rounded border border-blue-100">{product.libraryId}</span>
+                        )}
+                        {/* 三级系列名标签 */}
+                        {product.seriesName && (
+                          <span className="text-[9px] text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded border border-indigo-100 font-medium">
+                            {product.seriesName}
+                          </span>
                         )}
                         {/* JD风格标签：百分产品、展厅样板 */}
                         {product.tags?.slice(0, 2).map((tag, idx) => {

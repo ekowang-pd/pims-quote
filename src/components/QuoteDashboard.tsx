@@ -1,8 +1,38 @@
 import { useState } from 'react';
 import type { Quote } from '../types';
-import { formatCurrency, getStatusLabel, getStatusColor } from '../utils/format';
+import { formatCurrency } from '../utils/format';
 
 type StatusFilter = 'all' | 'draft' | 'submitted';
+
+// 订单来源标签样式
+const SOURCE_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+  PIMS:     { bg: 'bg-blue-50',   text: 'text-blue-700',   label: 'PIMS' },
+  TikTok:   { bg: 'bg-pink-50',   text: 'text-pink-700',   label: 'TikTok' },
+  Facebook: { bg: 'bg-indigo-50', text: 'text-indigo-700', label: 'Facebook' },
+  WhatsApp: { bg: 'bg-green-50',  text: 'text-green-700',  label: 'WhatsApp' },
+  Email:    { bg: 'bg-amber-50',  text: 'text-amber-700',  label: 'Email' },
+  OTHER:    { bg: 'bg-gray-100',  text: 'text-gray-500',   label: '其他' },
+};
+
+// 从报价人名称提取头像文字（支持 "冯焙荣 / Jackie" 格式）
+function getAvatarText(name: string): string {
+  const chinesePart = name.split('/')[0].trim();
+  return chinesePart.length > 0 ? chinesePart.slice(0, 1) : name.slice(0, 1);
+}
+
+// 头像渐变色（按首字母哈希）
+const AVATAR_COLORS = [
+  'from-blue-500 to-blue-600',
+  'from-purple-500 to-purple-600',
+  'from-green-500 to-green-600',
+  'from-orange-500 to-orange-600',
+  'from-pink-500 to-pink-600',
+  'from-teal-500 to-teal-600',
+];
+function getAvatarColor(name: string): string {
+  const code = name.charCodeAt(0) || 0;
+  return AVATAR_COLORS[code % AVATAR_COLORS.length];
+}
 
 interface Props {
   quotes: Quote[];
@@ -15,8 +45,8 @@ interface Props {
 export function QuoteDashboard({ quotes, onNewQuote, onEditQuote, onViewQuote, onDeleteQuote }: Props) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
-  const filteredQuotes = statusFilter === 'all' 
-    ? quotes 
+  const filteredQuotes = statusFilter === 'all'
+    ? quotes
     : quotes.filter(q => statusFilter === 'draft' ? q.status === 'draft' : q.status !== 'draft');
 
   const totalAmount = filteredQuotes.reduce((sum, q) => {
@@ -41,8 +71,8 @@ export function QuoteDashboard({ quotes, onNewQuote, onEditQuote, onViewQuote, o
               key={tab.key}
               onClick={() => setStatusFilter(tab.key)}
               className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer ${
-                statusFilter === tab.key 
-                  ? 'bg-blue-700 text-white' 
+                statusFilter === tab.key
+                  ? 'bg-blue-700 text-white'
                   : tab.color
               }`}
             >
@@ -118,76 +148,109 @@ export function QuoteDashboard({ quotes, onNewQuote, onEditQuote, onViewQuote, o
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-100 bg-gray-50/60">
-                    {['单号', '报价人', '总金额', '部门', 'ERP状态', '操作'].map(h => (
-                      <th key={h} className="text-left text-xs font-medium text-gray-500 px-5 py-3 uppercase tracking-wide">{h}</th>
-                    ))}
+                    <th className="text-left text-xs font-medium text-gray-500 px-5 py-3 whitespace-nowrap">单号</th>
+                    <th className="text-left text-xs font-medium text-gray-500 px-5 py-3 whitespace-nowrap">报价人</th>
+                    <th className="text-left text-xs font-medium text-gray-500 px-5 py-3 whitespace-nowrap">金额</th>
+                    <th className="text-left text-xs font-medium text-gray-500 px-5 py-3 whitespace-nowrap">部门</th>
+                    <th className="text-left text-xs font-medium text-gray-500 px-5 py-3 whitespace-nowrap">来源</th>
+                    <th className="text-left text-xs font-medium text-gray-500 px-5 py-3 whitespace-nowrap">产品数</th>
+                    <th className="text-left text-xs font-medium text-gray-500 px-5 py-3 whitespace-nowrap">状态</th>
+                    <th className="text-left text-xs font-medium text-gray-500 px-5 py-3 whitespace-nowrap">操作</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredQuotes.map((quote, i) => {
                     const total = quote.items.reduce((s, item) => s + item.quantity * item.unitPrice, 0);
-                    // 扩展字段
-                    const extQuote = quote as Quote & {
-                      salesperson?: string;
-                      department?: string;
-                      erpStatus?: string;
-                    };
-                    // 模拟数据
-                    const mockSalesperson = extQuote.salesperson || '王经理';
-                    const mockDepartment = extQuote.department || '陶瓷一部';
-                    const hasErp = !!extQuote.erpStatus;
+                    const productCount = quote.items.length;
+
+                    // 报价人（支持双语格式 "冯焙荣 / Jackie"）
+                    const salesperson = quote.salesperson || '负责人';
+                    const chineseName = salesperson.split('/')[0].trim();
+                    const englishName = salesperson.includes('/') ? salesperson.split('/')[1].trim() : '';
+
+                    // 部门
+                    const department = quote.department || '—';
+
+                    // 订单来源
+                    const source = (quote as Quote & { source?: string }).source || 'PIMS';
+                    const srcStyle = SOURCE_STYLES[source] || SOURCE_STYLES.OTHER;
+
                     return (
                       <tr key={quote.id} className={`border-b border-gray-50 hover:bg-blue-50/30 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
+                        {/* 单号 */}
                         <td className="px-5 py-3.5">
-                          <button onClick={() => onViewQuote(quote)} className="font-medium text-blue-700 hover:text-blue-800 hover:underline text-sm cursor-pointer">
+                          <button
+                            onClick={() => onViewQuote(quote)}
+                            className="font-mono font-medium text-blue-700 hover:text-blue-800 hover:underline text-sm cursor-pointer tracking-wide"
+                          >
                             {quote.quoteNo}
                           </button>
+                          <p className="text-[11px] text-gray-400 mt-0.5">{quote.createdAt?.slice(0, 10)}</p>
                         </td>
-                        {/* 报价人：头像+名称 */}
+
+                        {/* 报价人：头像+中文名+英文名 */}
                         <td className="px-5 py-3.5">
                           <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
-                              {mockSalesperson.slice(0, 1)}
+                            <div className={`w-7 h-7 rounded-full bg-gradient-to-br ${getAvatarColor(salesperson)} flex items-center justify-center text-white text-xs font-medium flex-shrink-0`}>
+                              {getAvatarText(salesperson)}
                             </div>
-                            <span className="text-sm text-gray-900">{mockSalesperson}</span>
+                            <div>
+                              <p className="text-sm text-gray-900 font-medium leading-tight">{chineseName}</p>
+                              {englishName && (
+                                <p className="text-[11px] text-gray-400 leading-tight">{englishName}</p>
+                              )}
+                            </div>
                           </div>
                         </td>
-                        <td className="px-5 py-3.5 text-sm font-semibold text-gray-900">{formatCurrency(total, quote.currency)}</td>
+
+                        {/* 金额 */}
+                        <td className="px-5 py-3.5">
+                          <span className="text-sm font-semibold text-gray-900">{formatCurrency(total, quote.currency)}</span>
+                        </td>
+
                         {/* 部门 */}
-                        <td className="px-5 py-3.5 text-sm text-gray-600">{mockDepartment}</td>
-                        {/* 报价单状态：草稿/已提交 */}
+                        <td className="px-5 py-3.5 text-sm text-gray-600">{department}</td>
+
+                        {/* 订单来源 */}
+                        <td className="px-5 py-3.5">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${srcStyle.bg} ${srcStyle.text}`}>
+                            {srcStyle.label}
+                          </span>
+                        </td>
+
+                        {/* 产品数量 */}
+                        <td className="px-5 py-3.5">
+                          <div className="flex items-center gap-1 text-sm text-gray-700">
+                            <svg className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            </svg>
+                            <span className="font-medium">{productCount}</span>
+                            <span className="text-gray-400 text-xs">款</span>
+                          </div>
+                        </td>
+
+                        {/* 状态 */}
                         <td className="px-5 py-3.5">
                           <span className={`badge ${quote.status === 'draft' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200' : 'bg-green-100 text-green-700 border border-green-200'}`}>
                             {quote.status === 'draft' ? '草稿' : '已提交'}
                           </span>
                         </td>
-                        {/* ERP状态：无/有 */}
+
+                        {/* 操作 */}
                         <td className="px-5 py-3.5">
-                          {hasErp ? (
-                            <span className="badge bg-emerald-100 text-emerald-700 border border-emerald-200">
-                              <svg className="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                              有
-                            </span>
-                          ) : (
-                            <span className="badge bg-gray-100 text-gray-400 border border-gray-200">无</span>
-                          )}
-                        </td>
-                        <td className="px-5 py-3.5">
-                          <div className="flex items-center gap-2">
-                            <button onClick={() => onViewQuote(quote)} className="text-gray-500 hover:text-blue-600 transition-colors cursor-pointer p-1 rounded" title="查看">
+                          <div className="flex items-center gap-1">
+                            <button onClick={() => onViewQuote(quote)} className="text-gray-400 hover:text-blue-600 transition-colors cursor-pointer p-1.5 rounded-lg hover:bg-blue-50" title="查看">
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                               </svg>
                             </button>
-                            <button onClick={() => onEditQuote(quote)} className="text-gray-500 hover:text-green-600 transition-colors cursor-pointer p-1 rounded" title="编辑">
+                            <button onClick={() => onEditQuote(quote)} className="text-gray-400 hover:text-green-600 transition-colors cursor-pointer p-1.5 rounded-lg hover:bg-green-50" title="编辑">
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                               </svg>
                             </button>
-                            <button onClick={() => onDeleteQuote(quote.id)} className="text-gray-500 hover:text-red-500 transition-colors cursor-pointer p-1 rounded" title="删除">
+                            <button onClick={() => onDeleteQuote(quote.id)} className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer p-1.5 rounded-lg hover:bg-red-50" title="删除">
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                               </svg>

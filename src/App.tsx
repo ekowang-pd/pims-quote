@@ -209,7 +209,93 @@ p001, p002, p003
 function App() {
   const [mainTab, setMainTab] = useState<MainTab>('quotes');
   const [view, setView] = useState<AppView>('dashboard');
-  const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [quotes, setQuotes] = useState<Quote[]>([
+    {
+      id: 'q_001',
+      quoteNo: 'PJ0030325-08060482',
+      customerName: 'ABC Building Materials Co.',
+      customerCountry: 'US',
+      createdAt: '2026-03-31',
+      validUntil: '2026-04-30',
+      status: 'sent',
+      currency: 'USD',
+      paymentTerms: 'T/T 30% deposit, 70% before shipment',
+      deliveryTerms: 'FOB',
+      salesperson: '冯焙荣 / Jackie',
+      department: '陶瓷一部',
+      businessDept: '陶瓷一部',
+      source: 'PIMS',
+      items: [
+        { id: 'i_001', type: 'standard', productId: 'p001', productName: 'GC-JH12052-JH', spec: '哑光', color: '灰', size: '1200x600mm', unit: '平方米', quantity: 152.64, unitPrice: 12.8, margin: 0.3 },
+        { id: 'i_002', type: 'standard', productId: 'p002', productName: 'GC-JH12053-JH', spec: '亮光', color: '白', size: '1200x600mm', unit: '平方米', quantity: 64.8, unitPrice: 14.5, margin: 0.3 },
+      ],
+    } as Quote & { source: string },
+    {
+      id: 'q_002',
+      quoteNo: 'PJ0036596-08029844',
+      customerName: 'Avery International Deco',
+      customerCountry: 'AU',
+      createdAt: '2026-03-31',
+      validUntil: '2026-04-30',
+      status: 'sent',
+      currency: 'USD',
+      paymentTerms: 'T/T 100% in advance',
+      deliveryTerms: 'CIF',
+      salesperson: '张慧妍 / Avery',
+      department: '陶瓷二部',
+      businessDept: '陶瓷二部',
+      source: 'PIMS',
+      items: [
+        { id: 'i_003', type: 'standard', productId: 'p003', productName: 'GC-SL128M17-JH', spec: '哑光', color: '浅灰', size: '1200x800mm', unit: '平方米', quantity: 64.8, unitPrice: 16.2, margin: 0.28 },
+        { id: 'i_004', type: 'standard', productId: 'p004', productName: 'GC-SL128M18-JH', spec: '哑光', color: '米黄', size: '1200x800mm', unit: '平方米', quantity: 252, unitPrice: 16.2, margin: 0.28 },
+        { id: 'i_005', type: 'standard', productId: 'p005', productName: 'French Lime Stone', spec: '亮光', color: '米白', size: '600x600mm', unit: '平方米', quantity: 22.68, unitPrice: 38.5, margin: 0.35 },
+        { id: 'i_006', type: 'standard', productId: 'p006', productName: 'Ioni', spec: '亮光', color: '灰', size: '600x300mm', unit: '平方米', quantity: 55.08, unitPrice: 42.0, margin: 0.35 },
+      ],
+    } as Quote & { source: string },
+    {
+      id: 'q_003',
+      quoteNo: 'PJ0043505-08013554',
+      customerName: 'Cathy Zhang Building Group',
+      customerCountry: 'CA',
+      createdAt: '2026-04-01',
+      validUntil: '2026-05-01',
+      status: 'draft',
+      currency: 'USD',
+      paymentTerms: 'T/T 30% deposit, 70% before shipment',
+      deliveryTerms: 'FOB',
+      salesperson: '张疆渝 / Cathy Zhang',
+      department: '陶瓷一部',
+      businessDept: '陶瓷一部',
+      source: 'TikTok',
+      items: [
+        { id: 'i_007', type: 'standard', productId: 'p007', productName: 'Porcelain tile GC-FK12024', spec: '哑光', color: '灰', size: '1200x600mm', unit: '平方米', quantity: 10.08, unitPrice: 11.5, margin: 0.25 },
+        { id: 'i_008', type: 'standard', productId: 'p008', productName: 'Porcelain tile GC-612A18', spec: '哑光', color: '浅灰', size: '600x600mm', unit: '平方米', quantity: 18.72, unitPrice: 9.8, margin: 0.25 },
+      ],
+    } as Quote & { source: string },
+    {
+      id: 'q_004',
+      quoteNo: 'PJ0044379-08086846',
+      customerName: 'Euro Design House Ltd',
+      customerCountry: 'GB',
+      createdAt: '2026-04-01',
+      validUntil: '2026-05-01',
+      status: 'draft',
+      currency: 'USD',
+      paymentTerms: 'L/C at sight',
+      deliveryTerms: 'CIF',
+      salesperson: '张疆渝 / Cathy Zhang',
+      department: '陶瓷一部',
+      businessDept: '陶瓷一部',
+      source: 'Facebook',
+      items: [
+        { id: 'i_009', type: 'standard', productId: 'p009', productName: 'Porcelain tile GC-T12Z629', spec: '哑光', color: '灰白', size: '1200x600mm', unit: '平方米', quantity: 146.88, unitPrice: 12.5, margin: 0.3 },
+        { id: 'i_010', type: 'standard', productId: 'p010', productName: 'Porcelain tile GC-ABD6608', spec: '亮光', color: '米白', size: '600x600mm', unit: '平方米', quantity: 37.44, unitPrice: 10.2, margin: 0.28 },
+        { id: 'i_011', type: 'standard', productId: 'p011', productName: 'Porcelain tile GC-BN12087', spec: '哑光', color: '深灰', size: '1200x800mm', unit: '平方米', quantity: 82.08, unitPrice: 15.8, margin: 0.3 },
+        { id: 'i_012', type: 'standard', productId: 'p012', productName: 'Porcelain tile GC-ABD61224', spec: '亮光', color: '米黄', size: '1200x600mm', unit: '平方米', quantity: 48.96, unitPrice: 12.0, margin: 0.28 },
+        { id: 'i_013', type: 'standard', productId: 'p013', productName: 'Porcelain tile GC-T12Z629-2', spec: '哑光', color: '浅灰', size: '1200x600mm', unit: '平方米', quantity: 34.56, unitPrice: 12.5, margin: 0.3 },
+      ],
+    } as Quote & { source: string },
+  ]);
   const [currentQuote, setCurrentQuote] = useState<Quote | null>(null);
   const [viewingQuote, setViewingQuote] = useState<Quote | null>(null);
   const [selectingForQuote, setSelectingForQuote] = useState<string | null>(null);
@@ -385,7 +471,7 @@ function App() {
               <span className="text-base font-bold text-gray-900">PIMS</span>
             </div>
 
-            {/* 2个 Tab */}
+            {/* 3个 Tab：报价单 / 产品 / H5 */}
             <nav className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
               <button
                 onClick={() => { setMainTab('quotes'); setView('dashboard'); }}
@@ -398,7 +484,7 @@ function App() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                我的报价单
+                报价单
               </button>
               <button
                 onClick={() => { setMainTab('products'); setView('catalog'); }}
@@ -413,9 +499,20 @@ function App() {
                 </svg>
                 产品
               </button>
+              <a
+                href="#/mobile"
+                target="_blank"
+                className={`flex items-center gap-2 px-5 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer text-gray-500 hover:text-gray-700`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                H5
+              </a>
             </nav>
 
-            {/* 右侧新建报价单（仅在报价单 Tab 显示） */}
+            {/* 右侧按钮区 */}
             {mainTab === 'quotes' && (
               <button onClick={handleNewQuote} className="btn-primary">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -434,7 +531,7 @@ function App() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                       d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                   </svg>
-                  H5扫码
+                  扫码
                 </button>
                 <div className="w-4" />
               </>

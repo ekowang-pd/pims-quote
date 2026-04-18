@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import type { StandardProduct, QuoteItem, ComboQuoteItem } from '../types';
-import { SAMPLE_PRODUCTS, COMBO_PRODUCTS } from '../data/categories';
+import { SAMPLE_PRODUCTS } from '../data/categories';
 
 interface Props {
   onAddToCart: (items: QuoteItem[], combos?: ComboQuoteItem[]) => void;
@@ -34,8 +34,12 @@ export function H5ScanSelector({ onAddToCart, onClose }: Props) {
     ) || null;
   };
 
-  // 启动扫码
-  const startScanner = async () => {
+  const [scanMode, setScanMode] = useState<'camera' | 'file' | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 启动相机扫码
+  const startCameraScan = async () => {
     if (!scannerDivRef.current) return;
     try {
       const html5QrCode = new Html5Qrcode('h5-reader');
@@ -52,11 +56,56 @@ export function H5ScanSelector({ onAddToCart, onClose }: Props) {
         },
         () => {} // ignore errors
       );
+      setScanMode('camera');
       setScanning(true);
     } catch (err) {
       console.error('Camera error:', err);
       alert('无法访问摄像头，请检查权限设置');
     }
+  };
+
+  // 从图片识别二维码/条形码
+  const handleFileScan = async (file: File) => {
+    setUploading(true);
+    try {
+      const html5QrCode = new Html5Qrcode('h5-reader');
+      scannerRef.current = html5QrCode;
+      // scanFile 支持二维码，对于条形码用 detectFileFromSrc
+      const result = await html5QrCode.scanFile(file, true);
+      handleScannedCode(result);
+      setScanMode('file');
+      setScanning(true);
+    } catch (err: any) {
+      // 尝试 detectFileFromSrc（支持更多格式）
+      try {
+        const html5QrCode2 = new Html5Qrcode('h5-reader');
+        scannerRef.current = html5QrCode2;
+        const result2 = await html5QrCode2.detectFileFromSrc(file);
+        handleScannedCode(result2);
+        setScanMode('file');
+        setScanning(true);
+      } catch (_) {
+        // 图片中未识别到编码，尝试作为产品ID直接搜索
+        const fileName = file.name.replace(/\.[^.]+$/, '');
+        const found = findProduct(fileName);
+        if (found) {
+          handleScannedCode(fileName);
+          setScanMode('file');
+          setScanning(true);
+        } else {
+          setNotFoundCode(fileName);
+        }
+      }
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleFileScan(file);
+    // reset input
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   // 停止扫码
@@ -65,6 +114,7 @@ export function H5ScanSelector({ onAddToCart, onClose }: Props) {
       scannerRef.current.stop().then(() => {
         scannerRef.current = null;
         setScanning(false);
+      setScanMode(null);
       }).catch(() => {});
     }
   };
@@ -180,23 +230,61 @@ export function H5ScanSelector({ onAddToCart, onClose }: Props) {
       {/* 扫描区域 */}
       <div className="flex-1 relative flex flex-col items-center justify-center overflow-hidden">
         {!scanning ? (
-          <div className="text-center p-8">
-            {/* 相机图标 */}
-            <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-white/10 flex items-center justify-center">
-              <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="text-center p-8 w-full max-w-sm mx-auto">
+            {/* 图标 */}
+            <div className="w-20 h-20 mx-auto mb-5 rounded-2xl bg-white/10 flex items-center justify-center">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                  d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
               </svg>
             </div>
             <p className="text-white/60 text-sm mb-8">扫描产品条形码或二维码<br />快速加入报价单</p>
-            <button
-              onClick={startScanner}
-              className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-full hover:bg-blue-700 transition-colors"
-            >
-              开启相机扫描
-            </button>
+
+            {/* 两种扫描方式 */}
+            <div className="flex gap-3 mb-6">
+              {/* 相机扫描 */}
+              <button
+                onClick={startCameraScan}
+                className="flex-1 flex flex-col items-center gap-2 py-4 bg-white/10 border border-white/20 rounded-2xl hover:bg-white/20 transition-colors"
+              >
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span className="text-white text-sm font-medium">相机扫描</span>
+              </button>
+
+              {/* 上传图片 */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="flex-1 flex flex-col items-center gap-2 py-4 bg-white/10 border border-white/20 rounded-2xl hover:bg-white/20 transition-colors disabled:opacity-50"
+              >
+                {uploading ? (
+                  <svg className="w-7 h-7 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                ) : (
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                )}
+                <span className="text-white text-sm font-medium">{uploading ? '识别中...' : '上传图片'}</span>
+              </button>
+            </div>
+
+            {/* 隐藏的文件上传input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileInputChange}
+            />
 
             {/* 手动输入区 */}
             <div className="mt-10 max-w-xs mx-auto">

@@ -266,67 +266,49 @@ export function QuoteDetail({ quote, onBack, onEdit }: Props) {
                 </thead>
                 <tbody>
                   {quote.items.map((item, idx) => {
+                    const totalCols = activeTemplate.columns.length;
                     // 组合品行
                     if (item.type === 'combo') {
                       const combo = item as ComboQuoteItem;
                       const finalPrice = combo.totalPrice * (1 + combo.margin);
                       return (
                         <>
-                          {/* 组合品主行 */}
+                          {/* 组合品主行：跨越全部列 */}
                           <tr key={item.id} className="border-b border-orange-200 bg-orange-50/30">
-                            <td className="px-3 py-3 text-sm text-gray-500">{idx + 1}</td>
-                            <td className="px-3 py-3">
-                              {item.imageUrl ? (
-                                <img src={item.imageUrl} alt="" className="w-10 h-10 object-cover rounded" />
-                              ) : (
-                                <div className="w-10 h-10 bg-orange-100 rounded flex items-center justify-center">
-                                  <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                                  </svg>
+                            <td colSpan={totalCols} className="px-4 py-3">
+                              <div className="flex items-center gap-4">
+                                {item.imageUrl ? (
+                                  <img src={item.imageUrl} alt="" className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
+                                ) : (
+                                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                    </svg>
+                                  </div>
+                                )}
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="font-mono text-xs text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded">{combo.comboProductId}</span>
+                                    <span className="badge text-xs bg-orange-100 text-orange-700">组合</span>
+                                    <span className="text-sm font-semibold text-orange-800">{combo.comboName}</span>
+                                    <span className="text-xs text-orange-500">含 {combo.components.length} 个组件</span>
+                                  </div>
+                                  <div className="flex flex-wrap gap-2">
+                                    {combo.components.map((comp, ci) => (
+                                      <span key={comp.componentId} className="text-xs bg-white border border-orange-200 rounded px-2 py-0.5 text-gray-600">
+                                        {ci + 1}. {comp.productName}
+                                        <span className="text-orange-500 ml-1">${comp.unitPrice.toFixed(2)} × {comp.quantity}</span>
+                                      </span>
+                                    ))}
+                                  </div>
                                 </div>
-                              )}
-                            </td>
-                            <td className="px-3 py-3"><span className="font-mono text-xs text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded">{combo.comboProductId}</span></td>
-                            <td className="px-3 py-3"><span className="badge text-xs bg-orange-100 text-orange-700">组合</span></td>
-                            <td className="px-3 py-3 col-span-3">
-                              <div className="text-sm font-semibold text-orange-800">{combo.comboName}</div>
-                              <div className="text-xs text-orange-500">含 {combo.components.length} 个组件</div>
-                            </td>
-                            <td colSpan={16} className="px-3 py-3 text-right">
-                              <span className="text-sm font-bold text-orange-700">{formatCurrency(finalPrice, quote.currency)}</span>
+                                <div className="text-right flex-shrink-0">
+                                  <div className="text-sm font-bold text-orange-700">{formatCurrency(finalPrice, quote.currency)}</div>
+                                  <div className="text-xs text-gray-400 mt-0.5">成本 {formatCurrency(combo.totalPrice, quote.currency)}</div>
+                                </div>
+                              </div>
                             </td>
                           </tr>
-                          {/* 组件明细子行 */}
-                          {combo.components.map((comp, cIdx) => (
-                            <tr key={`${combo.id}-${comp.componentId}`} className="border-b border-orange-100 bg-white">
-                              <td className="px-3 py-2"></td>
-                              <td className="px-3 py-2" colSpan={2}>
-                                <span className="text-[10px] text-gray-400 pl-2">组件{cIdx + 1}</span>
-                              </td>
-                              <td className="px-3 py-2">
-                                <div className="text-xs font-medium text-gray-700">{comp.productName}</div>
-                                <div className="text-[10px] text-gray-400">{comp.supplierProductId || '-'}</div>
-                              </td>
-                              <td className="px-3 py-2 col-span-2"></td>
-                              <td className="px-3 py-2">
-                                <span className="text-xs text-gray-600">{comp.length || '-'}</span>
-                              </td>
-                              <td className="px-3 py-2">
-                                <span className="text-xs text-gray-600">{comp.width || '-'}</span>
-                              </td>
-                              <td className="px-3 py-2 col-span={8}">
-                                <span className="text-xs text-gray-500">{comp.dimensionValue}mm</span>
-                                {comp.remark && <span className="text-[10px] text-orange-500 ml-1">({comp.remark})</span>}
-                              </td>
-                              <td className="px-3 py-2 text-xs text-gray-700">{comp.quantity}</td>
-                              <td className="px-3 py-2 text-xs text-gray-600">{comp.unit}</td>
-                              <td className="px-3 py-2" colSpan={3}></td>
-                              <td className="px-3 py-2 text-xs font-semibold text-orange-600">
-                                {formatCurrency(comp.unitPrice * comp.quantity, quote.currency)}
-                              </td>
-                              <td className="px-3 py-2" colSpan={2}></td>
-                            </tr>
-                          ))}
                         </>
                       );
                     }
