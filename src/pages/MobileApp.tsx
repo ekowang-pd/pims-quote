@@ -1,6 +1,9 @@
 import { useState, useRef, useMemo } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
 import type { StandardProduct, ComboProduct, ComboQuoteItem, ComboSelectedProduct } from '../types';
+
+// 动态导入 html5-qrcode，避免 SSR/初始加载崩溃
+type Html5QrcodeType = import('html5-qrcode').Html5Qrcode;
+const loadHtml5Qrcode = () => import('html5-qrcode').then(m => m.Html5Qrcode);
 import { SAMPLE_PRODUCTS, CATEGORIES, SUPPLIERS, COMBO_PRODUCTS, COMBO_PRODUCTS_CATALOG } from '../data/categories';
 
 interface CartItem {
@@ -35,7 +38,7 @@ export function MobileApp() {
   const [foundProduct, setFoundProduct] = useState<StandardProduct | null>(null);
   const [notFoundCode, setNotFoundCode] = useState<string | null>(null);
   const [lastScan, setLastScan] = useState('');
-  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const scannerRef = useRef<Html5QrcodeType | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 已扫产品
@@ -121,6 +124,7 @@ export function MobileApp() {
 
   const startCameraScan = async () => {
     try {
+      const Html5Qrcode = await loadHtml5Qrcode();
       const html5QrCode = new Html5Qrcode('mobile-reader');
       scannerRef.current = html5QrCode;
       await html5QrCode.start(
@@ -149,6 +153,7 @@ export function MobileApp() {
   const handleFileScan = async (file: File) => {
     setUploading(true);
     try {
+      const Html5Qrcode = await loadHtml5Qrcode();
       const result = await new Html5Qrcode('mobile-reader').detectFileFromSrc(file);
       handleScannedCode(result);
     } catch {
