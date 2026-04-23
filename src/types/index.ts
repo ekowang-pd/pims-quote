@@ -186,6 +186,65 @@ export interface Quote {
 // 计价维度：按长度/宽度/面积 调整价格
 export type PriceDimension = 'length' | 'width' | 'area';
 
+// ===== 浴室柜专用计价配置 =====
+
+// 材质选项
+export interface VanityMaterial {
+  id: string;
+  label: string;         // 显示名称，如 "免漆板"
+  priceUnit: number;     // 单位系数（元/米），用于按长度计价
+}
+
+// 柜型选项（含多个材质）
+export interface VanityCabinetType {
+  id: string;
+  label: string;         // 显示名称，如 "现代免漆板柜"
+  installType: 'hanging' | 'floor'; // 安装类型
+  materials: VanityMaterial[];
+}
+
+// 增配项
+export interface VanityAddon {
+  id: string;
+  label: string;            // 显示名称
+  priceType: 'quantity' | 'fixed'; // 计价方式
+  unitPrice: number;        // 单价（quantity）或固定价（fixed）
+  group: string;            // 所属分组：'cabinet' | 'extra' | 'hardware' | 'function'
+}
+
+// 包装项
+export interface VanityPacking {
+  id: string;
+  label: string;
+  priceUnit: number;   // 单位系数（元/米）
+}
+
+// ===== 完整浴室柜配置状态（Record 结构，兼容旧代码）=====
+export interface VanityCabinetConfig {
+  // 安装类型
+  installType: 'hanging' | 'floor';
+  // 主柜
+  cabinetType: string;      // 柜型Id
+  material: string;          // 材质Id
+  cabinetLength: number;     // 主柜长度(mm)
+  // 主柜增配
+  cabinetAddons: Record<string, number>;
+  // 增配选项（独立于柜体）
+  extraAddons: Record<string, number>;
+  // 包装
+  packingItems: Record<string, number>;
+}
+
+// 浴室柜配置结果（用于生成报价单）
+export interface VanityCabinetQuote {
+  cabinetPrice: number;     // 主柜价格
+  addonPrice: number;       // 增配价格小计
+  packingPrice: number;      // 包装价格小计
+  totalPrice: number;        // 总价
+  config: VanityCabinetConfig;
+}
+
+// ===== 旧版组合品组件（保留兼容）=====
 // 组合品组件（单个配件）
 export interface ComboComponent {
   id: string;

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Quote, QuoteItem, ComboQuoteItem, AnyQuoteItem } from './types';
 import { QuoteDashboard } from './components/QuoteDashboard';
 import { QuoteEditor } from './components/QuoteEditor';
@@ -6,10 +6,11 @@ import { QuoteDetail } from './components/QuoteDetail';
 import { ProductSelector } from './components/ProductSelector';
 import { ProductCatalog } from './components/ProductCatalog';
 import { H5ScanSelector } from './components/H5ScanSelector';
+import VanityCabinetConfigurator from './components/VanityCabinetConfigurator';
 import { SAMPLE_PRODUCTS, CATEGORIES } from './data/categories';
 
-export type AppView = 'dashboard' | 'editor' | 'detail' | 'product-select' | 'catalog';
-export type MainTab = 'quotes' | 'products';
+export type AppView = 'dashboard' | 'editor' | 'detail' | 'product-select' | 'catalog' | 'vanity';
+export type MainTab = 'quotes' | 'products' | 'vanity';
 
 // ===== 批量添加弹窗组件 =====
 function BatchAddModal({
@@ -303,6 +304,21 @@ function SplitQuoteModal({
 function App() {
   const [mainTab, setMainTab] = useState<MainTab>('quotes');
   const [view, setView] = useState<AppView>('dashboard');
+
+  // 监听 hash 路由，支持独立访问 #/vanity
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash === '#/vanity') {
+        setView('vanity');
+      } else if (hash === '#/mobile') {
+        // H5 页面走 MobileApp 独立路由
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    handleHashChange(); // 初始化
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
   // 拆分报价单弹窗
   const [splitModalGroups, setSplitModalGroups] = useState<{ categoryName: string; items: QuoteItem[]; subtotal: number }[] | null>(null);
   const [pendingItems, setPendingItems] = useState<QuoteItem[] | null>(null);
@@ -676,6 +692,20 @@ function App() {
                 </svg>
                 H5
               </a>
+              <button
+                onClick={() => { setMainTab('vanity'); setView('vanity'); }}
+                className={`flex items-center gap-2 px-5 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer ${
+                  mainTab === 'vanity'
+                    ? 'bg-white text-blue-700 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                浴室柜
+              </button>
             </nav>
 
             {/* 右侧按钮区 */}
@@ -743,6 +773,11 @@ function App() {
         <ProductCatalog
           onAddToCart={handleCartGenerateQuote}
         />
+      )}
+
+      {/* 浴室柜配置器 */}
+      {view === 'vanity' && (
+        <VanityCabinetConfigurator />
       )}
 
       {/* H5扫码选品 */}
