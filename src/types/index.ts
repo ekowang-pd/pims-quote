@@ -227,12 +227,14 @@ export interface VanityCabinetConfig {
   cabinetType: string;      // 柜型Id
   material: string;          // 材质Id
   cabinetLength: number;     // 主柜长度(mm)
-  // 主柜增配
-  cabinetAddons: Record<string, number>;
-  // 增配选项（独立于柜体）
-  extraAddons: Record<string, number>;
-  // 包装
-  packingItems: Record<string, number>;
+  // 主柜增配: { [addonId]: { optionId: string; qty: number } | undefined }
+  cabinetAddons: Record<string, { optionId: string; qty: number } | undefined>;
+  // 增配选项: { [addonId]: { optionId: string; qty: number } | undefined }
+  extraAddons: Record<string, { optionId: string; qty: number } | undefined>;
+  // 包装: { [packingId]: { optionId: string } | undefined }（无数量，只有选项）
+  packingItems: Record<string, { optionId: string } | undefined>;
+  // 包装长度: { [packingId]: number }（用于台面包装等需要手动输入长度的场景）
+  packingLengths: Record<string, number>;
 }
 
 // 浴室柜配置结果（用于生成报价单）
@@ -240,6 +242,7 @@ export interface VanityCabinetQuote {
   cabinetPrice: number;     // 主柜价格
   addonPrice: number;       // 增配价格小计
   packingPrice: number;      // 包装价格小计
+  basinPrice: number;        // 台盆价格
   totalPrice: number;        // 总价
   config: VanityCabinetConfig;
 }

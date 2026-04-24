@@ -309,7 +309,7 @@ function App() {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash;
-      if (hash === '#/vanity') {
+      if (hash.startsWith('#/vanity')) {
         setView('vanity');
       } else if (hash === '#/mobile') {
         // H5 页面走 MobileApp 独立路由
