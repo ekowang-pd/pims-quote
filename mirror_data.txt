@@ -1,0 +1,12 @@
+
+La:
+La=[{id:`plain-single`,label:`不包边`,unit:`面积`,priceNote:`650元/m²`},{id:`alu`,label:`铝型材包边`,unit:`面积`,priceNote:`700元/m²`},{id:`wood`,label:`木框包边`,unit:`长度`,priceNote:`按材质`},{id:`stainless`,label:`304#不锈钢包边`,unit:`面积`,priceNote:`950元/m²`}],Ra=[{id:`plain-cabinet`,label:`木材普通镜柜`,unit:`长度`,priceNote:`按材质`,hideRCorner:!0}],za=[{id:`no-border-backlight`,label:`不包边背光`,unit:`面积`,priceNote:`500元/m²`},{id:`no-border-sand`,label:`不包边正面打砂发光`,unit:`面积`,priceNote:`650元/m²`},{id:`wood-backlight`,label:`木材包边背光`
+
+za:
+za=[{id:`no-border-backlight`,label:`不包边背光`,unit:`面积`,priceNote:`500元/m²`},{id:`no-border-sand`,label:`不包边正面打砂发光`,unit:`面积`,priceNote:`650元/m²`},{id:`wood-backlight`,label:`木材包边背光`,unit:`长度`,priceNote:`按材质`},{id:`wood-sand`,label:`木材包边正面打砂发光`,unit:`长度`,priceNote:`按材质`},{id:`alu-backlight`,label:`铝型材包边背光`,unit:`面积`,priceNote:`650元/m²`},{id:`alu-sand`,label:`铝型材包边正面打砂发光`,unit:`面积`,priceNote:`700元/m²`},{id:`steel-backlight`,label:`304#不锈钢包边背光`,unit:`面积`,priceNote:`900元/m²`},{id:`steel-sand`,label:`
+
+Ba:
+Ba=[{id:`smart-cabinet-updown`,label:`木材镜柜上下发光`,unit:`长度`,priceNote:`按材质`,hideRCorner:!0},{id:`smart-cabinet-sand`,label:`木材镜柜正面打砂发光`,unit:`长度`,priceNote:`按材质`,hideRCorner:!0}];function Va({onAddToCart:e}){let[t,n]=(0,v.useState)(`cabinet`),[r,i]=(0,v.useState)(Aa()),[a,o]=(0,v.useState)(!1),[s,c]=(0,v.useState)(ja()),[l,u]=(0,v.useState)(!1),[d,f]=(0,v.useState)(Sa()),p=(0,v.useMemo)(()=>ga(r.cabinetType),[r.cabinetType]);ha[s.installType];let m=(0,v.useMemo)(()=>Na(s),[s]),h=(0,v.useMemo)(()=>
+
+Ra:
+Ra=[{id:`plain-cabinet`,label:`木材普通镜柜`,unit:`长度`,priceNote:`按材质`,hideRCorner:!0}],za=[{id:`no-border-backlight`,label:`不包边背光`,unit:`面积`,priceNote:`500元/m²`},{id:`no-border-sand`,label:`不包边正面打砂发光`,unit:`面积`,priceNote:`650元/m²`},{id:`wood-backlight`,label:`木材包边背光`,unit:`长度`,priceNote:`按材质`},{id:`wood-sand`,label:`木材包边正面打砂发光`,unit:`长度`,priceNote:`按材质`},{id:`alu-backlight`,label:`铝型材包边背光`,unit:`面积`,priceNote:`650元/m²`},{id:`alu-sand`,label:`铝型材包边正面打砂发光`,unit:`面积`,priceNote:`700元/m²`},{id:`steel-back

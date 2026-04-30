@@ -1,4 +1,4 @@
-import type { Category, StandardProduct, Supplier, Region } from '../types';
+import type { Category, StandardProduct, Supplier, Region, ComboProduct } from '../types';
 import { CERAMIC_PRODUCTS } from './ceramic_products';
 
 // ===== 供应商列表 =====
@@ -540,7 +540,6 @@ export const PAYMENT_TERMS = ['T/T 30% deposit, 70% before shipment', 'T/T 100% 
 export const DELIVERY_TERMS = ['FOB', 'CIF', 'EXW', 'CFR', 'DDP'];
 
 // ===== 组合品数据 =====
-import type { ComboProduct } from '../types';
 
 export const COMBO_PRODUCTS: ComboProduct[] = [
   {

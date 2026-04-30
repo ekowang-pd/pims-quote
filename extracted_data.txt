@@ -1,0 +1,200 @@
+
+============================================================
+PATTERN: kelinai (3 found)
+============================================================
+
+--- Match 1 ---
+uote/images/vanity/above-shiying.png`,dali:`/pims-quote/images/vanity/above-dali.png`},under:{yanban:`/pims-quote/images/vanity/under-yanban.png`,shiying:`/pims-quote/images/vanity/under-shiying.png`,kelinai:`/pims-quote/images/vanity/under-kelinai.png`,dali:`/pims-quote/images/vanity/under-dali.png`}},ta=ea.above.yanban,na=ea.above.shiying,ra=ea.above.dali,ia=ea.under.yanban,aa=ea.under.shiying,oa=ea.un
+
+--- Match 2 ---
+der.kelinai,sa=ea.under.dali,ca=[{id:`hanging`,label:`吊柜`,image:Bi},{id:`floor`,label:`落地柜`,image:Vi}],la=[{id:`hanging-mianqi`,label:`现代免漆板柜`,installType:`hanging`,icon:`🪵`,image:Hi,materials:[{id:`mianqi`,labe
+
+--- Match 3 ---
+二代无缝拼接盆`,priceType:`unit`,unitPrice:500,unit:`个`},{id:`jiedati`,label:`拼接一体盆`,priceType:`unit`,unitPrice:450,unit:`个`},{id:`youdeng`,label:`优等台下盆（普通工艺）`,priceType:`unit`,unitPrice:90,unit:`个`}]},{id:`kelinai`,label:`可丽耐`,image:oa,countertopOptions:[{id:`white-single`,label:`白色单层`,priceType:`length`,priceFormula:e=>Math.max(e,800)/1e3*950,unit:`mm`}],extraOptions:[{id:`white-edge`,label:`白色吊边H<250mm周长单加`,
+
+============================================================
+PATTERN: 可丽耐 (3 found)
+============================================================
+
+--- Match 1 ---
+`},{id:`youdeng`,label:`优等台下盆（普通工艺）`,priceType:`unit`,unitPrice:90,unit:`个`}]},{id:`kelinai`,label:`可丽耐`,image:oa,countertopOptions:[{id:`white-single`,label:`白色单层`,priceType:`length`,priceFormula:e=>Mat
+
+--- Match 2 ---
+`,priceType:`length`,priceFormula:e=>Math.max(e,800)/1e3*260,unit:`mm`},{id:`white-splash`,label:`白色可丽耐挡水单加`,priceType:`length`,priceFormula:e=>Math.max(e,1e3)/1e3*100,unit:`mm`}],basinOptions:[{id:`keli
+
+--- Match 3 ---
+nai-basin`,label:`白色可丽耐盆单加`,priceType:`unit`,unitPrice:300,unit:`个`}]},{id:`dali`,label:`大理石`,image:sa,countertopOptions:[{
+
+============================================================
+PATTERN: 岩板 (3 found)
+============================================================
+
+--- Match 1 ---
+00x1200mm`,label:`1200×1200`},{value:`600x600mm`,label:`600×600`}]}]},{id:`ceramic-rockboard`,name:`岩板`,specs:[],colors:[`黑`,`白`,`黄`,`深灰`,`中灰`,`浅灰`,`米黄`,`灰`,`蓝`,`米黄`],sizes:[`2400x1200mm`,`2600x900mm`,`
+
+--- Match 2 ---
+l:`台上盆`},{id:`under`,label:`台下盆`}],ha={above:{id:`above`,label:`台上盆`,materials:[{id:`yanban`,label:`岩板`,image:ta,countertopOptions:[{id:`single-layer`,label:`单层岩板（不含盆）`,priceType:`length`,priceFormula:e
+
+--- Match 3 ---
+itPrice:1e3}],basinQtyUnitPrice:280}]},under:{id:`under`,label:`台下盆`,materials:[{id:`yanban`,label:`岩板`,image:ia,countertopOptions:[{id:`single-layer`,label:`单层岩板（不含盆）`,priceType:`length`,priceFormula:e
+
+============================================================
+PATTERN: mianqi (3 found)
+============================================================
+
+--- Match 1 ---
+ text-white rounded-xl font-medium`,children:`手动搜索`})]})]})})]})}var Bi=`/pims-quote/assets/hanging-cabinet-1-BUWUlFA2.png`,Vi=`/pims-quote/assets/floor-cabinet-1-C8rGPi-Q.png`,Hi=`/pims-quote/assets/mianqi-cabinet-gnzTsEwo.png`,Ui=`/pims-quote/assets/flat-lacquer-hanging-B8jlob9J.png`,Wi=`/pims-quote/assets/flat-lacquer-floor-IPvLzmmq.png`,Gi=`/pims-quote/assets/luowen-side-edge-at_Sx1Kr.png`,Ki=`/pims
+
+--- Match 2 ---
+a.above.shiying,ra=ea.above.dali,ia=ea.under.yanban,aa=ea.under.shiying,oa=ea.under.kelinai,sa=ea.under.dali,ca=[{id:`hanging`,label:`吊柜`,image:Bi},{id:`floor`,label:`落地柜`,image:Vi}],la=[{id:`hanging-mianqi`,label:`现代免漆板柜`,installType:`hanging`,icon:`🪵`,image:Hi,materials:[{id:`mianqi`,label:`免漆板`,priceUnit:600,priceFormula:e=>Math.max(Math.ceil(e/100)*100,800)/1e3*600}]},{id:`hanging-pingmian`,label:`平
+
+--- Match 3 ---
+`,priceUnit:2100,priceFormula:e=>Math.max(Math.ceil(e/100)*100,800)/1e3*2100},{id:`baixiang`,label:`白橡直纹`,priceUnit:2200,priceFormula:e=>Math.max(Math.ceil(e/100)*100,800)/1e3*2200}]}],ua=[{id:`floor-mianqi`,label:`现代免漆板柜`,installType:`floor`,icon:`🪵`,image:Hi,materials:[{id:`mianqi`,label:`免漆板`,priceUnit:850,priceFormula:e=>Math.max(Math.ceil(e/100)*100,800)/1e3*850}]},{id:`floor-pingmian`,label:`平面烤漆柜
+
+============================================================
+PATTERN: priceFormula (3 found)
+============================================================
+
+--- Match 1 ---
+ng,ra=ea.above.dali,ia=ea.under.yanban,aa=ea.under.shiying,oa=ea.under.kelinai,sa=ea.under.dali,ca=[{id:`hanging`,label:`吊柜`,image:Bi},{id:`floor`,label:`落地柜`,image:Vi}],la=[{id:`hanging-mianqi`,label:`现代免漆板柜`,installType:`hanging`,icon:`🪵`,image:Hi,materials:[{id:`mianqi`,label:`免漆板`,priceUnit:600,priceFormula:e=>Math.max(Math.ceil(e/100)*100,800)/1e3*600}]},{id:`hanging-pingmian`,label:`平面烤漆柜`,installType:`hanging`,icon:`✨`,image:Ui,materials:[{id:`rubber`,label:`橡胶木`,priceUnit:1e3,priceFormula:e=>Math.max(Math.ceil(e/100)*100,800)/1e3*1e3},{id:`ash`,label:`白蜡木/红橡木`,priceUnit:1300,priceFormula:e=>Math.m
+
+--- Match 2 ---
+ax(Math.ceil(e/100)*100,800)/1e3*1300},{id:`wujin`,label:`乌金木`,priceUnit:1399,priceFormula:e=>Math.max(Math.ceil(e/100)*100,800)/1e3*1399},{id:`blackWalnut`,label:`黑胡桃木`,priceUnit:1500,priceFormula:e=>Math.max(Math.ceil(e/100)*100,800)/1e3*1500},{id:`whiteOak`,label:`白橡直纹`,priceUnit:1600,priceFormula:e=>Math.max(Math.ceil(e/100)*100,800)/1e3*1600}]},{id:`hanging-arc`,label:`圆弧烤漆柜`,installType:`hanging`,icon:`🌊`,image:Gi,materials:[{id:`xiangjiao`,label:`橡胶木`,priceUnit:1399,priceFormula:e=>Math.max(Math.ceil(e/100)*100,800)/1e3*1399},{id:`baixian`,label:`白蜡木/红橡木`,priceUnit:1900,priceFormula:e=>M
+
+--- Match 3 ---
+ath.max(Math.ceil(e/100)*100,800)/1e3*1900},{id:`wujin`,label:`乌金木`,priceUnit:2e3,priceFormula:e=>Math.max(Math.ceil(e/100)*100,800)/1e3*2e3},{id:`heihut`,label:`黑胡桃木`,priceUnit:2100,priceFormula:e=>Math.max(Math.ceil(e/100)*100,800)/1e3*2100},{id:`baixiang`,label:`白橡直纹`,priceUnit:2200,priceFormula:e=>Math.max(Math.ceil(e/100)*100,800)/1e3*2200}]},{id:`hanging-xiantiao`,label:`线条柜`,installType:`hanging`,icon:`📐`,image:qi,materials:[{id:`xiangjiao`,label:`橡胶木`,priceUnit:1399,priceFormula:e=>Math.max(Math.ceil(e/100)*100,800)/1e3*1399},{id:`baixian`,label:`白蜡木/红橡木`,priceUnit:1700,priceFormula:e
+
+============================================================
+PATTERN: priceType (3 found)
+============================================================
+
+--- Match 1 ---
+e3*180}]}],ma=[{id:`above`,label:`台上盆`},{id:`under`,label:`台下盆`}],ha={above:{id:`above`,label:`台上盆`,materials:[{id:`yanban`,label:`岩板`,image:ta,countertopOptions:[{id:`single-layer`,label:`单层岩板（不含盆）`,priceType:`length`,priceFormula:e=>Math.max(e,800)/1e3*200,unit:`mm`,priceFormulaStr:`MAX(长度,800)/1000×200`},{id:`edge-100`,label:`吊边H<100mm（不含盆）`,priceType:`length`,priceFormula:e=>Math.max(e,800)/1e3*260,uni
+
+--- Match 2 ---
+t:`mm`,priceFormulaStr:`MAX(长度,800)/1000×260`},{id:`edge-200`,label:`吊边H<200mm（不含盆）`,priceType:`length`,priceFormula:e=>Math.max(e,800)/1e3*300,unit:`mm`,priceFormulaStr:`MAX(长度,800)/1000×300`}],extraOptions:[{id:`splash`,label:`挡水边单加`,priceType:`length`,priceFormula:e=>Math.max(e,1e3)/1e3*30,
+
+--- Match 3 ---
+unit:`mm`,priceFormulaStr:`MAX(长度,1000)/1000×30`},{id:`over-2m`,label:`长度超2米单加`,priceType:`length`,priceFormula:e=>e>2e3?(e-2e3)/1e3*100:0,unit:`mm`,priceFormulaStr:`IF(长度>2000,(长度-2000)/1000×100,0)`}],basinMaterialOptions:[{id:`taoc`,label:`陶瓷台上盆`,unitPrice:200},{id:`shuij`,label:`水晶台上盆`
+
+============================================================
+PATTERN: unitPrice (3 found)
+============================================================
+
+--- Match 1 ---
+:n,onViewQuote:r,onDeleteQuote:i}){let[a,o]=(0,v.useState)(`all`),s=a===`all`?e:e.filter(e=>a===`draft`?e.status===`draft`:e.status!==`draft`),c=s.reduce((e,t)=>e+t.items.reduce((e,t)=>e+t.quantity*t.unitPrice,0),0),l=e.filter(e=>e.status===`draft`).length,u=e.filter(e=>e.status!==`draft`).length;return(0,Z.jsxs)(`div`,{className:`min-h-screen bg-gray-50`,children:[(0,Z.jsx)(`div`,{className:`bg-white bord
+
+--- Match 2 ---
+sx)(`th`,{className:`text-left text-xs font-medium text-gray-500 px-5 py-3 whitespace-nowrap`,children:`操作`})]})}),(0,Z.jsx)(`tbody`,{children:s.map((t,a)=>{let o=t.items.reduce((e,t)=>e+t.quantity*t.unitPrice,0),s=t.items.length,c=t.salesperson||`负责人`,l=c.split(`/`)[0].trim(),u=c.includes(`/`)?c.split(`/`)[1].trim():``,d=t.department||`—`,f=Nn[t.source||`PIMS`]||Nn.OTHER;return(0,Z.jsxs)(`tr`,{className:`
+
+--- Match 3 ---
+h:`w-16`,editable:!0,type:`text`},{key:`basePrice`,label:`产品库价格`,width:`w-24`,type:`number`,align:`right`},{key:`discountPct`,label:`折扣(%)`,width:`w-20`,editable:!0,type:`number`,align:`right`},{key:`unitPrice`,label:`Unit Price (RMB)`,width:`w-28`,editable:!0,type:`number`,align:`right`},{key:`amount`,label:`Amount (RMB)`,width:`w-28`,type:`calculated`,align:`right`,calc:e=>(Number(e.quantity)||0)*(Number
+
+============================================================
+PATTERN: stdLen (0 found)
+============================================================
+
+============================================================
+PATTERN: splash (3 found)
+============================================================
+
+--- Match 1 ---
+n=[{id:`cer-00001`,libraryId:`LIB-CER-GYBIGCC124`,supplierProductId:`GY-BIGCC1249SU004Y-BNL`,categoryId:`ceramic`,subCategoryId:`ceramic-tile`,seriesName:`素色系列`,supplierId:`cer-001`,name:`可丽芙胶囊-高级灰`,spec:`哑光`,color:`灰`,size:`2400x1200mm`,unit:`平方米`,moq:1,basePrice:145.152,imageUrl:`https://images.unsplash.com/photo-1615529182904-14819c35db37?w=400&h=300&fit=crop`,length:2400,width:1200,height:9,weight:58,description:`表面:哑光；工艺:超细哑干粒；吸水率:≤0.5%；破坏强度:≥800；防滑系数:0.63~0.64`,attrs:{surface:`哑光`,craft:`超细哑干粒`,waterAbsorb:`≤0.5%`,breakStrength:`≥800`,slipR:`0.63~0.64`,sqmPerCtn:`2.88`,pcsPerCtn:`1`}},{id:`cer
+
+--- Match 2 ---
+-00002`,libraryId:`LIB-CER-GYBIGCC926`,supplierProductId:`GY-BIGCC926SU004Y-BNL`,categoryId:`ceramic`,subCategoryId:`ceramic-tile`,seriesName:`素色系列`,supplierId:`cer-001`,name:`可丽芙胶囊-高级灰`,spec:`哑光`,color:`灰`,size:`2600x900mm`,unit:`平方米`,moq:1,basePrice:123.984,imageUrl:`https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?w=400&h=300&fit=crop`,length:2600,width:900,height:9,weight:48,description:`表面:哑光；工艺:超细哑干粒；吸水率:≤0.5%；破坏强度:≥800；防滑系数:0.63~0.64`,attrs:{surface:`哑光`,craft:`超细哑干粒`,waterAbsorb:`≤0.5%`,breakStrength:`≥800`,slipR:`0.63~0.64`,sqmPerCtn:`2.34`,pcsPerCtn:`1`}},{id:`cer-
+
+--- Match 3 ---
+00003`,libraryId:`LIB-CER-GYBIGCC127`,supplierProductId:`GY-BIGCC1279SU004Y-BNL`,categoryId:`ceramic`,subCategoryId:`ceramic-tile`,seriesName:`素色系列`,supplierId:`cer-001`,name:`可丽芙胶囊-高级灰`,spec:`哑光`,color:`灰`,size:`2700x1200mm`,unit:`平方米`,moq:1,basePrice:160.272,imageUrl:`https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400&h=300&fit=crop`,length:2700,width:1200,height:9,weight:66,description:`表面:哑光；工艺:超细哑干粒；吸水率:≤0.5%；破坏强度:≥800；防滑系数:0.63~0.64`,attrs:{surface:`哑光`,craft:`超细哑干粒`,waterAbsorb:`≤0.5%`,breakStrength:`≥800`,slipR:`0.63~0.64`,sqmPerCtn:`3.24`,pcsPerCtn:`1`}},{id:`cer
+
+============================================================
+PATTERN: countertop (3 found)
+============================================================
+
+--- Match 1 ---
+https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&h=400&fit=crop`,components:[{id:`c-balcony-cabinet`,name:`柜体`,subCategoryId:`balcony-cabinet`,required:!0,baseWidth:1200,baseLength:400,baseArea:.48,priceDimension:`width`,basePrice:180},{id:`c-balcony-counter`,name:`台面`,subCategoryId:`countertop`,required:!0,baseWidth:1200,baseLength:500,baseArea:.6,priceDimension:`width`,basePrice:65},{id:`c-balcony-faucet`,name:`龙头`,subCategoryId:`faucet`,required:!1,baseWidth:void 0,baseLength:void 0,baseArea:void 0,priceDimension:`width`,basePrice:45}]}],Wn=[{id:`vc001`,libraryId:`LIB-CMP-0001`,supplie
+
+--- Match 2 ---
+t:`件`,moq:2,basePrice:220,imageUrl:`https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop`,length:1500,width:400,height:800,weight:38,description:`宽版铝合金阳台柜，灰色，三开门设计`},{id:`ct001`,libraryId:`LIB-CMP-0031`,supplierProductId:`MW-CT-1200-QZ`,categoryId:`sanitary`,subCategoryId:`countertop`,name:`石英石台面`,spec:`石英石`,color:`白色`,size:`1.2m`,unit:`米`,moq:1,basePrice:65,imageUrl:`https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop`,length:1200,width:500,height:30,weight:25,description:`石英石台面，白色，厚度30mm，含安装`},{id:`ct002`,libraryId:`LIB-CMP-0032`,supplierProductId:`
+
+--- Match 3 ---
+MW-CT-1500-QZ`,categoryId:`sanitary`,subCategoryId:`countertop`,name:`石英石台面宽版`,spec:`石英石`,color:`灰色`,size:`1.5m`,unit:`米`,moq:1,basePrice:78,imageUrl:`https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop`,length:1500,width:500,height:30,weight:32,description:`石英石台面宽版，灰色，厚度30mm`},{id:`fa001`,libraryId:`LIB-CMP-0041`,supplierProductId:`
+
+============================================================
+PATTERN: VANITY (2 found)
+============================================================
+
+--- Match 1 ---
+,S.toFixed(0)]})]})]}),(0,Z.jsx)(`button`,{onClick:()=>{let t=[];if(h>0){let e=r.installType===`hanging`?`吊柜`:`落地柜`,n=p?.label||``,i=r.cabinetLength?`${r.cabinetLength}mm`:``,a=r.cabinetWoodMaterial&&VANITY_WOOD_MATERIALS.find(e=>e.id===r.cabinetWoodMaterial)?.label||``,o=[];(r.cabinetAddons?.length||0)>0&&r.cabinetAddons?.forEach(e=>{let t=Pa.find(t=>t.id===e);t&&o.push(t.label)});let s=[e,n,a,i].filte
+
+--- Match 2 ---
+antity:1})}if(b>0){let e=d.mirrorType===`plain`?`普通镜`:`智能镜`,n=d.mirrorStyle===`single`?`单镜`:`镜柜`,r=``;r=d.mirrorType===`plain`?d.mirrorStyle===`single`?La.find(e=>e.id===d.plainSingleType)?.label||``:VANITY_PLAIN_CABINET_TYPES.find(e=>e.id===d.plainCabinetType)?.label||``:d.mirrorStyle===`single`?za.find(e=>e.id===d.smartSingleType)?.label||``:Ba.find(e=>e.id===d.smartCabinetType)?.label||``;let i=getCu
+
+============================================================
+PATTERN: 台下盆 (3 found)
+============================================================
+
+--- Match 1 ---
+]}]},{id:`basin`,name:`面盆`,specs:[{value:`above-counter`,label:`台上盆`},{value:`under-counter`,label:`台下盆`},{value:`wall-hung`,label:`挂墙盆`}],colors:[`白色`,`黑色`,`米色`],sizes:[`500x400mm`,`600x460mm`,`700x480m
+
+--- Match 2 ---
+,filterGroups:[{key:`installType`,label:`安装方式`,type:`tag`,options:[{value:`台上盆`,label:`台上`},{value:`台下盆`,label:`台下`},{value:`挂墙盆`,label:`挂墙`},{value:`立柱盆`,label:`立柱`}]},{key:`material`,label:`材质`,type:`t
+
+--- Match 3 ---
+52`,supplierProductId:`MW-BS-700A`,categoryId:`sanitary`,subCategoryId:`basin`,name:`台下陶瓷洗手盆`,spec:`台下盆`,color:`白色`,size:`700x480mm`,unit:`件`,moq:10,basePrice:55,imageUrl:`https://images.unsplash.com/pho
+
+============================================================
+PATTERN: 台上盆 (3 found)
+============================================================
+
+--- Match 1 ---
+mm`},{value:`400mm坑距`,label:`400mm`}]}]},{id:`basin`,name:`面盆`,specs:[{value:`above-counter`,label:`台上盆`},{value:`under-counter`,label:`台下盆`},{value:`wall-hung`,label:`挂墙盆`}],colors:[`白色`,`黑色`,`米色`],size
+
+--- Match 2 ---
+mm`,`700x480mm`],unit:`件`,filterGroups:[{key:`installType`,label:`安装方式`,type:`tag`,options:[{value:`台上盆`,label:`台上`},{value:`台下盆`,label:`台下`},{value:`挂墙盆`,label:`挂墙`},{value:`立柱盆`,label:`立柱`}]},{key:`mat
+
+--- Match 3 ---
+tId:`MW-BAS-600A`,categoryId:`sanitary`,subCategoryId:`basin`,supplierId:`s003`,name:`台上陶瓷面盆`,spec:`台上盆`,color:`白色`,size:`600x460mm`,unit:`件`,moq:10,basePrice:45,imageUrl:`https://images.unsplash.com/pho
+
+============================================================
+PATTERN: 浴室柜 (3 found)
+============================================================
+
+--- Match 1 ---
+op`,length:1200,width:900,height:9,weight:24,description:`BIG CUBE 系列陶瓷大板，米白色调，现代简约风格，大规格铺贴效果大气`,attrs:{surface:`亮光面`,antiSlip:`R10`}}],Hn=[`USD`,`EUR`,`GBP`,`AUD`,`CAD`],Un=[{id:`combo-vanity`,name:`浴室柜组合`,description:`主柜 + 洗手盆 + 镜柜，完整浴室解决方案`,imageUrl:`https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=600&h=400&fit=crop`,components:[{id:`c-vanity-cabinet`,name:`主柜`,subCategoryId:`vanity-ca
+
+--- Match 2 ---
+h:void 0,baseArea:void 0,priceDimension:`width`,basePrice:45}]}],Wn=[{id:`vc001`,libraryId:`LIB-CMP-0001`,supplierProductId:`MW-VC-1000`,categoryId:`sanitary`,subCategoryId:`vanity-cabinet`,name:`北欧简约浴室柜主柜`,spec:`实木`,color:`白色`,size:`1.0m`,unit:`件`,moq:5,basePrice:280,imageUrl:`https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=400&h=300&fit=crop`,length:1e3,width:480,height:500,weight:28,de
+
+--- Match 3 ---
+scription:`北欧简约实木浴室柜，白色烤漆，悬挂式，含缓冲门铰`},{id:`vc002`,libraryId:`LIB-CMP-0002`,supplierProductId:`MW-VC-1200`,categoryId:`sanitary`,subCategoryId:`vanity-cabinet`,name:`现代简约浴室柜主柜`,spec:`MDF`,color:`灰色`,size:`1.2m`,unit:`件`,moq:5,basePrice:320,imageUrl:`https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&h=300&fit=crop`,length:1200,width:500,height:520,weight:
+
+============================================================
+PATTERN: 白色 (3 found)
+============================================================
+
+--- Match 1 ---
+c`,subCategoryId:`ceramic-tile`,seriesName:`玉石系列`,supplierId:`cer-005`,name:`白雪公主`,spec:`亮光`,color:`白色`,size:`2600x800mm`,unit:`平方米`,moq:1,basePrice:114.854,imageUrl:`https://images.unsplash.com/photo-1
+
+--- Match 2 ---
+,supplierProductId:`GY-LV930L916-ZYL`,categoryId:`ceramic`,subCategoryId:`ceramic-tile`,seriesName:`白色大理石系列`,supplierId:`cer-005`,name:`熊猫白`,spec:`亮光`,color:`白`,size:`3000x900mm`,unit:`平方米`,moq:1,basePr
+
+--- Match 3 ---
+supplierProductId:`GY-ZL1224L916-ZYL`,categoryId:`ceramic`,subCategoryId:`ceramic-tile`,seriesName:`白色大理石系列`,supplierId:`cer-005`,name:`熊猫白`,spec:`亮光`,color:`白`,size:`2400x1200mm`,unit:`平方米`,moq:1,baseP
+
+============================================================
+PATTERN: 800mm起算 (0 found)
+============================================================
+
+============================================================
+PATTERN: 1000mm (3 found)
+============================================================
+
+--- Match 1 ---
+Id:`ceramic-tile`,seriesName:`玉石系列`,supplierId:`cer-004`,name:`波斯琦玉`,spec:`亮光`,color:`白`,size:`2600x1000mm`,unit:`平方米`,moq:1,basePrice:598.087,imageUrl:`https://images.unsplash.com/photo-1556909114-f6e7ad7d
+
+--- Match 2 ---
+:`ceramic-tile`,seriesName:`洞石系列`,supplierId:`cer-006`,name:`意大利红洞石`,spec:`哑光`,color:`红`,size:`3000x1000mm`,unit:`平方米`,moq:1,basePrice:438.48,imageUrl:`https://images.unsplash.com/photo-1600210492493-094691
+
+--- Match 3 ---
+yId:`ceramic-tile`,seriesName:`水泥系列`,supplierId:`cer-004`,name:`赛雅白`,spec:`哑光`,color:`白`,size:`2600x1000mm`,unit:`平方米`,moq:1,basePrice:671.993,imageUrl:`https://images.unsplash.com/photo-1600566753190-17f0b
