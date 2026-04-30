@@ -2,32 +2,32 @@
 // 从 bundle-temp.js 提取重建
 // 包含：柜体类型、台盆配置、镜面配置、增配选项、计价公式
 
-// ===== 图片路径（来自 images/vanity/）=====
+// ===== 图片路径（来自 public/pims-quote/images/vanity/）=====
 export const VANITY_IMAGES = {
   // 柜体
-  hangingCabinet: '/pims-quote/images/vanity/hanging-cabinet-1.png',
-  floorCabinet: '/pims-quote/images/vanity/floor-cabinet-1.png',
-  mianqiCabinet: '/pims-quote/images/vanity/mianqi-cabinet.png',
-  flatLacquerHanging: '/pims-quote/images/vanity/flat-lacquer-hanging.png',
-  flatLacquerFloor: '/pims-quote/images/vanity/flat-lacquer-floor.png',
-  arcLacquerHanging: '/pims-quote/images/vanity/arc-lacquer-hanging.png',
-  arcLacquerFloor: '/pims-quote/images/vanity/arc-lacquer-floor.png',
-  lineCabinet: '/pims-quote/images/vanity/line-cabinet.png',
-  carvedCabinet: '/pims-quote/images/vanity/carved-cabinet.png',
-  luowenSideEdge: '/pims-quote/images/vanity/luowen-side-edge.png',
-  luowenFrontDetail: '/pims-quote/images/vanity/luowen-front-detail.png',
-  luowenThreeEdge: '/pims-quote/images/vanity/luowen-three-edge.png',
-  // 台盆（统一大小写）
-  aboveYanban: '/pims-quote/images/vanity/above-yanban.png',
-  aboveShiying: '/pims-quote/images/vanity/above-shiying.png',
-  aboveDali: '/pims-quote/images/vanity/above-dali.png',
-  underYanban: '/pims-quote/images/vanity/under-yanban.png',
-  underShiying: '/pims-quote/images/vanity/under-shiying.png',
-  underKelinai: '/pims-quote/images/vanity/under-kelinai.png',
-  underDali: '/pims-quote/images/vanity/under-dali.png',
+  hangingCabinet: '/pims-quote/pims-quote/images/vanity/hanging-cabinet-1.png',
+  floorCabinet: '/pims-quote/pims-quote/images/vanity/floor-cabinet-1.png',
+  mianqiCabinet: '/pims-quote/pims-quote/images/vanity/mianqi-cabinet.png',
+  flatLacquerHanging: '/pims-quote/pims-quote/images/vanity/flat-lacquer-hanging.png',
+  flatLacquerFloor: '/pims-quote/pims-quote/images/vanity/flat-lacquer-floor.png',
+  arcLacquerHanging: '/pims-quote/pims-quote/images/vanity/arc-lacquer-hanging.png',
+  arcLacquerFloor: '/pims-quote/pims-quote/images/vanity/arc-lacquer-floor.png',
+  lineCabinet: '/pims-quote/pims-quote/images/vanity/line-cabinet.png',
+  carvedCabinet: '/pims-quote/pims-quote/images/vanity/carved-cabinet.png',
+  luowenSideEdge: '/pims-quote/pims-quote/images/vanity/luowen-side-edge.png',
+  luowenFrontDetail: '/pims-quote/pims-quote/images/vanity/luowen-front-detail.png',
+  luowenThreeEdge: '/pims-quote/pims-quote/images/vanity/luowen-three-edge.png',
+  // 台盆
+  aboveYanban: '/pims-quote/pims-quote/images/vanity/above-yanban.png',
+  aboveShiying: '/pims-quote/pims-quote/images/vanity/above-shiying.png',
+  aboveDali: '/pims-quote/pims-quote/images/vanity/above-dali.png',
+  underYanban: '/pims-quote/pims-quote/images/vanity/under-yanban.png',
+  underShiying: '/pims-quote/pims-quote/images/vanity/under-shiying.png',
+  underKelinai: '/pims-quote/pims-quote/images/vanity/under-kelinai.png',
+  underDali: '/pims-quote/pims-quote/images/vanity/under-dali.png',
   // 镜面
-  mirrorSingle: '/pims-quote/images/vanity/mirror-single.png',
-  mirrorCabinet: '/pims-quote/images/vanity/mirror-cabinet.png',
+  mirrorSingle: '/pims-quote/pims-quote/images/vanity/mirror-single.png',
+  mirrorCabinet: '/pims-quote/pims-quote/images/vanity/mirror-cabinet.png',
 };
 
 // ===== 柜体安装类型 =====

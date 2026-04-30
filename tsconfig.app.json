@@ -18,6 +18,7 @@
 
     /* Strictness disabled for development - re-enable later */
     "strict": false,
+    "strict": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noImplicitAny": false,
