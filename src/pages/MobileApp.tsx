@@ -58,9 +58,9 @@ export function MobileApp() {
   const filteredProducts = SAMPLE_PRODUCTS.filter(p => {
     const matchSearch = !search ||
       p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.supplierProductId.toLowerCase().includes(search.toLowerCase()) ||
-      p.libraryId.toLowerCase().includes(search.toLowerCase()) ||
-      p.id.toLowerCase().includes(search.toLowerCase());
+      (p.supplierProductId?.toLowerCase() || '').includes(search.toLowerCase()) ||
+      (p.libraryId?.toLowerCase() || '').includes(search.toLowerCase()) ||
+      (p.id?.toLowerCase() || '').includes(search.toLowerCase());
     const matchCat = activeCategory === 'all' || p.categoryId === activeCategory;
     const matchSubCat = activeSubCategory === 'all' || p.subCategoryId === activeSubCategory;
     const matchSupplier = !selectedSupplier || p.supplierId === selectedSupplier;
@@ -82,8 +82,8 @@ export function MobileApp() {
 
   // 当前子类筛选项
   const activeSubCatObj = activeCatObj?.subCategories.find(sc => sc.id === activeSubCategory);
-  const currentFilterGroups = (activeSubCatObj?.filterGroups || []).length > 0
-    ? activeSubCatObj!.filterGroups
+  const currentFilterGroups = (activeSubCatObj?.filterGroups?.length ?? 0) > 0
+    ? (activeSubCatObj?.filterGroups ?? GLOBAL_FILTERS)
     : GLOBAL_FILTERS;
 
   const totalFilterCount = Object.values(activeFilters).reduce((s, v) => s + v.length, 0) + (selectedSupplier ? 1 : 0);
@@ -149,7 +149,7 @@ export function MobileApp() {
   const handleFileScan = async (file: File) => {
     setUploading(true);
     try {
-      const result = await new Html5Qrcode('mobile-reader').detectFileFromSrc(file);
+      const result = await new Html5Qrcode('mobile-reader').scanFile(file, false);
       handleScannedCode(result);
     } catch {
       const fileName = file.name.replace(/\.[^.]+$/, '');

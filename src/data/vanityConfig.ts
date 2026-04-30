@@ -626,7 +626,7 @@ export interface MirrorLengthOption {
   id: string;
   label: string;
   // 系数，按木材类型 key，计价公式：MAX(长度mm, 800) / 1000 * 系数 - 100
-  pricePerMeter: Record<string, number>;
+  pricePerMeter: { [key: string]: number };
   // R角额外加价
   rCornerExtra: number;
 }

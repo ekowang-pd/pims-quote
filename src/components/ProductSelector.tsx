@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import type {
   QuoteItem, Category, SubCategory, StandardProduct, ProductTag,
   ComboProduct, ComboComponent, ComboSelectedProduct, ComboQuoteItem,
@@ -14,7 +14,7 @@ interface Props {
 }
 
 // 标签配置
-const TAG_STYLES: Record<string, { bg: string; text: string; icon?: JSX.Element }> = {
+const TAG_STYLES: Record<string, { bg: string; text: string; icon?: React.ReactElement }> = {
   hot: {
     bg: 'bg-red-500',
     text: 'text-white',
@@ -88,7 +88,7 @@ function getTagLabel(tag: ProductTag): string {
   return labels[tag.type] || tag.type;
 }
 
-const CATEGORY_ICONS: Record<string, JSX.Element> = {
+const CATEGORY_ICONS: Record<string, React.ReactElement> = {
   ceramic: (
     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <rect x="3" y="3" width="8" height="8" rx="1" strokeWidth={1.5}/>

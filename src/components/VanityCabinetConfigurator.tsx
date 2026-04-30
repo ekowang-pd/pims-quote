@@ -1581,7 +1581,7 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
                 .map(opt => {
                   const isSelected = mirrorSurfaceId === opt.id;
                   const pricePerSqm = 'pricePerSqm' in opt ? opt.pricePerSqm : 0;
-                  const rcExtra = 'rCornerExtra' in opt ? opt.rCornerExtra : 0;
+                  // const rcExtra = 'rCornerExtra' in opt ? opt.rCornerExtra : 0; // 仅长度型使用
 
                   return (
                     <div
@@ -1650,7 +1650,7 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
                 .filter(opt => 'pricePerMeter' in opt && opt.pricePerMeter)
                 .map(opt => {
                   const isSelected = mirrorSurfaceId === opt.id;
-                  const rcExtra = 'rCornerExtra' in opt ? opt.rCornerExtra : 0;
+                  // const rcExtra = 'rCornerExtra' in opt ? opt.rCornerExtra : 0; // 暂不使用
                   const currentWoodPrice = opt.pricePerMeter[woodType] || 0;
 
                   return (
@@ -1677,8 +1677,8 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
                           </select>
                         </div>
                       )}
-                      {/* R角选项 */}
-                      {isSelected && rcExtra > 0 && (
+                      {/* R角选项 - 暂不使用 */}
+                      {/* {isSelected && rcExtra > 0 && (
                         <div className="mt-1 flex items-center gap-1.5">
                           <label className="flex items-center gap-1 cursor-pointer">
                             <input
@@ -1690,10 +1690,10 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
                               }}
                               className="w-3 h-3 rounded border-gray-300 text-blue-500 focus:ring-blue-400"
                             />
-                            <span className="text-xs text-gray-600">倒R角(+¥{rcExtra})</span>
+                            <span className="text-xs text-gray-600">倒R角(+¥{0})</span>
                           </label>
                         </div>
-                      )}
+                      )} */}
                     </MirrorSurfaceOptionCard>
                   );
                 })}

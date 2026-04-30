@@ -1,10 +1,11 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import type { QuoteItem, StandardProduct, Category, SubCategory, ProductTag } from '../types';
+import type { AnyQuoteItem } from '../types';
 import { SAMPLE_PRODUCTS, CATEGORIES, SUPPLIERS, COMBO_PRODUCTS, COMBO_PRODUCTS_CATALOG } from '../data/categories';
-import type { ComboProduct, ComboQuoteItem } from '../types';
+import type { ComboProduct } from '../types';
 
 // 标签配置
-const TAG_STYLES: Record<string, { bg: string; text: string; icon?: JSX.Element }> = {
+const TAG_STYLES: Record<string, { bg: string; text: string; icon?: React.ReactElement }> = {
   hot: { bg: 'bg-red-500', text: 'text-white' },
   recommend: { bg: 'bg-amber-500', text: 'text-white' },
   new: { bg: 'bg-emerald-500', text: 'text-white' },
@@ -23,7 +24,7 @@ function getTagLabel(tag: ProductTag): string {
   return labels[tag.type] || tag.type;
 }
 
-const CATEGORY_ICONS: Record<string, JSX.Element> = {
+const CATEGORY_ICONS: Record<string, React.ReactElement> = {
   ceramic: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <rect x="3" y="3" width="8" height="8" rx="1" strokeWidth={1.5}/>
@@ -64,7 +65,7 @@ const COLOR_DOTS: Record<string, string> = {
 
 interface CartItem extends QuoteItem {}
 interface Props {
-  onAddToCart: (items: QuoteItem[]) => void;
+  onAddToCart: (items: AnyQuoteItem[]) => void;
 }
 
 // ===== 产品详情弹窗 =====
@@ -332,7 +333,7 @@ function FilterBar({
   supplierSearch: string;
   onSupplierChange: (id: string) => void;
   onSearchChange: (q: string) => void;
-  filterGroups: SubCategory['filterGroups'];
+  filterGroups: SubCategory['filterGroups'] | undefined;
   activeFilters: Record<string, string>;
   onFilterChange: (key: string, val: string) => void;
   hasFilter: boolean;
@@ -342,7 +343,7 @@ function FilterBar({
   const [sortBy, setSortBy] = useState<'default' | 'price_asc' | 'price_desc' | 'name'>('default');
   const [priceMin, setPriceMin] = useState('');
   const [priceMax, setPriceMax] = useState('');
-  const selectedSupplierInfo = selectedSupplier ? SUPPLIERS.find(s => s.id === selectedSupplier) : null;
+  // const selectedSupplierInfo = selectedSupplier ? SUPPLIERS.find(s => s.id === selectedSupplier) : null;
 
   const toggleFilter = (key: string, val: string) => {
     onFilterChange(key, activeFilters[key] === val ? '' : val);
@@ -350,20 +351,21 @@ function FilterBar({
 
   // 常见筛选项：每个筛选项组最多显示前3个选项
   const COMMON_MAX = 3;
-  const commonGroups = filterGroups.slice(0, 2); // 前2个组常见
-  const moreGroups = filterGroups.slice(2); // 第3个组起算"更多"
-  const hasMoreFilters = moreGroups.length > 0 || filterGroups.some(g => g.options.length > COMMON_MAX);
+  const groups = filterGroups || [];
+  const commonGroups = groups.slice(0, 2); // 前2个组常见
+  const moreGroups = groups.slice(2); // 第3个组起算"更多"
+  const hasMoreFilters = moreGroups.length > 0 || groups.some(g => g.options.length > COMMON_MAX);
 
   // 收集当前已选中的筛选项
   const activeFilterTags: { key: string; label: string; val: string }[] = [];
-  filterGroups.forEach(g => {
+  groups.forEach(g => {
     if (activeFilters[g.key]) {
       const opt = g.options.find(o => o.value === activeFilters[g.key]);
       activeFilterTags.push({ key: g.key, label: g.label, val: opt?.label ?? activeFilters[g.key] });
     }
   });
 
-  const renderFilterGroupRow = (group: typeof filterGroups[0], showAll: boolean) => (
+  const renderFilterGroupRow = (group: typeof groups[0], showAll: boolean) => (
     <div key={group.key} className="flex items-center gap-3">
       <span className="text-xs text-gray-500 w-14 flex-shrink-0">{group.label}</span>
       <div className="flex flex-wrap gap-1.5">
@@ -624,193 +626,10 @@ function FilterBar({
   );
 }
 
-// ===== 供应商搜索选择区 =====  (与 ProductSelector 统一)
-function SupplierFilterPanel({
-  availableSuppliers,
-  filteredSuppliers,
-  selectedSupplier,
-  supplierSearch,
-  onSupplierChange,
-  onSearchChange,
-}: {
-  availableSuppliers: typeof SUPPLIERS;
-  filteredSuppliers: typeof SUPPLIERS;
-  selectedSupplier: string;
-  supplierSearch: string;
-  onSupplierChange: (id: string) => void;
-  onSearchChange: (q: string) => void;
-}) {
-  const [showDropdown, setShowDropdown] = useState(false);
-  const selectedSupplierInfo = selectedSupplier ? SUPPLIERS.find(s => s.id === selectedSupplier) : null;
 
-  return (
-    <div className="card p-4">
-      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5 mb-3">
-        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-        </svg>
-        供应商
-      </h3>
 
-      <div className="flex items-start gap-3">
-        {/* 搜索框 + 下拉 */}
-        <div className="relative flex-1 max-w-xs">
-          <div className="relative">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input
-              type="text"
-              className="w-full pl-8 pr-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
-              placeholder="搜索供应商名称..."
-              value={supplierSearch}
-              onChange={e => { onSearchChange(e.target.value); setShowDropdown(true); }}
-              onFocus={() => setShowDropdown(true)}
-              onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
-            />
-          </div>
-          {showDropdown && filteredSuppliers.length > 0 && (
-            <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-44 overflow-y-auto">
-              {filteredSuppliers.map(s => (
-                <button
-                  key={s.id}
-                  onMouseDown={() => {
-                    onSupplierChange(s.id);
-                    onSearchChange('');
-                    setShowDropdown(false);
-                  }}
-                  className="w-full text-left px-3 py-2.5 hover:bg-blue-50 transition-colors border-b border-gray-50 last:border-0"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-gray-800">{s.name}</span>
-                    <div className="flex items-center gap-0.5">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <svg key={i} className={`w-2.5 h-2.5 ${i < s.rating ? 'text-amber-400' : 'text-gray-200'}`} fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      ))}
-                    </div>
-                  </div>
-                  {s.tags && s.tags.length > 0 && (
-                    <div className="flex gap-1 mt-1">
-                      {s.tags.map(t => (
-                        <span key={t} className="px-1.5 py-0.5 text-[10px] bg-gray-100 text-gray-500 rounded">{t}</span>
-                      ))}
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
 
-        {/* 快捷选择：该品类有产品的供应商 */}
-        <div className="flex flex-wrap gap-1.5 flex-1">
-          <button
-            onClick={() => onSupplierChange('')}
-            className={`px-2.5 py-1.5 text-xs rounded-lg border transition-colors cursor-pointer ${
-              !selectedSupplier
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400'
-            }`}
-          >
-            全部供应商
-          </button>
-          {availableSuppliers.map(s => (
-            <button
-              key={s.id}
-              onClick={() => onSupplierChange(selectedSupplier === s.id ? '' : s.id)}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-lg border transition-colors cursor-pointer ${
-                selectedSupplier === s.id
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400'
-              }`}
-            >
-              {s.name}
-              {selectedSupplier !== s.id && (
-                <div className="flex items-center gap-0.5">
-                  {Array.from({ length: s.rating }).map((_, i) => (
-                    <svg key={i} className="w-2.5 h-2.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ===== 属性筛选卡片 =====  (与 ProductSelector 统一)
-function FilterGroupsCard({
-  filterGroups,
-  activeFilters,
-  onFilterChange,
-}: {
-  filterGroups: SubCategory['filterGroups'];
-  activeFilters: Record<string, string>;
-  onFilterChange: (key: string, val: string) => void;
-}) {
-  const toggleFilter = (key: string, val: string) => {
-    onFilterChange(key, activeFilters[key] === val ? '' : val);
-  };
-
-  return (
-    <div className="card p-4 space-y-3">
-      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
-        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
-        </svg>
-        筛选条件
-      </h3>
-
-      {filterGroups.map(group => (
-        <div key={group.key} className="flex items-center gap-3">
-          <span className="text-xs text-gray-500 w-16 flex-shrink-0">{group.label}</span>
-          <div className="flex flex-wrap gap-1.5">
-            {group.type === 'color' ? (
-              group.options.map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => toggleFilter(group.key, opt.value)}
-                  title={opt.label}
-                  className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-md border transition-colors cursor-pointer ${
-                    activeFilters[group.key] === opt.value
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 hover:border-gray-400 text-gray-600'
-                  }`}
-                >
-                  <span
-                    className="w-3 h-3 rounded-full border border-gray-300 flex-shrink-0"
-                    style={{ backgroundColor: opt.colorHex || COLOR_DOTS[opt.value] || '#e5e7eb' }}
-                  />
-                  {opt.label}
-                </button>
-              ))
-            ) : (
-              group.options.map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => toggleFilter(group.key, opt.value)}
-                  className={`px-2.5 py-1 text-xs rounded-md border transition-colors cursor-pointer ${
-                    activeFilters[group.key] === opt.value
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
+// Unused functions removed - please delete these
 
 // ===== 产品库主视图 =====
 export function ProductCatalog({ onAddToCart }: Props) {
@@ -1034,7 +853,7 @@ export function ProductCatalog({ onAddToCart }: Props) {
 
   const cartTotal = cartItems.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0);
 
-  const hasFilter = selectedSupplier || Object.values(activeFilters).some(Boolean);
+  const hasFilter = Boolean(selectedSupplier) || Object.values(activeFilters).some(Boolean);
   const isSearching = searchKeyword.trim().length > 0;
 
   // 供应商相关计算
@@ -1043,7 +862,8 @@ export function ProductCatalog({ onAddToCart }: Props) {
     [...new Set(allProducts.map(p => p.supplierId).filter(Boolean))] as string[], [allProducts]);
   const availableSuppliers = useMemo(() =>
     SUPPLIERS.filter(s => availableSupplierIds.includes(s.id)), [availableSupplierIds]);
-  const filteredSuppliers = useMemo(() => {
+  // 供应商搜索结果（备用）
+  const _filteredSuppliers = useMemo(() => {
     const q = supplierSearch.trim().toLowerCase();
     return q ? availableSuppliers.filter(s => s.name.toLowerCase().includes(q) || s.tags?.some(t => t.includes(q))) : availableSuppliers;
   }, [supplierSearch, availableSuppliers]);

@@ -1,4 +1,4 @@
-import type { Category, StandardProduct, Supplier, Region, ComboProduct } from '../types';
+import type { Category, StandardProduct, Supplier, Region, ComboProduct, SubCategory } from '../types';
 import { CERAMIC_PRODUCTS } from './ceramic_products';
 
 // ===== 供应商列表 =====

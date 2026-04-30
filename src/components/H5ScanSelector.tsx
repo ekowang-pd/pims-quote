@@ -34,7 +34,7 @@ export function H5ScanSelector({ onAddToCart, onClose }: Props) {
     ) || null;
   };
 
-  const [scanMode, setScanMode] = useState<'camera' | 'file' | null>(null);
+  const [, setScanMode] = useState<'camera' | 'file' | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -76,11 +76,11 @@ export function H5ScanSelector({ onAddToCart, onClose }: Props) {
       setScanMode('file');
       setScanning(true);
     } catch (err: any) {
-      // 尝试 detectFileFromSrc（支持更多格式）
+      // 尝试 scanFile（支持更多格式）
       try {
         const html5QrCode2 = new Html5Qrcode('h5-reader');
         scannerRef.current = html5QrCode2;
-        const result2 = await html5QrCode2.detectFileFromSrc(file);
+        const result2 = await html5QrCode2.scanFile(file, false);
         handleScannedCode(result2);
         setScanMode('file');
         setScanning(true);
