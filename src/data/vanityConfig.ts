@@ -772,3 +772,4 @@ export const VANITY_SMART_CABINET_BACKLIGHT: Record<string, number> = {
 export const VANITY_SMART_CABINET_SAND: Record<string, number> = {
   mianqi: 750, xiangjiao: 950, baixian: 1100, wujin: 1200, heihut: 1300, baixiang: 1399,
 };
+  
