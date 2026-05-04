@@ -314,7 +314,9 @@ type AddonOption = {
   id: string;
   label: string;
   price: number;
+  priceType?: 'length' | 'unit';
   priceFormula?: (e: number) => number;
+  priceFormulaStr?: string;
 };
 
 function AddonGridCard({
@@ -336,10 +338,13 @@ function AddonGridCard({
   const effectiveOptionId = value?.optionId || options[0]?.id || '';
   const effectiveQty = value?.qty ?? 0;
   const selectedOpt = options.find(o => o.id === effectiveOptionId);
+  const isLengthBased = selectedOpt?.priceType === 'length';
   const pricePerUnit = selectedOpt?.priceFormula
     ? Math.round(selectedOpt.priceFormula(dynamicLen))
     : (selectedOpt?.price || 0);
-  const subtotal = pricePerUnit * effectiveQty;
+  // 按长度计价：小计 = 单价（已含长度计算），不乘数量
+  // 按数量计价：小计 = 单价 × 数量
+  const subtotal = isLengthBased ? pricePerUnit : pricePerUnit * effectiveQty;
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 p-3 flex flex-col gap-2 min-w-0">
@@ -362,20 +367,21 @@ function AddonGridCard({
         ))}
       </select>
 
-      {/* 数量 + 小计 */}
+      {/* 数量 + 小计（按长度计价的选项不显示数量控制）*/}
       <div className="flex items-center justify-between">
-        <QtyControl
-          value={effectiveQty}
-          onChange={qty => {
-            if (qty === 0) {
-              // qty=0 时从state中删除该项，不计入小计
-              onChange({ optionId: '', qty: 0 } as any);
-            } else {
-              onChange({ optionId: effectiveOptionId, qty });
-            }
-          }}
-        />
-        <span className="text-sm font-semibold text-red-500">
+        {!isLengthBased && (
+          <QtyControl
+            value={effectiveQty}
+            onChange={qty => {
+              if (qty === 0) {
+                onChange({ optionId: '', qty: 0 } as any);
+              } else {
+                onChange({ optionId: effectiveOptionId, qty });
+              }
+            }}
+          />
+        )}
+        <span className={`text-sm font-semibold text-red-500 ${isLengthBased ? 'ml-auto' : ''}`}>
           {subtotal > 0 ? fmt(subtotal) : '¥0'}
         </span>
       </div>

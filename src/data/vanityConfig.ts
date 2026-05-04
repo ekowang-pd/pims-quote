@@ -223,11 +223,12 @@ export const VANITY_EXTRA_ADDONS = [
   {
     id: 'shelf',
     label: '主柜下层板单加',
-    unit: '块',
+    unit: 'mm',
+    priceType: 'length',
     icon: '🔲',
     options: [
-      { id: 'mianqi', label: '免漆材质', price: 0, priceFormula: (e: number) => Math.max(Math.ceil(e / 100) * 100, 800) / 1000 * 300 },
-      { id: 'zaoqi', label: '烤漆材质', price: 0, priceFormula: (e: number) => Math.max(Math.ceil(e / 100) * 100, 800) / 1000 * 400 },
+      { id: 'mianqi', label: '免漆材质', price: 0, priceType: 'length', priceFormula: (e: number) => Math.max(Math.ceil(e / 100) * 100, 800) / 1000 * 300, priceFormulaStr: 'MAX(CEILING(长度,100),800)/1000×300' },
+      { id: 'zaoqi', label: '烤漆材质', price: 0, priceType: 'length', priceFormula: (e: number) => Math.max(Math.ceil(e / 100) * 100, 800) / 1000 * 400, priceFormulaStr: 'MAX(CEILING(长度,100),800)/1000×400' },
     ],
   },
   {
