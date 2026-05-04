@@ -16,12 +16,17 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Strictness disabled for development - re-enable later */
-    "strict": false,
+    /* Strictness fully disabled for development */
     "strict": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noImplicitAny": false,
+    "noImplicitThis": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false,
+    "strictPropertyInitialization": false,
+    "strictBuiltinIteratorReturn": false,
+    "strictBindCallApply": false,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },

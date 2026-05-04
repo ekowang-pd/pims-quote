@@ -51,7 +51,7 @@ interface CabinetConfig {
   material: string;
   cabinetLength: number;
   cabinetAddons: Record<string, { optionId: string; qty: number }>;
-  extraAddons: Record<string, { optionId: string; qty: number }>;
+  extraAddons: Record<string, { optionId: string; qty: number; length?: number }>;
   colorChange: boolean;
 }
 
@@ -325,25 +325,23 @@ function AddonGridCard({
   options,
   value,
   onChange,
-  dynamicLen = 0,
+  hasLengthInput = false,
 }: {
   icon: string;
   name: string;
   options: AddonOption[];
-  value: { optionId: string; qty: number } | undefined;
-  onChange: (v: { optionId: string; qty: number }) => void;
-  dynamicLen?: number; // 用于 priceFormula 动态计价
+  value: { optionId: string; qty: number; length?: number } | undefined;
+  onChange: (v: { optionId: string; qty: number; length?: number }) => void;
+  hasLengthInput?: boolean; // 长度输入型选项卡（选项+输入框）
 }) {
-  // 未选中时默认选第一项，数量默认0
   const effectiveOptionId = value?.optionId || options[0]?.id || '';
   const effectiveQty = value?.qty ?? 0;
+  const effectiveLength = value?.length ?? 800;
   const selectedOpt = options.find(o => o.id === effectiveOptionId);
   const isLengthBased = selectedOpt?.priceType === 'length';
   const pricePerUnit = selectedOpt?.priceFormula
-    ? Math.round(selectedOpt.priceFormula(dynamicLen))
+    ? Math.round(selectedOpt.priceFormula(effectiveLength))
     : (selectedOpt?.price || 0);
-  // 按长度计价：小计 = 单价（已含长度计算），不乘数量
-  // 按数量计价：小计 = 单价 × 数量
   const subtotal = isLengthBased ? pricePerUnit : pricePerUnit * effectiveQty;
 
   return (
@@ -357,7 +355,7 @@ function AddonGridCard({
       {/* 下拉选择 */}
       <select
         value={effectiveOptionId}
-        onChange={e => onChange({ optionId: e.target.value, qty: 1 })}
+        onChange={e => onChange({ optionId: e.target.value, qty: 1, length: effectiveLength })}
         className="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 focus:outline-none focus:border-blue-400 bg-gray-50"
       >
         {options.map(opt => (
@@ -367,24 +365,41 @@ function AddonGridCard({
         ))}
       </select>
 
-      {/* 数量 + 小计（按长度计价的选项不显示数量控制）*/}
-      <div className="flex items-center justify-between">
-        {!isLengthBased && (
-          <QtyControl
-            value={effectiveQty}
-            onChange={qty => {
-              if (qty === 0) {
-                onChange({ optionId: '', qty: 0 } as any);
-              } else {
-                onChange({ optionId: effectiveOptionId, qty });
-              }
-            }}
+      {/* 数量或长度输入 */}
+      {hasLengthInput ? (
+        <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+          <input
+            type="number"
+            value={effectiveLength}
+            step={100}
+            min={0}
+            onChange={e => onChange({ optionId: effectiveOptionId, qty: effectiveQty, length: parseInt(e.target.value) || 0 })}
+            className="flex-1 px-2 py-1.5 border border-gray-200 rounded-lg text-center text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
           />
-        )}
-        <span className={`text-sm font-semibold text-red-500 ${isLengthBased ? 'ml-auto' : ''}`}>
-          {subtotal > 0 ? fmt(subtotal) : '¥0'}
-        </span>
-      </div>
+          <span className="text-xs text-gray-400">mm</span>
+          <span className="text-sm font-semibold text-red-500 ml-auto">
+            {subtotal > 0 ? fmt(subtotal) : '¥0'}
+          </span>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between">
+          {!isLengthBased && (
+            <QtyControl
+              value={effectiveQty}
+              onChange={qty => {
+                if (qty === 0) {
+                  onChange({ optionId: '', qty: 0 } as any);
+                } else {
+                  onChange({ optionId: effectiveOptionId, qty });
+                }
+              }}
+            />
+          )}
+          <span className={`text-sm font-semibold text-red-500 ${isLengthBased ? 'ml-auto' : ''}`}>
+            {subtotal > 0 ? fmt(subtotal) : '¥0'}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -661,14 +676,16 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
     let total = 0;
     Object.entries(cabinet.extraAddons).forEach(([addonId, val]) => {
       if (!val.optionId) return;
-      const addon = VANITY_EXTRA_ADDONS.find(a => a.id === addonId);
+      const addon = VANITY_EXTRA_ADDONS.find(a => a.id === addonId) as any;
       if (!addon) return;
-      const opt = addon.options.find(o => o.id === val.optionId);
+      const opt = addon.options.find((o: any) => o.id === val.optionId);
       if (!opt) return;
+      const len = (val.length ?? cabinet.cabinetLength);
       const unitPrice = opt.priceFormula
-        ? Math.round(opt.priceFormula(cabinet.cabinetLength))
+        ? Math.round(opt.priceFormula(len))
         : opt.price;
-      total += unitPrice * val.qty;
+      const isLengthBased = opt.priceType === 'length';
+      total += isLengthBased ? unitPrice : unitPrice * val.qty;
     });
     return Math.round(total);
   }, [cabinet]);
@@ -1065,20 +1082,23 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <SectionTitle icon="✨" title="增配选项" />
           <div className="grid grid-cols-4 gap-2">
-            {VANITY_EXTRA_ADDONS.map(addon => (
-              <AddonGridCard
-                key={addon.id}
-                icon={addon.icon}
-                name={addon.label}
-                options={addon.options}
-                value={cabinet.extraAddons[addon.id]}
-                dynamicLen={cabinet.cabinetLength}
-                onChange={val => setCabinet(prev => ({
-                  ...prev,
-                  extraAddons: { ...prev.extraAddons, [addon.id]: val },
-                }))}
-              />
-            ))}
+            {VANITY_EXTRA_ADDONS.map((addon: any) => {
+              const hasLenInput = addon.priceType === 'length';
+              return (
+                <AddonGridCard
+                  key={addon.id}
+                  icon={addon.icon}
+                  name={addon.label}
+                  options={addon.options as any}
+                  value={cabinet.extraAddons[addon.id]}
+                  hasLengthInput={hasLenInput}
+                  onChange={val => setCabinet(prev => ({
+                    ...prev,
+                    extraAddons: { ...prev.extraAddons, [addon.id]: val },
+                  }))}
+                />
+              );
+            })}
           </div>
           <SubtotalRow label="增配选项小计" amount={extraAddonPrice} />
         </div>
