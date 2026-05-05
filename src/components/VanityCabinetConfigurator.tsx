@@ -2093,7 +2093,7 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
     ? `台盆 ¥${basinPrice.toFixed(0)}`
     : '台盆待配置';
 
-  const mirrorStatus = mirror.mirrorLength > 0
+  const mirrorStatus = mirror.mirrorSurfaceId !== '' && (mirror.mirrorLength > 0 || mirror.cabinetMirrorLength > 0)
     ? `浴室镜 ¥${(mirrorPrice + mirrorAddonPrice).toFixed(0)}`
     : '浴室镜未选配';
 
