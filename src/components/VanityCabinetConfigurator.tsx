@@ -2089,7 +2089,7 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
   };
 
   const cabinetTotal = cabinetPrice + cabinetAddonPrice + extraAddonPrice;
-  const basinStatus = basin.countertopLength > 0
+  const basinStatus = basinPrice > 0
     ? `台盆 ¥${basinPrice.toFixed(0)}`
     : '台盆待配置';
 
