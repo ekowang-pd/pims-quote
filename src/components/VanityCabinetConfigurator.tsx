@@ -851,8 +851,12 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
       const coef = opt.pricePerMeter[cabinetMirrorWoodType] || 0;
       const baseLen = Math.max(Math.ceil(cabinetMirrorLength / 100) * 100, 800);
       const total = (baseLen / 1000) * coef;
-      // 普通镜-单镜的木框包边需要减100，其他情况不减
-      const subtract100 = (mirrorCategory === 'plain' && !isCabinet && mirrorSurfaceId === 'wood');
+      // 需要减100的情况：
+      // 1. 普通镜-单镜 的木框包边（wood）
+      // 2. 普通镜柜 的木材镜柜（plain-cabinet-wood，woodSubtract100=true）
+      const subtract100 =
+        (mirrorCategory === 'plain' && !isCabinet && mirrorSurfaceId === 'wood') ||
+        (opt.woodSubtract100 && mirrorCategory === 'plain' && isCabinet);
       return Math.round(subtract100 ? total - 100 : total);
     }
 
@@ -1833,8 +1837,12 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
                   const currentPrice = currentWood?.pricePerMeter || opt.woodOptions?.[0]?.pricePerMeter || 0;
                   const displayLen = mirror.cabinetMirrorLength || 0;
                   const baseLen = Math.max(Math.ceil(displayLen / 100) * 100, 800);
-                  // 普通镜-单镜的木框包边需要减100（与Excel公式一致）
-                  const needSubtract100 = opt.id === 'wood' && mirrorCategory === 'plain' && !isCabinet;
+                  // 需要减100的情况：
+                  // 1. 普通镜-单镜 的木框包边（wood）
+                  // 2. 普通镜柜 的木材镜柜（plain-cabinet-wood，woodSubtract100=true）
+                  const needSubtract100 =
+                    (opt.id === 'wood' && mirrorCategory === 'plain' && !isCabinet) ||
+                    (opt.woodSubtract100 && mirrorCategory === 'plain' && isCabinet);
                   const calcPrice = displayLen > 0
                     ? Math.round((baseLen / 1000) * currentPrice - (needSubtract100 ? 100 : 0))
                     : 0;
