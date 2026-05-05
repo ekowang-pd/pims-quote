@@ -851,11 +851,13 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
       return Math.round(Math.max(A, 0.6) * opt.pricePerSqm + rExtra);
     }
 
-    // hasLengthInput 型（镜柜三合一）：选项+材质下拉+长度输入，长度为0时直接返回0
-    if (opt.hasLengthInput && opt.pricePerMeter) {
+    // hasLengthInput 型（镜柜三合一：木材镜柜/上下发光/正面打砂）长度为0时直接返回0
+    if (opt.hasLengthInput) {
       if (cabinetMirrorLength === 0) return 0;
-      const coef = opt.pricePerMeter[cabinetMirrorWoodType] || 0;
       const baseLen = Math.max(Math.ceil(cabinetMirrorLength / 100) * 100, 800);
+      // pricePerMeter 挂在 woodOptions[].pricePerMeter 上，不是 opt.pricePerMeter
+      const woodCfg = opt.woodOptions?.find((w: any) => w.id === cabinetMirrorWoodType);
+      const coef = woodCfg?.pricePerMeter || opt.woodOptions?.[0]?.pricePerMeter || 0;
       const total = (baseLen / 1000) * coef;
       // 需要减100的情况：
       // 1. 普通镜-单镜 的木框包边（wood）
