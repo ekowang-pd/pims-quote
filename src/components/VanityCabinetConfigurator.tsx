@@ -710,16 +710,18 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
     let total = 0;
     Object.entries(cabinet.extraAddons).forEach(([addonId, val]) => {
       if (!val.optionId) return;
+      const qty = val.qty ?? 0;
+      if (qty === 0) return; // 未勾选不计价
       const addon = VANITY_EXTRA_ADDONS.find(a => a.id === addonId) as any;
       if (!addon) return;
       const opt = addon.options.find((o: any) => o.id === val.optionId);
       if (!opt) return;
-      const len = (val.length ?? cabinet.cabinetLength);
+      const isLengthBased = opt.priceType === 'length';
+      const len = isLengthBased ? (val.length ?? 0) : 0;
       const unitPrice = opt.priceFormula
         ? Math.round(opt.priceFormula(len))
         : opt.price;
-      const isLengthBased = opt.priceType === 'length';
-      total += isLengthBased ? unitPrice : unitPrice * val.qty;
+      total += isLengthBased ? unitPrice * qty : unitPrice * qty;
     });
     return Math.round(total);
   }, [cabinet]);
