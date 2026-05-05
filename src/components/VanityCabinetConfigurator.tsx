@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import mirrorSingleImg from '../../public/mirror-single.png';
 import mirrorCabinetImg from '../../public/mirror-cabinet.png';
 import type { QuoteItem } from '../types';
@@ -351,6 +351,15 @@ function AddonGridCard({
   const effectiveOptionId = value?.optionId || options[0]?.id || '';
   const effectiveQty = value?.qty ?? 0;
   const effectiveLength = value?.length ?? 800;
+
+  // 长度型增配：挂载时若 value 未初始化，自动写入默认值，确保 extraAddonPrice 能计入该项
+  useEffect(() => {
+    if (hasLengthInput && !value) {
+      onChange({ optionId: options[0]?.id || '', qty: 1, length: 800 });
+    }
+  // 仅在挂载时执行一次
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const selectedOpt = options.find(o => o.id === effectiveOptionId);
   const isLengthBased = selectedOpt?.priceType === 'length';
   const pricePerUnit = selectedOpt?.priceFormula
