@@ -63,7 +63,8 @@ interface BasinConfig {
   installType: string;
   materialId: string;
   countertopId: string;
-  countertopLength: number;
+  /** 台面长度：按台面ID独立记录，格式 { [countertopId]: length } */
+  countertopLength: Record<string, number>;
   basinItems: Record<string, number>;
   extraItems: Record<string, number>;
   /** 配置项的长度输入值 */
@@ -645,7 +646,7 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
     installType: 'above',
     materialId: 'shiying',
     countertopId: 'single-layer',
-    countertopLength: 0,
+    countertopLength: {},
     basinItems: {},
     basinDropdownSelections: {},
     extraLengthInputs: {},
@@ -759,8 +760,9 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
 
     // 1. 台面计价（长度>0才计价）
     const countertop = material.countertopOptions.find(c => c.id === basin.countertopId);
-    if (countertop && countertop.priceFormula && basin.countertopLength > 0) {
-      total += Math.round(countertop.priceFormula(basin.countertopLength) * 100) / 100;
+    const clen = basin.countertopLength[basin.countertopId] || 0;
+    if (countertop && countertop.priceFormula && clen > 0) {
+      total += Math.round(countertop.priceFormula(clen) * 100) / 100;
     }
 
     // 2. 台盆选项计价（basinMaterialOptions: dropdown类型）
@@ -785,7 +787,7 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
       const opt = material.basinOptions?.find(b => b.id === optId);
       if (opt) {
         if (opt.priceType === 'unit') total += (opt.unitPrice || 0) * qty;
-        else if (opt.priceFormula) total += Math.round(opt.priceFormula(basin.countertopLength) * 100) / 100;
+        else if (opt.priceFormula) total += Math.round(opt.priceFormula(clen) * 100) / 100;
       }
     });
 
@@ -933,7 +935,7 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
       });
     }
 
-    if (basin.countertopLength > 0) {
+    if ((basin.countertopLength[basin.countertopId] || 0) > 0) {
       const installType = VANITY_BASIN_TYPES[basin.installType as keyof typeof VANITY_BASIN_TYPES] as BasinType;
       const material = installType?.materials.find(m => m.id === basin.materialId);
       const countertop = material?.countertopOptions.find(c => c.id === basin.countertopId);
@@ -941,9 +943,9 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
         id: `vc_${Date.now()}_2`,
         type: 'custom',
         productName: `台面(${installType?.label || ''})${material?.label || ''}`,
-        spec: `${countertop?.label || basin.countertopId} - ${basin.countertopLength}mm`,
+        spec: `${countertop?.label || basin.countertopId} - ${basin.countertopLength[basin.countertopId] || 0}mm`,
         color: material?.label || basin.materialId,
-        size: `${basin.countertopLength}mm`,
+        size: `${basin.countertopLength[basin.countertopId] || 0}mm`,
         unit: '项',
         quantity: 1,
         unitPrice: basinPrice,
@@ -1393,7 +1395,7 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                 {material.countertopOptions.map(c => {
                   const isSelected = basin.countertopId === c.id;
-                  const len = basin.countertopLength;
+                  const len = basin.countertopLength[c.id] || 0;
                   const price = len > 0 && c.priceFormula ? c.priceFormula(len) : 0;
                   return (
                     <div
@@ -1413,11 +1415,18 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
                       <div className="flex items-center justify-between pt-1 border-t border-gray-100">
                         <input
                           type="number"
-                          value={basin.countertopLength}
-                          onClick={e => e.stopPropagation()}
+                          value={len}
+                          onClick={e => {
+                            e.stopPropagation();
+                            // 选中此项
+                            if (!isSelected) setBasin(prev => ({ ...prev, countertopId: c.id }));
+                          }}
                           onChange={e => setBasin(prev => ({
                             ...prev,
-                            countertopLength: parseInt(e.target.value) || 0,
+                            countertopLength: {
+                              ...prev.countertopLength,
+                              [c.id]: parseInt(e.target.value) || 0,
+                            },
                           }))}
                           className="w-16 px-1.5 py-1 border border-gray-200 rounded-lg text-center font-mono text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
                           step={1}
@@ -2156,7 +2165,7 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
             {cabinetTotal > 0 ? `主柜 ¥${cabinetTotal.toFixed(0)}` : '主柜未配置'}
           </span>
           <span>|</span>
-          <span className={basin.countertopLength > 0 ? 'text-green-600' : ''}>{basinStatus}</span>
+          <span className={basinPrice > 0 ? 'text-green-600' : ''}>{basinStatus}</span>
           <span>|</span>
           <span className={mirror.mirrorLength > 0 ? 'text-green-600' : ''}>{mirrorStatus}</span>
           <span>|</span>
