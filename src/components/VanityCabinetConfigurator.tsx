@@ -633,7 +633,7 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
     installType: 'hanging',
     cabinetType: 'hanging-mianqi',
     material: 'mianqi',
-    cabinetLength: 800,
+    cabinetLength: 0,
     cabinetAddons: {},
     extraAddons: {},
     colorChange: false,
@@ -645,7 +645,7 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
     installType: 'above',
     materialId: 'shiying',
     countertopId: 'single-layer',
-    countertopLength: 800,
+    countertopLength: 0,
     basinItems: {},
     basinDropdownSelections: {},
     extraLengthInputs: {},
@@ -662,8 +662,8 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
   const [mirror, setMirror] = useState<MirrorConfig>({
     mirrorCategory: 'plain',
     isCabinet: false,
-    mirrorLength: 800,
-    mirrorArea: 0.6,
+    mirrorLength: 0,
+    mirrorArea: 0,
     mirrorSurfaceId: 'no-border',
     mirrorRC: false,
     mirrorAreaMode: 'area',
@@ -688,6 +688,7 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
     if (!typeData) return 0;
     const mat = typeData.materials.find(m => m.id === cabinet.material);
     if (!mat) return 0;
+    if (cabinet.cabinetLength === 0) return 0;
     return Math.round(mat.priceFormula(cabinet.cabinetLength) * 100) / 100;
   }, [cabinet]);
 
@@ -748,6 +749,7 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
 
   // ===== 台盆计价 =====
   const basinPrice = useMemo(() => {
+    if (basin.countertopLength === 0) return 0;
     const installType = VANITY_BASIN_TYPES[basin.installType as keyof typeof VANITY_BASIN_TYPES] as BasinType;
     const material = installType?.materials.find(m => m.id === basin.materialId);
     if (!material) return 0;
@@ -842,14 +844,16 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
 
     if (!opt) return 0;
 
-    // 面积型：MAX(面积, 0.6) * pricePerSqm (+R角型再+60)
+    // 面积型：MAX(面积, 0.6) * pricePerSqm (+R角型再+60)，面积为0时直接返回0
     if (opt.pricePerSqm !== undefined) {
+      if (A === 0) return 0;
       const rExtra = mirrorAreaMode === 'rCorner' ? (opt.rCornerExtra || 0) : 0;
       return Math.round(Math.max(A, 0.6) * opt.pricePerSqm + rExtra);
     }
 
-    // hasLengthInput 型（镜柜三合一）：选项+材质下拉+长度输入
+    // hasLengthInput 型（镜柜三合一）：选项+材质下拉+长度输入，长度为0时直接返回0
     if (opt.hasLengthInput && opt.pricePerMeter) {
+      if (cabinetMirrorLength === 0) return 0;
       const coef = opt.pricePerMeter[cabinetMirrorWoodType] || 0;
       const baseLen = Math.max(Math.ceil(cabinetMirrorLength / 100) * 100, 800);
       const total = (baseLen / 1000) * coef;
@@ -862,8 +866,9 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
       return Math.round(subtract100 ? total - 100 : total);
     }
 
-    // 普通长度型：MAX(长度, 800) / 1000 * 系数 - 100 + R角
+    // 普通长度型：MAX(长度, 800) / 1000 * 系数 - 100 + R角，长度为0时直接返回0
     if (opt.pricePerMeter) {
+      if (L === 0) return 0;
       const coef = opt.pricePerMeter[woodType] || 650;
       const rExtra = mirrorRC ? (opt.rCornerExtra || 0) : 0;
       return Math.round(Math.max(L, 800) / 1000 * coef - 100 + rExtra);
