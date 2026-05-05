@@ -402,6 +402,20 @@ export interface BasinOption {
   unitPrice?: number;
   priceFormula?: (len: number) => number;
   unit?: string;
+  /** 带选项+长度输入的模式（如热弯一体盆） */
+  hasLengthInput?: boolean;
+  options?: Array<{
+    id: string;
+    label: string;
+    priceType: 'unit' | 'length';
+    priceFormula?: (len: number) => number;
+    unitPrice?: number;
+    unit?: string;
+    priceLabel?: string;
+    priceFormulaStr?: string;
+  }>;
+  priceLabel?: string;
+  priceFormulaStr?: string;
 }
 
 export interface BasinMaterial {
@@ -529,9 +543,16 @@ export const VANITY_BASIN_TYPES = {
           { id: 'youdeng', label: '优等台下盆（普通工艺）', priceType: 'unit', unitPrice: 90, unit: '个' },
           { id: 'wufeng', label: '岩板无缝拼接陶瓷盆', priceType: 'unit', unitPrice: 300, unit: '个' },
           { id: 'jiedati', label: '岩板拼接一体盆', priceType: 'unit', unitPrice: 350, unit: '个' },
-          { id: 'rewan-white', label: '热弯一体盆（白色/鱼肚白）', priceType: 'length', priceFormula: (e) => e / 1000 * 900, unit: 'mm' },
-          { id: 'rewan-other', label: '热弯一体盆（其他颜色）', priceType: 'length', priceFormula: (e) => e / 1000 * 1000, unit: 'mm' },
-          { id: 'rewan-edge', label: '热弯一体盆吊边H<200mm', priceType: 'length', priceFormula: (e) => e / 1000 * 200, unit: 'mm' },
+          { id: 'rewan', label: '热弯一体盆', priceType: 'length', hasLengthInput: true,
+            options: [
+              { id: 'white', label: '白色/鱼肚白', priceType: 'length', priceFormula: (e) => e / 1000 * 900, priceLabel: '¥900/m', priceFormulaStr: '长度/1000×900' },
+              { id: 'other', label: '其他颜色', priceType: 'length', priceFormula: (e) => e / 1000 * 1000, priceLabel: '¥1000/m', priceFormulaStr: '长度/1000×1000' },
+            ],
+          },
+          { id: 'rewan-edge', label: '热弯一体盆吊边H<200mm', hasLengthInput: true, options: [
+            { id: 'white', label: '白色/鱼肚白', priceFormula: (e) => e / 1000 * 200 },
+            { id: 'other', label: '其他颜色', priceFormula: (e) => e / 1000 * 300 },
+          ]},
           { id: 'extra-rewan', label: '单加岩板热弯一体盆', priceType: 'unit', unitPrice: 300, unit: '个' },
         ],
       },
@@ -626,10 +647,18 @@ export interface MirrorAreaOption {
 export interface MirrorLengthOption {
   id: string;
   label: string;
-  // 系数，按木材类型 key，计价公式：MAX(长度mm, 800) / 1000 * 系数 - 100
-  pricePerMeter: { [key: string]: number };
+  // 普通长度型：系数，按木材类型 key，计价公式：MAX(长度mm, 800) / 1000 * 系数 - 100
+  pricePerMeter?: { [key: string]: number };
   // R角额外加价
-  rCornerExtra: number;
+  rCornerExtra?: number;
+  // hasLengthInput 型：镜柜三合一选项卡（含材质下拉+长度输入）
+  hasLengthInput?: boolean;
+  woodOptions?: Array<{
+    id: string;
+    label: string;
+    pricePerMeter: { [key: string]: number }; // material id → price
+  }>;
+  woodSubtract100?: boolean; // 木材镜柜需减100
 }
 
 // ===== 普通镜 - 镜面配置（单镜无收纳）=====
@@ -640,20 +669,54 @@ export const VANITY_PLAIN_SINGLE_MIRROR_OPTIONS: MirrorAreaOption[] = [
   { id: 'stainless', label: '304#不锈钢包边', pricePerSqm: 950, rCornerExtra: 60 },
 ];
 
-// ===== 普通镜木框 - 长度型选项 =====
+// ===== 镜柜镜面木材材质列表（免漆板/橡胶木/白蜡木/红橡木/乌金木/黑胡桃木/白橡直纹）=====
+export const VANITY_CABINET_MIRROR_MATERIALS = [
+  { id: 'mianqi',    label: '免漆板',     pricePerMeter: 0 },
+  { id: 'xiangjiao', label: '橡胶木',     pricePerMeter: 0 },
+  { id: 'baixian',   label: '白蜡木/红橡木', pricePerMeter: 0 },
+  { id: 'wujin',     label: '乌金木',     pricePerMeter: 0 },
+  { id: 'heihut',    label: '黑胡桃木',   pricePerMeter: 0 },
+  { id: 'baixiang',  label: '白橡直纹',   pricePerMeter: 0 },
+];
+
+// ===== 镜柜木材子选项基类（各类型仅单价不同）=====
+export type CabinetMirrorWoodOption = {
+  id: string;
+  label: string;
+  /** 该木材的每米单价（元/米）*/
+  pricePerMeter: number;
+};
+
+// ===== 普通镜木框 - 长度型选项（hasLengthInput：选项+材质下拉+长度输入）=====
 export const VANITY_PLAIN_WOOD_LENGTH_OPT: MirrorLengthOption = {
   id: 'wood',
   label: '木框包边',
-  pricePerMeter: { mianqi: 700, xiangjiao: 950, baixian: 1100, wujin: 1200, heihut: 1399, baixiang: 1500 },
+  hasLengthInput: true,
+  woodOptions: [
+    { id: 'mianqi',    label: '免漆板',       pricePerMeter: 700 },
+    { id: 'xiangjiao', label: '橡胶木',       pricePerMeter: 950 },
+    { id: 'baixian',   label: '白蜡木/红橡木', pricePerMeter: 1100 },
+    { id: 'wujin',     label: '乌金木',       pricePerMeter: 1200 },
+    { id: 'heihut',    label: '黑胡桃木',     pricePerMeter: 1399 },
+    { id: 'baixiang',  label: '白橡直纹',     pricePerMeter: 1500 },
+  ],
   rCornerExtra: 60,
 };
 
-// ===== 普通镜柜 - 镜面配置（镜柜有收纳）=====
+// ===== 普通镜柜 - 镜面配置（hasLengthInput：选项+材质下拉+长度输入）=====
+// 木材镜柜：MAX(CEILING(len,100),800)/1000*price - 100
 export const VANITY_PLAIN_CABINET_MIRROR_OPT: MirrorLengthOption = {
   id: 'plain-cabinet-wood',
   label: '木材镜柜',
-  pricePerMeter: { mianqi: 650, xiangjiao: 850, baixian: 1000, wujin: 1100, heihut: 1200, baixiang: 1399 },
-  rCornerExtra: 0, // 镜柜无R角
+  hasLengthInput: true,
+  woodOptions: [
+    { id: 'mianqi',    label: '免漆板',       pricePerMeter: 650 },
+    { id: 'xiangjiao', label: '橡胶木',       pricePerMeter: 850 },
+    { id: 'baixian',   label: '白蜡木/红橡木', pricePerMeter: 1000 },
+    { id: 'wujin',     label: '乌金木',       pricePerMeter: 1100 },
+    { id: 'heihut',    label: '黑胡桃木',     pricePerMeter: 1200 },
+  ],
+  woodSubtract100: true, // 木材镜柜：MAX(len,800)/1000*price - 100
 };
 
 // ===== 智能镜 - 镜面配置（单镜触控/除雾）=====
@@ -668,33 +731,69 @@ export const VANITY_SMART_SINGLE_MIRROR_OPTIONS: MirrorAreaOption[] = [
 ];
 
 // ===== 智能镜木材 - 长度型选项 =====
+// 智能镜-单镜：木材包边背光，交互同木材镜柜（选项+材质下拉+长度输入）
 export const VANITY_SMART_WOOD_LENGTH_OPT_BACKLIGHT: MirrorLengthOption = {
   id: 'smart-wood-backlight',
   label: '木材包边背光',
-  pricePerMeter: { mianqi: 600, xiangjiao: 850, baixian: 1000, wujin: 1100, heihut: 1300, baixiang: 1399 },
+  hasLengthInput: true,
+  woodOptions: [
+    { id: 'mianqi',    label: '免漆板',       pricePerMeter: 600 },
+    { id: 'xiangjiao', label: '橡胶木',       pricePerMeter: 850 },
+    { id: 'baixian',   label: '白蜡木/红橡木', pricePerMeter: 1000 },
+    { id: 'wujin',     label: '乌金木',       pricePerMeter: 1100 },
+    { id: 'heihut',    label: '黑胡桃木',     pricePerMeter: 1300 },
+    { id: 'baixiang',  label: '白橡直纹',     pricePerMeter: 1399 },
+  ],
   rCornerExtra: 60,
 };
 
+// 智能镜-单镜：木材包边正面打砂发光，交互同木材镜柜（选项+材质下拉+长度输入）
 export const VANITY_SMART_WOOD_LENGTH_OPT_SAND: MirrorLengthOption = {
   id: 'smart-wood-sand',
   label: '木材包边正面打砂发光',
-  pricePerMeter: { mianqi: 700, xiangjiao: 950, baixian: 1100, wujin: 1200, heihut: 1399, baixiang: 1500 },
+  hasLengthInput: true,
+  woodOptions: [
+    { id: 'mianqi',    label: '免漆木',       pricePerMeter: 700 },
+    { id: 'xiangjiao', label: '橡胶木',       pricePerMeter: 950 },
+    { id: 'baixian',   label: '白蜡木/红橡木', pricePerMeter: 1100 },
+    { id: 'wujin',     label: '乌金木',       pricePerMeter: 1200 },
+    { id: 'heihut',    label: '黑胡桃木',     pricePerMeter: 1399 },
+    { id: 'baixiang',  label: '白橡直纹',     pricePerMeter: 1500 },
+  ],
   rCornerExtra: 60,
 };
 
-// ===== 智能镜柜 - 镜面配置（镜柜触控+收纳）=====
+// ===== 智能镜柜 - 镜面配置（hasLengthInput：选项+材质下拉+长度输入）=====
+// 木材镜柜上下发光：MAX(CEILING(len,100),800)/1000*price
 export const VANITY_SMART_CABINET_MIRROR_OPT_BACKLIGHT: MirrorLengthOption = {
   id: 'smart-cabinet-backlight',
   label: '木材镜柜上下发光',
-  pricePerMeter: { mianqi: 650, xiangjiao: 850, baixian: 1000, wujin: 1100, heihut: 1200, baixiang: 1300 },
-  rCornerExtra: 0,
+  hasLengthInput: true,
+  woodOptions: [
+    { id: 'mianqi',    label: '免漆板',       pricePerMeter: 650 },
+    { id: 'xiangjiao', label: '橡胶木',       pricePerMeter: 850 },
+    { id: 'baixian',   label: '白蜡木/红橡木', pricePerMeter: 1000 },
+    { id: 'wujin',     label: '乌金木',       pricePerMeter: 1100 },
+    { id: 'heihut',    label: '黑胡桃木',     pricePerMeter: 1200 },
+    { id: 'baixiang',  label: '白橡直纹',     pricePerMeter: 1300 },
+  ],
+  woodSubtract100: false,
 };
 
+// 木材镜柜正面打砂发光：MAX(CEILING(len,100),800)/1000*price
 export const VANITY_SMART_CABINET_MIRROR_OPT_SAND: MirrorLengthOption = {
   id: 'smart-cabinet-sand',
   label: '木材镜柜正面打砂发光',
-  pricePerMeter: { mianqi: 750, xiangjiao: 950, baixian: 1100, wujin: 1200, heihut: 1300, baixiang: 1399 },
-  rCornerExtra: 0,
+  hasLengthInput: true,
+  woodOptions: [
+    { id: 'mianqi',    label: '免漆板',       pricePerMeter: 750 },
+    { id: 'xiangjiao', label: '橡胶木',       pricePerMeter: 950 },
+    { id: 'baixian',   label: '白蜡木/红橡木', pricePerMeter: 1100 },
+    { id: 'wujin',     label: '乌金木',       pricePerMeter: 1200 },
+    { id: 'heihut',    label: '黑胡桃木',     pricePerMeter: 1300 },
+    { id: 'baixiang',  label: '白橡直纹',     pricePerMeter: 1399 },
+  ],
+  woodSubtract100: false,
 };
 
 // ===== 普通镜类型 =====

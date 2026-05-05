@@ -20,6 +20,7 @@ import {
   VANITY_PLAIN_SINGLE_MIRROR_OPTIONS,
   VANITY_PLAIN_WOOD_LENGTH_OPT,
   VANITY_PLAIN_CABINET_MIRROR_OPT,
+  VANITY_CABINET_MIRROR_MATERIALS,
   VANITY_SMART_SINGLE_MIRROR_OPTIONS,
   VANITY_SMART_WOOD_LENGTH_OPT_BACKLIGHT,
   VANITY_SMART_WOOD_LENGTH_OPT_SAND,
@@ -53,6 +54,8 @@ interface CabinetConfig {
   cabinetAddons: Record<string, { optionId: string; qty: number }>;
   extraAddons: Record<string, { optionId: string; qty: number; length?: number }>;
   colorChange: boolean;
+  /** 主柜夹板打包是否启用 */
+  cabinetPackingEnabled: boolean;
 }
 
 // ===== 台盆配置状态 =====
@@ -65,12 +68,18 @@ interface BasinConfig {
   extraItems: Record<string, number>;
   /** 配置项的长度输入值 */
   extraLengthInputs: Record<string, number>;
+  rewanEdgeSelectedOption?: string;
+  rewanEdgeLength?: number;
   /** 下拉型台盆选项（如"陶瓷台上盆"）选中的子材质 id */
   basinDropdownSelections: Record<string, string>;
   /** 台面打包：用户选择类型 'board'=夹板打包, 'wood'=夹板木箱打包 */
   countertopPackingType: 'board' | 'wood';
   /** 台面打包：用户输入的长度(mm) */
   countertopPackingLength: number;
+  /** 热弯一体盆：选中的子选项 'white' | 'other' */
+  rewanSelectedOption: string;
+  /** 热弯一体盆：用户输入的长度(mm) */
+  rewanLength: number;
 }
 
 // ===== 镜面配置状态 =====
@@ -87,6 +96,9 @@ interface MirrorConfig {
   mirrorSurfaceId: string;
   // 镜面R角选中状态（用于长度型）
   mirrorRC: boolean;
+  // 镜柜木材型镜面：选中的木材材质 + 镜面长度（用于 hasLengthInput 类型）
+  cabinetMirrorWoodType: string;
+  cabinetMirrorLength: number;
   // 面积模式：'area'=面积(m²), 'rCorner'=倒R角面积(m²)
   mirrorAreaMode: 'area' | 'rCorner';
   // 木材类型（用于木框/木柜类）
@@ -101,6 +113,8 @@ interface MirrorConfig {
   shelfLight: boolean;
   glassDoor: boolean;
   aluGlassDoor: boolean;
+  /** 浴室镜夹板打包是否启用 */
+  mirrorPackingEnabled: boolean;
 }
 
 // ===== 镜柜额外配置 =====
@@ -612,6 +626,7 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
     cabinetAddons: {},
     extraAddons: {},
     colorChange: false,
+    cabinetPackingEnabled: false,
   });
 
   // ===== 台盆状态 =====
@@ -623,9 +638,13 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
     basinItems: {},
     basinDropdownSelections: {},
     extraLengthInputs: {},
+    rewanEdgeSelectedOption: undefined,
+    rewanEdgeLength: 0,
     extraItems: {},
     countertopPackingType: 'board',
     countertopPackingLength: 0,
+    rewanSelectedOption: '',
+    rewanLength: 0,
   });
 
   // ===== 镜面状态 =====
@@ -637,6 +656,8 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
     mirrorSurfaceId: 'no-border',
     mirrorRC: false,
     mirrorAreaMode: 'area',
+    cabinetMirrorWoodType: 'mianqi',
+    cabinetMirrorLength: 800,
     woodType: 'mianqi',
     sideCabinetQty: 0,
     openShelfQty: 0,
@@ -646,6 +667,7 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
     shelfLight: false,
     glassDoor: false,
     aluGlassDoor: false,
+    mirrorPackingEnabled: false,
   });
 
   // ===== 柜体计价 =====
@@ -692,8 +714,8 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
 
   const packingPrice = useMemo(() => {
     let total = 0;
-    // 主柜打包：吊柜=MAX(len,800)/1000*80，主柜=MAX(len,800)/1000*100
-    if (cabinet.cabinetLength > 0) {
+    // 主柜打包（可选）：吊柜=MAX(len,800)/1000*80，主柜=MAX(len,800)/1000*100
+    if (cabinet.cabinetPackingEnabled && cabinet.cabinetLength > 0) {
       const baseLen = Math.max(Math.ceil(cabinet.cabinetLength / 100) * 100, 800);
       const rate = cabinet.cabinetType.startsWith('hanging') ? 80 : 100;
       total += (baseLen / 1000) * rate;
@@ -704,8 +726,8 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
       const rate = basin.countertopPackingType === 'wood' ? 180 : 90;
       total += (baseLen / 1000) * rate;
     }
-    // 浴室镜打包：单镜=MAX(len,800)/1000*70，镜柜=MAX(len,800)/1000*80
-    if (mirror.mirrorLength > 0) {
+    // 浴室镜打包（可选）：单镜=MAX(len,800)/1000*70，镜柜=MAX(len,800)/1000*80
+    if (mirror.mirrorPackingEnabled && mirror.mirrorLength > 0) {
       const baseLen = Math.max(Math.ceil(mirror.mirrorLength / 100) * 100, 800);
       const rate = mirror.isCabinet ? 80 : 70;
       total += (baseLen / 1000) * rate;
@@ -753,6 +775,20 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
       }
     });
 
+    // 3b. 热弯一体盆按长度计价（hasLengthInput类型）
+    const rewanOpt = material.basinOptions?.find(b => b.id === 'rewan');
+    if (rewanOpt?.hasLengthInput && basin.rewanSelectedOption && basin.rewanLength > 0) {
+      const sub = rewanOpt.options?.find(s => s.id === basin.rewanSelectedOption);
+      if (sub?.priceFormula) total += Math.round(sub.priceFormula(basin.rewanLength) * 100) / 100;
+    }
+
+    // 3c. 热弯一体盆吊边按长度计价（hasLengthInput类型）
+    const rewanEdgeOpt = material.extraOptions?.find(e => e.id === 'rewan-edge' && e.hasLengthInput);
+    if (rewanEdgeOpt && basin.rewanEdgeSelectedOption && basin.rewanEdgeLength > 0) {
+      const sub = rewanEdgeOpt.options?.find(s => s.id === basin.rewanEdgeSelectedOption);
+      if (sub?.priceFormula) total += Math.round(sub.priceFormula(basin.rewanEdgeLength) * 100) / 100;
+    }
+
     // 4. 台中盆单加（按数量×basinQtyUnitPrice）
     const taizhongQty = basin.extraItems['taizhong'] || 0;
     if (taizhongQty > 0 && material.basinQtyUnitPrice) {
@@ -771,12 +807,12 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
 
   // ===== 镜面计价 =====
   const mirrorPrice = useMemo(() => {
-    const { mirrorCategory, isCabinet, mirrorLength, mirrorArea, mirrorSurfaceId, mirrorRC, mirrorAreaMode, woodType } = mirror;
+    const { mirrorCategory, isCabinet, mirrorLength, mirrorArea, mirrorSurfaceId, mirrorRC, mirrorAreaMode, woodType, cabinetMirrorWoodType, cabinetMirrorLength } = mirror;
     const L = mirrorLength;
     const A = mirrorArea;
 
     // 查找当前选中的镜面选项
-    let opt: { pricePerSqm?: number; pricePerMeter?: Record<string, number>; rCornerExtra?: number } | null = null;
+    let opt: { pricePerSqm?: number; pricePerMeter?: Record<string, number>; rCornerExtra?: number; hasLengthInput?: boolean; woodSubtract100?: boolean } | null = null;
 
     if (mirrorCategory === 'plain' && !isCabinet) {
       // 普通镜-单镜
@@ -795,13 +831,23 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
 
     if (!opt) return 0;
 
-    // 面积型：MAX(面积, 0.6) * pricePerSqm - 100 (+R角型再+60)
+    // 面积型：MAX(面积, 0.6) * pricePerSqm (+R角型再+60)
     if (opt.pricePerSqm !== undefined) {
       const rExtra = mirrorAreaMode === 'rCorner' ? (opt.rCornerExtra || 0) : 0;
-      return Math.round(Math.max(A, 0.6) * opt.pricePerSqm - 100 + rExtra);
+      return Math.round(Math.max(A, 0.6) * opt.pricePerSqm + rExtra);
     }
 
-    // 长度型：MAX(长度, 800) / 1000 * 系数 - 100 + R角
+    // hasLengthInput 型（镜柜三合一）：选项+材质下拉+长度输入
+    if (opt.hasLengthInput && opt.pricePerMeter) {
+      const coef = opt.pricePerMeter[cabinetMirrorWoodType] || 0;
+      const baseLen = Math.max(Math.ceil(cabinetMirrorLength / 100) * 100, 800);
+      const total = (baseLen / 1000) * coef;
+      // 普通镜-单镜的木框包边需要减100，其他情况不减
+      const subtract100 = (mirrorCategory === 'plain' && !isCabinet && mirrorSurfaceId === 'wood');
+      return Math.round(subtract100 ? total - 100 : total);
+    }
+
+    // 普通长度型：MAX(长度, 800) / 1000 * 系数 - 100 + R角
     if (opt.pricePerMeter) {
       const coef = opt.pricePerMeter[woodType] || 650;
       const rExtra = mirrorRC ? (opt.rCornerExtra || 0) : 0;
@@ -1230,24 +1276,71 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
                 })}
                 {/* 台下盆：basinOptions */}
                 {material.basinOptions?.map(opt => (
-                  <div key={opt.id} className="bg-white rounded-xl border border-gray-200 p-2.5 flex flex-col gap-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-base">🧼</span>
-                      <span className="text-xs font-medium text-gray-700 truncate">{opt.label}</span>
+                  opt.hasLengthInput ? (
+                    <div key={opt.id} className="bg-white rounded-xl border border-gray-200 p-2.5 flex flex-col gap-2">
+                      {/* 标题行 */}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-base">🧼</span>
+                        <span className="text-xs font-medium text-gray-700">{opt.label}</span>
+                      </div>
+                      {/* 子选项单选组 */}
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {opt.options?.map(sub => (
+                          <button
+                            key={sub.id}
+                            onClick={() => setBasin(prev => ({ ...prev, rewanSelectedOption: sub.id }))}
+                            className={`py-1.5 px-2 rounded-lg text-xs border-2 transition-all text-left ${
+                              basin.rewanSelectedOption === sub.id
+                                ? 'border-blue-500 bg-blue-50 text-blue-700 font-medium'
+                                : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300'
+                            }`}
+                          >
+                            <div className="font-medium">{sub.label}</div>
+                            <div className="text-xs opacity-70">{sub.priceLabel || `¥${Math.round(sub.priceFormula?.(600) || 0)}/m`}</div>
+                          </button>
+                        ))}
+                      </div>
+                      {/* 长度输入行 */}
+                      <div className="flex items-center gap-2 border-t border-gray-100 pt-2">
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-gray-500">长度(mm)：</span>
+                          <input
+                            type="number"
+                            value={basin.rewanLength || ''}
+                            onChange={e => setBasin(prev => ({ ...prev, rewanLength: parseInt(e.target.value) || 0 }))}
+                            className="w-20 px-2 py-1 border border-gray-200 rounded-lg text-center text-xs font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                            placeholder="800"
+                          />
+                        </div>
+                        <span className="text-xs font-semibold text-red-500 ml-auto">
+                          ¥{(() => {
+                            const sub = opt.options?.find(s => s.id === basin.rewanSelectedOption);
+                            if (!sub || !basin.rewanLength) return 0;
+                            return Math.round((sub.priceFormula || (() => 0))(basin.rewanLength));
+                          })()}
+                        </span>
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-400">
-                      {opt.priceType === 'unit' ? `¥${opt.unitPrice}/个` : `¥${Math.round(opt.priceFormula?.(600) || 0)}/600mm`}
+                  ) : (
+                    <div key={opt.id} className="bg-white rounded-xl border border-gray-200 p-2.5 flex flex-col gap-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-base">🧼</span>
+                        <span className="text-xs font-medium text-gray-700 truncate">{opt.label}</span>
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        {opt.priceType === 'unit' ? `¥${opt.unitPrice}/个` : `¥${Math.round(opt.priceFormula?.(600) || 0)}/600mm`}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <QtyControl value={basin.basinItems[opt.id] || 0} onChange={qty => setBasin(prev => ({
+                          ...prev,
+                          basinItems: { ...prev.basinItems, [opt.id]: qty },
+                        }))} />
+                        <span className="text-xs font-semibold text-red-500">
+                          ¥{(opt.priceType === 'unit' ? (opt.unitPrice || 0) : Math.round(opt.priceFormula?.(600) || 0)) * (basin.basinItems[opt.id] || 0)}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <QtyControl value={basin.basinItems[opt.id] || 0} onChange={qty => setBasin(prev => ({
-                        ...prev,
-                        basinItems: { ...prev.basinItems, [opt.id]: qty },
-                      }))} />
-                      <span className="text-xs font-semibold text-red-500">
-                        ¥{(opt.priceType === 'unit' ? (opt.unitPrice || 0) : Math.round(opt.priceFormula?.(600) || 0)) * (basin.basinItems[opt.id] || 0)}
-                      </span>
-                    </div>
-                  </div>
+                  )
                 ))}
                 {/* 台上盆专用：台中盆单加 */}
                 {installType.id === 'above' && material?.basinQtyUnitPrice && (
@@ -1322,7 +1415,8 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
                   <SectionTitle icon="✨" title="配置项" />
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                    {material.extraOptions.filter(e => e.id !== 'taizhong').map(opt => {
+                    {/* 普通长度输入项 */}
+                    {material.extraOptions.filter(e => e.id !== 'taizhong' && !e.hasLengthInput).map(opt => {
                       const len = basin.extraLengthInputs[opt.id] || 0;
                       const price = len > 0 ? Math.round(opt.priceFormula(len) * 100) / 100 : 0;
                       return (
@@ -1351,6 +1445,47 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
                         </div>
                       );
                     })}
+                    {/* hasLengthInput 类型 — 热弯一体盆吊边 */}
+                    {material.extraOptions.filter(e => e.id === 'rewan-edge' && e.hasLengthInput).map(opt => {
+                      const selectedSub = opt.options?.find(s => s.id === basin.rewanEdgeSelectedOption);
+                      const len = basin.rewanEdgeLength || 0;
+                      const price = selectedSub && len > 0 ? Math.round(selectedSub.priceFormula(len) * 100) / 100 : 0;
+                      return (
+                        <div key={opt.id} className="bg-white rounded-xl border border-gray-200 p-3 flex flex-col gap-2 col-span-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-base">✨</span>
+                            <span className="text-sm font-medium text-gray-800">{opt.label}</span>
+                          </div>
+                          {/* 子选项 */}
+                          <div className="flex gap-2 flex-wrap">
+                            {opt.options?.map(sub => (
+                              <button
+                                key={sub.id}
+                                onClick={() => setBasin(prev => ({ ...prev, rewanEdgeSelectedOption: sub.id }))}
+                                className={`px-2.5 py-1 rounded-full text-xs border transition-colors ${basin.rewanEdgeSelectedOption === sub.id
+                                  ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'}`}
+                              >
+                                {sub.label}
+                              </button>
+                            ))}
+                          </div>
+                          {/* 长度输入 */}
+                          <div className="flex items-center gap-2 pt-1 border-t border-gray-100">
+                            <input
+                              type="number"
+                              value={len || ''}
+                              onChange={e => setBasin(prev => ({ ...prev, rewanEdgeLength: parseInt(e.target.value) || 0 }))}
+                              className="flex-1 px-2 py-1.5 border border-gray-200 rounded-lg text-center font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                              placeholder="输入长度(mm)"
+                              step={1}
+                            />
+                            <span className="text-sm font-semibold text-red-500 min-w-[50px] text-right">
+                              {price > 0 ? `¥${Math.round(price)}` : '¥0'}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -1363,13 +1498,20 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
   };
 
   const renderMirrorTab = () => {
-    const { mirrorCategory, isCabinet, mirrorLength, mirrorArea, mirrorSurfaceId, mirrorRC, mirrorAreaMode, woodType, sideCabinetQty, openShelfQty, addonWoodType, americanStyle, glassShelf, shelfLight, glassDoor, aluGlassDoor } = mirror;
+    const { mirrorCategory, isCabinet, mirrorLength, mirrorArea, mirrorSurfaceId, mirrorRC, mirrorAreaMode, woodType, sideCabinetQty, openShelfQty, addonWoodType, americanStyle, glassShelf, shelfLight, glassDoor, aluGlassDoor, cabinetMirrorWoodType, cabinetMirrorLength } = mirror;
 
     // ===== 根据一级+二级获取镜面选项列表 =====
     const getSurfaceOptions = () => {
-      if (mirrorCategory === 'plain' && !isCabinet) return VANITY_PLAIN_SINGLE_MIRROR_OPTIONS;
+      if (mirrorCategory === 'plain' && !isCabinet) return [
+        ...VANITY_PLAIN_SINGLE_MIRROR_OPTIONS,
+        VANITY_PLAIN_WOOD_LENGTH_OPT,
+      ];
       if (mirrorCategory === 'plain' && isCabinet) return [VANITY_PLAIN_CABINET_MIRROR_OPT];
-      if (mirrorCategory === 'smart' && !isCabinet) return VANITY_SMART_SINGLE_MIRROR_OPTIONS;
+      if (mirrorCategory === 'smart' && !isCabinet) return [
+        ...VANITY_SMART_SINGLE_MIRROR_OPTIONS,
+        VANITY_SMART_WOOD_LENGTH_OPT_BACKLIGHT,
+        VANITY_SMART_WOOD_LENGTH_OPT_SAND,
+      ];
       if (mirrorCategory === 'smart' && isCabinet) return [VANITY_SMART_CABINET_MIRROR_OPT_BACKLIGHT, VANITY_SMART_CABINET_MIRROR_OPT_SAND];
       return [];
     };
@@ -1603,7 +1745,7 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
             {/* 面积型选项（不包边/铝型材/不锈钢）——面积输入在卡片内 */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mb-2">
               {surfaceOptions
-                .filter(opt => !('pricePerMeter' in opt) || !opt.pricePerMeter)
+                .filter(opt => (!('pricePerMeter' in opt) || !opt.pricePerMeter) && !opt.hasLengthInput)
                 .map(opt => {
                   const isSelected = mirrorSurfaceId === opt.id;
                   const pricePerSqm = 'pricePerSqm' in opt ? opt.pricePerSqm : 0;
@@ -1671,63 +1813,82 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
                   );
                 })}
 
-              {/* 木框包边（长度型）——木材下拉在卡片内 */}
+              {/* ===== hasLengthInput 型（镜柜三合一：木材镜柜/上下发光/正面打砂）=====
+                 每个卡片独立一行：选项卡 + 材质下拉 + 长度输入 */}
               {surfaceOptions
-                .filter(opt => 'pricePerMeter' in opt && opt.pricePerMeter)
+                .filter(opt => opt.hasLengthInput && opt.woodOptions)
                 .map(opt => {
                   const isSelected = mirrorSurfaceId === opt.id;
-                  // const rcExtra = 'rCornerExtra' in opt ? opt.rCornerExtra : 0; // 暂不使用
-                  const currentWoodPrice = opt.pricePerMeter[woodType] || 0;
+                  const currentWood = opt.woodOptions?.find(w => w.id === mirror.cabinetMirrorWoodType);
+                  // 显示当前选中材质的价格，未选材质时显示默认（第一个）的价格
+                  const currentPrice = currentWood?.pricePerMeter || opt.woodOptions?.[0]?.pricePerMeter || 0;
+                  const displayLen = mirror.cabinetMirrorLength || 0;
+                  const baseLen = Math.max(Math.ceil(displayLen / 100) * 100, 800);
+                  // 普通镜-单镜的木框包边需要减100（与Excel公式一致）
+                  const needSubtract100 = opt.id === 'wood' && mirrorCategory === 'plain' && !isCabinet;
+                  const calcPrice = displayLen > 0
+                    ? Math.round((baseLen / 1000) * currentPrice - (needSubtract100 ? 100 : 0))
+                    : 0;
 
                   return (
-                    <MirrorSurfaceOptionCard
+                    <div
                       key={opt.id}
-                      icon="🪞"
-                      name={opt.label}
-                      selected={isSelected}
-                      onClick={() => setMirror(prev => ({ ...prev, mirrorSurfaceId: opt.id, mirrorRC: false }))}
-                      priceLabel={`¥${currentWoodPrice}/m`}
+                      className={`rounded-xl border-2 transition-all ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}
                     >
-                      {/* 木材类型下拉 */}
-                      {isSelected && (
-                        <div className="mt-2">
-                          <select
-                            value={woodType}
-                            onChange={e => setMirror(prev => ({ ...prev, woodType: e.target.value }))}
-                            onClick={e => e.stopPropagation()}
-                            className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1 text-gray-600 focus:outline-none focus:border-blue-400 bg-white"
-                          >
-                            {VANITY_WOOD_MATERIALS.map(m => (
-                              <option key={m.id} value={m.id}>{m.label}</option>
-                            ))}
-                          </select>
+                      {/* 主卡头：图标+名称+单价，点击选中 */}
+                      <div
+                        className="p-3 cursor-pointer"
+                        onClick={() => setMirror(prev => ({ ...prev, mirrorSurfaceId: opt.id, mirrorRC: false }))}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-base">🪞</span>
+                          <span className={`text-sm font-semibold flex-1 ${isSelected ? 'text-blue-700' : 'text-gray-700'}`}>{opt.label}</span>
+                          <span className="text-xs text-gray-400">¥{currentPrice}/m</span>
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? 'border-blue-500' : 'border-gray-300'}`}>
+                            {isSelected && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+                          </div>
                         </div>
-                      )}
-                      {/* R角选项 - 暂不使用 */}
-                      {/* {isSelected && rcExtra > 0 && (
-                        <div className="mt-1 flex items-center gap-1.5">
-                          <label className="flex items-center gap-1 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={mirrorRC}
-                              onChange={e => {
-                                e.stopPropagation();
-                                setMirror(prev => ({ ...prev, mirrorRC: e.target.checked }));
-                              }}
-                              className="w-3 h-3 rounded border-gray-300 text-blue-500 focus:ring-blue-400"
-                            />
-                            <span className="text-xs text-gray-600">倒R角(+¥{0})</span>
-                          </label>
-                        </div>
-                      )} */}
-                    </MirrorSurfaceOptionCard>
+
+                        {isSelected && (
+                          <div className="space-y-2" onClick={e => e.stopPropagation()}>
+                            {/* 材质下拉 */}
+                            <select
+                              value={mirror.cabinetMirrorWoodType}
+                              onChange={e => setMirror(prev => ({ ...prev, cabinetMirrorWoodType: e.target.value }))}
+                              className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 focus:outline-none focus:border-blue-400 bg-white"
+                            >
+                              {opt.woodOptions?.map(m => (
+                                <option key={m.id} value={m.id}>{m.label}</option>
+                              ))}
+                            </select>
+
+                            {/* 长度输入 + 实时计价 */}
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                value={displayLen}
+                                onChange={e => setMirror(prev => ({ ...prev, cabinetMirrorLength: parseInt(e.target.value) || 0 }))}
+                                className="flex-1 px-2 py-1.5 border border-gray-200 rounded-lg text-center font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                                placeholder="输入长度(mm)"
+                                step={1}
+                              />
+                              <span className="text-sm font-semibold text-red-500 min-w-[60px] text-right">
+                                {calcPrice > 0 ? `¥${calcPrice}` : '¥0'}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   );
                 })}
+
+              {/* 木框包边等长度型选项已被上方 hasLengthInput 逻辑统一渲染，此处不再重复 */}
             </div>
           </div>
 
-          {/* ===== 镜子长度（仅长度型选项显示） ===== */}
-          {isLengthType && (
+          {/* ===== 镜子长度（仅普通长度型选项显示，hasLengthInput型在卡片内） ===== */}
+          {isLengthType && !surfaceOptions.some(o => o.id === mirrorSurfaceId && 'hasLengthInput' in o && o.hasLengthInput) && (
             <div className="mb-0">
               <SectionTitle icon="📏" title="镜子长度" />
               <div className="flex items-center gap-3">
@@ -1776,17 +1937,17 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
   };
 
   const renderPackingTab = () => {
-    // 主柜打包价格
-    const cabinetPackingPrice = cabinet.cabinetLength > 0
+    // 主柜打包价格（可选）
+    const cabinetPackingPrice = cabinet.cabinetPackingEnabled && cabinet.cabinetLength > 0
       ? Math.round((Math.max(Math.ceil(cabinet.cabinetLength / 100) * 100, 800) / 1000) * (cabinet.cabinetType.startsWith('hanging') ? 80 : 100))
       : 0;
 
-    // 浴室镜打包价格
-    const mirrorPackingPrice = mirror.mirrorLength > 0
+    // 浴室镜打包价格（可选）
+    const mirrorPackingPrice = mirror.mirrorPackingEnabled && mirror.mirrorLength > 0
       ? Math.round((Math.max(Math.ceil(mirror.mirrorLength / 100) * 100, 800) / 1000) * (mirror.isCabinet ? 80 : 70))
       : 0;
 
-    // 台面打包价格
+    // 台面打包价格（用户手动输入，有输入即启用）
     const countertopPackingPrice = basin.countertopPackingLength > 0
       ? Math.round((Math.max(Math.ceil(basin.countertopPackingLength / 100) * 100, 800) / 1000) * (basin.countertopPackingType === 'wood' ? 180 : 90))
       : 0;
@@ -1794,11 +1955,24 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
     return (
       <div className="space-y-3">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-          <SectionTitle icon="📦" title="包装配置" note="（根据主柜/台盆/浴室镜自动带入）" />
+          <SectionTitle icon="📦" title="包装配置" note="（自动读取数据，可选启用）" />
           <div className="space-y-2">
 
-            {/* 主柜夹板打包 */}
-            <div className={`flex items-center gap-3 px-3 py-3 rounded-xl border ${cabinetPackingPrice > 0 ? 'border-green-200 bg-green-50' : 'border-gray-100 bg-white opacity-60'}`}>
+            {/* 主柜夹板打包（可选） */}
+            <div className={`flex items-center gap-3 px-3 py-3 rounded-xl border transition-colors ${
+              cabinetPackingPrice > 0 ? 'border-green-200 bg-green-50' : 'border-gray-100 bg-white'
+            }`}>
+              {/* 开关 */}
+              <button
+                onClick={() => setCabinet(prev => ({ ...prev, cabinetPackingEnabled: !prev.cabinetPackingEnabled }))}
+                className={`w-10 h-5 rounded-full transition-colors flex-shrink-0 ${
+                  cabinet.cabinetPackingEnabled ? 'bg-blue-500' : 'bg-gray-300'
+                }`}
+              >
+                <div className={`w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                  cabinet.cabinetPackingEnabled ? 'translate-x-5' : 'translate-x-0.5'
+                }`} />
+              </button>
               <div className="text-xl">📦</div>
               <div className="flex-1">
                 <div className="text-sm font-medium text-gray-800">主柜夹板打包</div>
@@ -1808,13 +1982,28 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
                     : '主柜未配置'}
                 </div>
               </div>
-              <div className={`px-3 py-1 rounded-full text-xs font-semibold ${cabinetPackingPrice > 0 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'}`}>
+              <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                cabinetPackingPrice > 0 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'
+              }`}>
                 {cabinetPackingPrice > 0 ? `¥${cabinetPackingPrice}` : '—'}
               </div>
             </div>
 
-            {/* 浴室镜夹板打包 */}
-            <div className={`flex items-center gap-3 px-3 py-3 rounded-xl border ${mirrorPackingPrice > 0 ? 'border-green-200 bg-green-50' : 'border-gray-100 bg-white opacity-60'}`}>
+            {/* 浴室镜夹板打包（可选） */}
+            <div className={`flex items-center gap-3 px-3 py-3 rounded-xl border transition-colors ${
+              mirrorPackingPrice > 0 ? 'border-green-200 bg-green-50' : 'border-gray-100 bg-white'
+            }`}>
+              {/* 开关 */}
+              <button
+                onClick={() => setMirror(prev => ({ ...prev, mirrorPackingEnabled: !prev.mirrorPackingEnabled }))}
+                className={`w-10 h-5 rounded-full transition-colors flex-shrink-0 ${
+                  mirror.mirrorPackingEnabled ? 'bg-blue-500' : 'bg-gray-300'
+                }`}
+              >
+                <div className={`w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                  mirror.mirrorPackingEnabled ? 'translate-x-5' : 'translate-x-0.5'
+                }`} />
+              </button>
               <div className="text-xl">🪞</div>
               <div className="flex-1">
                 <div className="text-sm font-medium text-gray-800">浴室镜夹板打包</div>
@@ -1824,7 +2013,9 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
                     : '浴室镜未配置'}
                 </div>
               </div>
-              <div className={`px-3 py-1 rounded-full text-xs font-semibold ${mirrorPackingPrice > 0 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'}`}>
+              <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                mirrorPackingPrice > 0 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'
+              }`}>
                 {mirrorPackingPrice > 0 ? `¥${mirrorPackingPrice}` : '—'}
               </div>
             </div>
