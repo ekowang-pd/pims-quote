@@ -751,16 +751,15 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
 
   // ===== 台盆计价 =====
   const basinPrice = useMemo(() => {
-    if (basin.countertopLength === 0) return 0;
     const installType = VANITY_BASIN_TYPES[basin.installType as keyof typeof VANITY_BASIN_TYPES] as BasinType;
     const material = installType?.materials.find(m => m.id === basin.materialId);
     if (!material) return 0;
 
     let total = 0;
 
-    // 1. 台面计价
+    // 1. 台面计价（长度>0才计价）
     const countertop = material.countertopOptions.find(c => c.id === basin.countertopId);
-    if (countertop && countertop.priceFormula) {
+    if (countertop && countertop.priceFormula && basin.countertopLength > 0) {
       total += Math.round(countertop.priceFormula(basin.countertopLength) * 100) / 100;
     }
 
