@@ -350,12 +350,12 @@ function AddonGridCard({
 }) {
   const effectiveOptionId = value?.optionId || options[0]?.id || '';
   const effectiveQty = value?.qty ?? 0;
-  const effectiveLength = value?.length ?? 800;
+  const effectiveLength = value?.length ?? 0;
 
-  // 长度型增配：挂载时若 value 未初始化，自动写入默认值，确保 extraAddonPrice 能计入该项
+  // 长度型增配：挂载时若 value 未初始化，自动写入默认值（qty=0，长度0），确保 extraAddonPrice 能正确处理
   useEffect(() => {
     if (hasLengthInput && !value) {
-      onChange({ optionId: options[0]?.id || '', qty: 1, length: 800 });
+      onChange({ optionId: options[0]?.id || '', qty: 0, length: 0 });
     }
   // 仅在挂载时执行一次
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1767,7 +1767,12 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
                   return (
                     <div
                       key={opt.id}
-                      onClick={() => setMirror(prev => ({ ...prev, mirrorSurfaceId: opt.id, mirrorRC: false, mirrorAreaMode: 'area' }))}
+                      onClick={() => setMirror(prev => ({
+                        ...prev,
+                        mirrorSurfaceId: prev.mirrorSurfaceId === opt.id ? '' : opt.id,
+                        mirrorRC: false,
+                        mirrorAreaMode: 'area',
+                      }))}
                       className={`rounded-xl border-2 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400 ${
                         isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:border-gray-300'
                       }`}
