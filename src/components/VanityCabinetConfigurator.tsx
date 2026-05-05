@@ -362,9 +362,11 @@ function AddonGridCard({
   }, []);
   const selectedOpt = options.find(o => o.id === effectiveOptionId);
   const isLengthBased = selectedOpt?.priceType === 'length';
-  const pricePerUnit = selectedOpt?.priceFormula
-    ? Math.round(selectedOpt.priceFormula(effectiveLength))
-    : (selectedOpt?.price || 0);
+  const pricePerUnit = (isLengthBased && effectiveLength === 0)
+    ? 0
+    : (selectedOpt?.priceFormula
+      ? Math.round(selectedOpt.priceFormula(effectiveLength))
+      : (selectedOpt?.price || 0));
   const subtotal = isLengthBased ? pricePerUnit : pricePerUnit * effectiveQty;
 
   return (
