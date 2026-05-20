@@ -3,6 +3,7 @@ import mirrorSingleImg from '../../public/mirror-single.png';
 import mirrorCabinetImg from '../../public/mirror-cabinet.png';
 import type { QuoteItem } from '../types';
 import type { BasinType, MirrorAreaOption, MirrorLengthOption } from '../data/vanityConfig';
+import VanityQuoteModal, { type VanityQuoteRow } from './VanityQuoteModal';
 import {
   VANITY_IMAGES,
   VANITY_INSTALL_TYPES,
@@ -1008,6 +1009,360 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
       onAdd(items);
     }
   };
+
+  // ===== 报价单弹窗状态 =====
+  const [showQuoteModal, setShowQuoteModal] = useState(false);
+
+  // ===== 生成报价单明细行（用于弹窗表格） =====
+  const generateVanityQuoteRows = useCallback((): VanityQuoteRow[] => {
+    const rows: VanityQuoteRow[] = [];
+    let no = 1;
+
+    // ---- 1. 主柜 ----
+    if (cabinet.cabinetLength > 0) {
+      const types = cabinet.installType === 'hanging' ? VANITY_HANGING_CABINET_TYPES : VANITY_FLOOR_CABINET_TYPES;
+      const typeData = types.find(t => t.id === cabinet.cabinetType);
+      const mat = typeData?.materials.find(m => m.id === cabinet.material);
+      const installLabel = cabinet.installType === 'hanging' ? '悬挂' : '落地';
+      rows.push({
+        no: no++,
+        componentImage: '',
+        componentName: '',
+        itemNumber: `VC-CABINET-${cabinet.cabinetType?.toUpperCase() || '001'}`,
+        productType: `浴室柜主柜 - ${installLabel}`,
+        picture: typeData?.image || mat?.image || '',
+        lengthMm: cabinet.cabinetLength,
+        widthMm: '',
+        heightMm: '',
+        description: `${typeData?.label || '主柜'} ${mat?.label || cabinet.material} ${cabinet.cabinetLength}mm`,
+        unit: '套',
+        quantity: 1,
+        basePrice: cabinetPrice,
+        margin: '',
+        unitPriceCny: cabinetPrice,
+        amountCny: cabinetPrice,
+        cbm: '',
+        weightKg: '',
+        remarks: '',
+      });
+    }
+
+    // ---- 2. 柜体增配 ----
+    Object.entries(cabinet.cabinetAddons).forEach(([addonId, val]) => {
+      if (!val.optionId) return;
+      const addon = VANITY_CABINET_ADDONS.find((a: any) => a.id === addonId) as any;
+      if (!addon) return;
+      const opt = addon.options?.find((o: any) => o.id === val.optionId);
+      if (!opt) return;
+      const qty = val.qty ?? 0;
+      if (qty === 0) return;
+      const unitCost = opt.price ?? 0;
+      const amount = unitCost * qty;
+      if (amount === 0) return;
+      rows.push({
+        no: no++,
+        componentImage: '',
+        componentName: '',
+        itemNumber: `VC-ADDON-${addonId.toUpperCase()}`,
+        productType: `柜体增配 - ${addon.label || addonId}`,
+        picture: '',
+        lengthMm: '',
+        widthMm: '',
+        heightMm: '',
+        description: `${addon.label || addonId}: ${opt.label || val.optionId}`,
+        unit: addon.unit || '个',
+        quantity: qty,
+        basePrice: unitCost,
+        margin: '',
+        unitPriceCny: unitCost,
+        amountCny: amount,
+        cbm: '',
+        weightKg: '',
+        remarks: '',
+      });
+    });
+
+    // ---- 3. 增配选项 ----
+    Object.entries(cabinet.extraAddons).forEach(([addonId, val]) => {
+      if (!val.optionId) return;
+      const qty = val.qty ?? 0;
+      if (qty === 0) return;
+      const addon = VANITY_EXTRA_ADDONS.find((a: any) => a.id === addonId) as any;
+      if (!addon) return;
+      const opt = addon.options?.find((o: any) => o.id === val.optionId);
+      if (!opt) return;
+      const isLengthBased = opt.priceType === 'length';
+      const len = isLengthBased ? (val.length ?? 0) : 0;
+      const unitCost = isLengthBased
+        ? (len === 0 ? 0 : (opt.priceFormula ? Math.round(opt.priceFormula(len)) : opt.price))
+        : (opt.price ?? 0);
+      const amount = unitCost * qty;
+      if (amount === 0) return;
+      rows.push({
+        no: no++,
+        componentImage: '',
+        componentName: '',
+        itemNumber: `VC-EXTRA-${addonId.toUpperCase()}`,
+        productType: `增配选项 - ${addon.label || addonId}`,
+        picture: '',
+        lengthMm: isLengthBased ? len : '',
+        widthMm: '',
+        heightMm: '',
+        description: `${addon.label || addonId}: ${opt.label || val.optionId}${isLengthBased && len ? ` ${len}mm` : ''}`,
+        unit: isLengthBased ? 'm' : (addon.unit || '个'),
+        quantity: isLengthBased ? (len / 1000).toFixed(3) : qty,
+        basePrice: unitCost,
+        margin: '',
+        unitPriceCny: unitCost,
+        amountCny: amount,
+        cbm: '',
+        weightKg: '',
+        remarks: '',
+      });
+    });
+
+    // ---- 4. 台盆 & 台面 ----
+    if (basinPrice > 0) {
+      const installType = VANITY_BASIN_TYPES[basin.installType as keyof typeof VANITY_BASIN_TYPES] as BasinType;
+      const material = installType?.materials.find(m => m.id === basin.materialId);
+      const countertop = material?.countertopOptions.find(c => c.id === basin.countertopId);
+      const ctLen = basin.countertopLength[basin.countertopId] || 0;
+
+      // 台面行
+      if (ctLen > 0) {
+        const ctPrice = countertop?.priceFormula ? Math.round(countertop.priceFormula(ctLen)) : 0;
+        rows.push({
+          no: no++,
+          componentImage: '',
+          componentName: '',
+          itemNumber: `VC-BASIN-COUNTERTOP-${basin.countertopId.toUpperCase()}`,
+          productType: `台面 - ${installType?.label || ''} ${material?.label || ''}`,
+          picture: material?.image || '',
+          lengthMm: ctLen,
+          widthMm: '',
+          heightMm: '',
+          description: `${countertop?.label || basin.countertopId} ${ctLen}mm`,
+          unit: '项',
+          quantity: 1,
+          basePrice: ctPrice,
+          margin: '',
+          unitPriceCny: ctPrice,
+          amountCny: ctPrice,
+          cbm: '',
+          weightKg: '',
+          remarks: '',
+        });
+      }
+
+      // 台盆选项行
+      Object.entries(basin.basinItems).forEach(([optId, qty]) => {
+        if (!qty || qty === 0) return;
+        const material2 = installType?.materials.find(m => m.id === basin.materialId);
+        let optLabel = optId;
+        let unitCost = 0;
+        material2?.basinItems?.forEach((item: any) => {
+          const found = item.options?.find((o: any) => o.id === optId);
+          if (found) { optLabel = found.label || optId; unitCost = found.unitPrice || 0; }
+        });
+        if (unitCost === 0) return;
+        rows.push({
+          no: no++,
+          componentImage: '',
+          componentName: '',
+          itemNumber: `VC-BASIN-${optId.toUpperCase()}`,
+          productType: `台盆 - ${installType?.label || ''} ${material2?.label || ''}`,
+          picture: '',
+          lengthMm: '',
+          widthMm: '',
+          heightMm: '',
+          description: optLabel,
+          unit: '个',
+          quantity: qty,
+          basePrice: unitCost,
+          margin: '',
+          unitPriceCny: unitCost,
+          amountCny: unitCost * qty,
+          cbm: '',
+          weightKg: '',
+          remarks: '',
+        });
+      });
+
+      // 台盆额外配置行
+      Object.entries(basin.extraItems).forEach(([optId, qty]) => {
+        if (!qty || qty === 0) return;
+        const material2 = installType?.materials.find(m => m.id === basin.materialId);
+        let optLabel = optId;
+        let unitCost = 0;
+        material2?.extraItems?.forEach((item: any) => {
+          const found = item.options?.find((o: any) => o.id === optId);
+          if (found) { optLabel = found.label || optId; unitCost = found.unitPrice || 0; }
+        });
+        if (unitCost === 0) return;
+        rows.push({
+          no: no++,
+          componentImage: '',
+          componentName: '',
+          itemNumber: `VC-BASIN-EXTRA-${optId.toUpperCase()}`,
+          productType: '台盆配件',
+          picture: '',
+          lengthMm: '',
+          widthMm: '',
+          heightMm: '',
+          description: optLabel,
+          unit: '个',
+          quantity: qty,
+          basePrice: unitCost,
+          margin: '',
+          unitPriceCny: unitCost,
+          amountCny: unitCost * qty,
+          cbm: '',
+          weightKg: '',
+          remarks: '',
+        });
+      });
+    }
+
+    // ---- 5. 浴室镜 ----
+    if (mirrorPrice > 0) {
+      const catLabel = mirror.mirrorCategory === 'plain' ? '普通镜' : '智能镜';
+      const cabLabel = mirror.isCabinet ? '镜柜' : '单镜';
+      const L = mirror.mirrorLength;
+      const CL = mirror.cabinetMirrorLength;
+      const surfaceLen = L > 0 ? L : CL;
+      const mirrorImg = mirror.isCabinet ? mirrorCabinetImg : mirrorSingleImg;
+
+      // 找镜面选项 label
+      const allPlainSingle: any[] = [...VANITY_PLAIN_SINGLE_MIRROR_OPTIONS, VANITY_PLAIN_WOOD_LENGTH_OPT];
+      const allSmartSingle: any[] = [...VANITY_SMART_SINGLE_MIRROR_OPTIONS, VANITY_SMART_WOOD_LENGTH_OPT_BACKLIGHT, VANITY_SMART_WOOD_LENGTH_OPT_SAND];
+      const allMirrorOpts: any[] = [
+        ...allPlainSingle,
+        VANITY_PLAIN_CABINET_MIRROR_OPT,
+        ...VANITY_PLAIN_CABINET_TYPES,
+        ...allSmartSingle,
+        VANITY_SMART_CABINET_MIRROR_OPT_BACKLIGHT,
+        VANITY_SMART_CABINET_MIRROR_OPT_SAND,
+        ...VANITY_SMART_CABINET_TYPES,
+      ];
+      const surfaceOpt = allMirrorOpts.find((o: any) => o.id === mirror.mirrorSurfaceId);
+      const surfaceLabel = surfaceOpt?.label || mirror.mirrorSurfaceId;
+
+      rows.push({
+        no: no++,
+        componentImage: '',
+        componentName: '',
+        itemNumber: `VC-MIRROR-${mirror.mirrorCategory.toUpperCase()}-${mirror.isCabinet ? 'CAB' : 'SGL'}`,
+        productType: `浴室镜 - ${catLabel}${cabLabel}`,
+        picture: mirrorImg,
+        lengthMm: surfaceLen || '',
+        widthMm: '',
+        heightMm: '',
+        description: `${catLabel}${cabLabel} - ${surfaceLabel}${surfaceLen ? ` ${surfaceLen}mm` : ''}`,
+        unit: '面',
+        quantity: 1,
+        basePrice: mirrorPrice,
+        margin: '',
+        unitPriceCny: mirrorPrice,
+        amountCny: mirrorPrice,
+        cbm: '',
+        weightKg: '',
+        remarks: '',
+      });
+    }
+
+    // ---- 6. 浴室镜增配 ----
+    if (mirror.sideCabinetQty > 0) {
+      const unitCost = VANITY_SIDE_CABINET_PRICE_PER_M[mirror.addonWoodType] || 260;
+      rows.push({
+        no: no++,
+        componentImage: '', componentName: '',
+        itemNumber: `VC-MIRROR-SIDECAB`,
+        productType: '浴室镜增配 - 侧柜',
+        picture: '',
+        lengthMm: '', widthMm: '', heightMm: '',
+        description: `侧柜 x${mirror.sideCabinetQty}`,
+        unit: '个',
+        quantity: mirror.sideCabinetQty,
+        basePrice: unitCost,
+        margin: '',
+        unitPriceCny: unitCost,
+        amountCny: unitCost * mirror.sideCabinetQty,
+        cbm: '', weightKg: '', remarks: '',
+      });
+    }
+    if (mirror.openShelfQty > 0) {
+      const unitCost = VANITY_OPEN_SHELF_PRICE_PER_M[mirror.addonWoodType] || 200;
+      rows.push({
+        no: no++,
+        componentImage: '', componentName: '',
+        itemNumber: `VC-MIRROR-OPENSHELF`,
+        productType: '浴室镜增配 - 开放格',
+        picture: '',
+        lengthMm: '', widthMm: '', heightMm: '',
+        description: `开放格 x${mirror.openShelfQty}`,
+        unit: '个',
+        quantity: mirror.openShelfQty,
+        basePrice: VANITY_OPEN_SHELF_PRICE_PER_M[mirror.addonWoodType] || 200,
+        margin: '',
+        unitPriceCny: unitCost,
+        amountCny: unitCost * mirror.openShelfQty,
+        cbm: '', weightKg: '', remarks: '',
+      });
+    }
+    const mirrorAddonItems: [boolean, string, string, number][] = [
+      [mirror.americanStyle, 'VC-MIRROR-AMERICAN', '美式造型', VANITY_AMERICAN_STYLE_PRICE],
+      [mirror.glassShelf, 'VC-MIRROR-GLASSSHELF', '玻璃层板', VANITY_GLASS_SHELF_PRICE],
+      [mirror.shelfLight, 'VC-MIRROR-SHELFLIGHT', '层板灯带', VANITY_SHELF_LIGHT_PRICE],
+      [mirror.glassDoor, 'VC-MIRROR-GLASSDOOR', '玻璃门', VANITY_GLASS_DOOR_PRICE],
+      [mirror.aluGlassDoor, 'VC-MIRROR-ALUGLASSDOOR', '铝合金玻璃门', VANITY_ALU_GLASS_DOOR_PRICE],
+    ];
+    mirrorAddonItems.forEach(([enabled, itemNo, label, price]) => {
+      if (!enabled || price === 0) return;
+      rows.push({
+        no: no++,
+        componentImage: '', componentName: '',
+        itemNumber: itemNo,
+        productType: `浴室镜增配 - ${label}`,
+        picture: '',
+        lengthMm: '', widthMm: '', heightMm: '',
+        description: label,
+        unit: '项',
+        quantity: 1,
+        basePrice: price,
+        margin: '',
+        unitPriceCny: price,
+        amountCny: price,
+        cbm: '', weightKg: '', remarks: '',
+      });
+    });
+
+    // ---- 7. 包装 ----
+    if (packingPrice > 0) {
+      rows.push({
+        no: no++,
+        componentImage: '', componentName: '',
+        itemNumber: 'VC-PACKING',
+        productType: '包装',
+        picture: '',
+        lengthMm: '', widthMm: '', heightMm: '',
+        description: '包装费',
+        unit: '项',
+        quantity: 1,
+        basePrice: packingPrice,
+        margin: '',
+        unitPriceCny: packingPrice,
+        amountCny: packingPrice,
+        cbm: '', weightKg: '', remarks: '',
+      });
+    }
+
+    return rows;
+  }, [
+    cabinet, cabinetPrice, cabinetAddonPrice, extraAddonPrice,
+    basin, basinPrice,
+    mirror, mirrorPrice, mirrorAddonPrice,
+    packingPrice,
+  ]);
 
   // ===== Tab 内容 =====
   const renderCabinetTab = () => {
@@ -2115,7 +2470,8 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
     : '包装未配置';
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <>
+      <div className="min-h-screen bg-gray-50 flex flex-col" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       {/* 顶部导航 */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="flex items-center justify-between px-4 py-3">
@@ -2182,13 +2538,23 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
             <div className="text-2xl font-bold text-red-500">{fmt(totalPrice)}</div>
           </div>
           <button
-            onClick={handleAddToQuote}
+            onClick={() => setShowQuoteModal(true)}
             className="px-6 py-3 bg-blue-500 text-white rounded-xl text-sm font-medium hover:bg-blue-600 active:bg-blue-700 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400"
           >
-            ✓ 加入报价车
+            📋 生成报价单
           </button>
         </div>
       </div>
     </div>
+
+    {/* 报价单弹窗 */}
+    {showQuoteModal && (
+      <VanityQuoteModal
+        rows={generateVanityQuoteRows()}
+        totalPrice={totalPrice}
+        onClose={() => setShowQuoteModal(false)}
+      />
+    )}
+    </>
   );
 }
