@@ -832,8 +832,12 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
     let opt: { pricePerSqm?: number; pricePerMeter?: Record<string, number>; rCornerExtra?: number; hasLengthInput?: boolean; woodSubtract100?: boolean } | null = null;
 
     if (mirrorCategory === 'plain' && !isCabinet) {
-      // 普通镜-单镜
-      opt = VANITY_PLAIN_SINGLE_MIRROR_OPTIONS.find(o => o.id === mirrorSurfaceId) || null;
+      // 普通镜-单镜（含长度型木材包边选项）
+      const allPlainSingle: any[] = [
+        ...VANITY_PLAIN_SINGLE_MIRROR_OPTIONS,
+        VANITY_PLAIN_WOOD_LENGTH_OPT,
+      ];
+      opt = allPlainSingle.find((o: any) => o.id === mirrorSurfaceId) || null;
     } else if (mirrorCategory === 'plain' && isCabinet) {
       // 普通镜-镜柜
       opt = VANITY_PLAIN_CABINET_MIRROR_OPT.id === mirrorSurfaceId ? VANITY_PLAIN_CABINET_MIRROR_OPT : null;
