@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { exportVanityQuoteToExcel } from '../utils/exportVanityQuote';
 
 // ============================================================
 // 报价行类型定义
@@ -63,6 +64,8 @@ const HEADERS = [
 // 主组件
 // ============================================================
 export default function VanityQuoteModal({ rows, totalPrice, onClose }: VanityQuoteModalProps) {
+  const [exporting, setExporting] = useState(false);
+
   const quoteNo = useMemo(() => {
     const now = new Date();
     const y = now.getFullYear();
@@ -72,6 +75,17 @@ export default function VanityQuoteModal({ rows, totalPrice, onClose }: VanityQu
     const min = String(now.getMinutes()).padStart(2, '0');
     return `VQ-${y}${m}${d}-${h}${min}`;
   }, []);
+
+  const handleExportExcel = async () => {
+    setExporting(true);
+    try {
+      await exportVanityQuoteToExcel(rows, totalPrice, quoteNo);
+    } catch (err) {
+      alert('导出失败：' + (err as Error).message);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const renderCell = (row: VanityQuoteRow, key: string) => {
     const val = (row as any)[key];
@@ -108,6 +122,13 @@ export default function VanityQuoteModal({ rows, totalPrice, onClose }: VanityQu
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportExcel}
+              disabled={exporting}
+              className="px-4 py-2 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors disabled:opacity-50"
+            >
+              {exporting ? '导出中...' : '📊 导出Excel'}
+            </button>
             <button
               onClick={handlePrint}
               className="px-4 py-2 text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
