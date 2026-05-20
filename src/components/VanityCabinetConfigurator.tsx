@@ -837,8 +837,13 @@ export function VanityCabinetConfigurator({ onAdd, onClose }: VanityCabinetConfi
       // 普通镜-镜柜
       opt = VANITY_PLAIN_CABINET_MIRROR_OPT.id === mirrorSurfaceId ? VANITY_PLAIN_CABINET_MIRROR_OPT : null;
     } else if (mirrorCategory === 'smart' && !isCabinet) {
-      // 智能镜-单镜
-      opt = VANITY_SMART_SINGLE_MIRROR_OPTIONS.find(o => o.id === mirrorSurfaceId) || null;
+      // 智能镜-单镜（含长度型木材包边选项）
+      const allSmartSingle: any[] = [
+        ...VANITY_SMART_SINGLE_MIRROR_OPTIONS,
+        VANITY_SMART_WOOD_LENGTH_OPT_BACKLIGHT,
+        VANITY_SMART_WOOD_LENGTH_OPT_SAND,
+      ];
+      opt = allSmartSingle.find((o: any) => o.id === mirrorSurfaceId) || null;
     } else if (mirrorCategory === 'smart' && isCabinet) {
       // 智能镜-镜柜
       if (mirrorSurfaceId === 'smart-cabinet-backlight') opt = VANITY_SMART_CABINET_MIRROR_OPT_BACKLIGHT;
